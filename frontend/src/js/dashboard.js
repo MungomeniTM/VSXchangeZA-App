@@ -5,7 +5,7 @@ const $ = id => document.getElementById(id);
 const create = (tag, cls) => { const el = document.createElement(tag); if (cls) el.className = cls; return el; };
 
 // ✅ Flask API base (update if hosted elsewhere)
-const API_URL = "http://127.0.0.1:5000/api";
+const API_URL = "http://localhost:5000/api";
 
 const auth = window.auth;
 const H = window.helpers;
@@ -13,8 +13,7 @@ const H = window.helpers;
 // =======================
 // STATE
 // =======================
-let page = 1, size = 12, loading = false, hasMore = true;
-let skillsChart = null, farmChart = null;
+let page = 1, size = 12, loading = false, hasMore = true; skillsChart = null, farmChart = null;
 
 // =======================
 // SAFE API WRAPPER
