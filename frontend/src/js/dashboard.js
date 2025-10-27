@@ -51,6 +51,21 @@ async function loadProfile() {
     // handled by safeJson
   }
 }
+// ========== Theme Toggle ==========
+(function initTheme() {
+  const saved = localStorage.getItem('theme') || 'dark';
+  root.dataset.theme = saved;
+  const toggle = $('toggleTheme');
+  toggle.textContent = saved === 'dark' ? '🌗' : '☀️';
+  toggle.onclick = () => {
+    const current = root.dataset.theme;
+    const next = current === 'dark' ? 'light' : 'dark';
+    root.dataset.theme = next;
+    toggle.textContent = next === 'dark' ? '🌗' : '☀️';
+    localStorage.setItem('theme', next);
+  };
+})();
+
 
 // =======================
 // FEED
@@ -356,18 +371,7 @@ $('logout').addEventListener('click', async () => {
 $('createPostSidebar').addEventListener('click', () => { window.scrollTo({ top: 200, behavior: 'smooth' }); $('composeText').focus(); });
 $('fab').addEventListener('click', () => { $('composeText').focus(); });
 
-// theme toggle
-(function themeInit(){
-  const root = document.documentElement;
-  const stored = localStorage.getItem('vsx-theme') || 'dark';
-  root.setAttribute('data-theme', stored);
-  $('toggleTheme').addEventListener('click', () => {
-    const cur = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-    root.setAttribute('data-theme', cur);
-    localStorage.setItem('vsx-theme', cur);
-    $('toggleTheme').setAttribute('aria-pressed', cur === 'dark' ? 'false' : 'true');
-  });
-})();
+
 
 // =======================
 // Init
