@@ -1,29 +1,39 @@
 // src/api.js
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system";
 
-// During development: point to your laptop backend
-// NOTE: on a real phone use your machine IP (e.g. http://192.168.1.10:5000)
-// or use ngrok and replace API_URL with the ngrok URL.
-// For Codespaces, use forwarded port URL.
-export const API_URL = "http://10.0.2.2:5000/api"; // Android emulator default
-// If testing on real device, set API_URL to http://<YOUR_LAPTOP_IP>:5000/api
+const NGROK_FILE_PATH = `${FileSystem.documentDirectory}ngrok_url.txt`;
 
-const api = axios.create({
-  baseURL: API_URL,
-  timeout: 10000,
-});
+// Try to load your latest ngrok link (so you don’t manually paste it)
+export async function getAPIBaseURL() {
+  try {
+    const savedURL = await FileSystem.readAsStringAsync(NGROK_FILE_PATH);
+    if (savedURL) return savedURL.trim();
+  } catch (e) {
+    console.log("⚠️ No cached Ngrok URL found");
+  }
+  // fallback (change to your local IP if needed)
+  return "http://10.0.2.2:5000/api";
+}
 
-api.interceptors.request.use(async (config) => {
-  const token = await AsyncStorage.getItem("token");
-  if (token) config.headers["Authorization"] = `Bearer ${token}`;
-  config.headers["Accept"] = "application/json";
-  return config;
-}, (error) => Promise.reject(error));
+// Save new ngrok URL manually once, then it stays cached
+export async function setAPIBaseURL(url) {
+  await FileSystem.writeAsStringAsync(NGROK_FILE_PATH, url);
+  console.log("✅ Ngrok URL updated:", url);
+}
 
-export const register = (payload) => api.post("/auth/register", payload);
-export const login = (payload) => api.post("/auth/login", payload);
-export const fetchPosts = () => api.get("/posts");
-export const createPost = (formData, config = {}) => api.post("/posts", formData, config);
+export async function createAPI() {
+  const baseURL = await getAPIBaseURL();
+  console.log("🔗 Using API base URL:", baseURL);
 
-export default api;
+  const api = axios.create({ baseURL, timeout: 10000 });
+
+  api.interceptors.request.use(async (config) => {
+    const token = await AsyncStorage.getItem("token");
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
+
+  return api;
+}
