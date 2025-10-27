@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from "react-native";
 import axios from "axios";
 
-const API_URL = "https://YOUR_NGROK_URL_HERE/api/auth/register"; // 👈 replace with ngrok URL
+const API_URL = " https://hugo-presurgical-rachelle.ngrok-free.dev/api/auth/register"; // 👈 replace with ngrok URL
 
 export default function App() {
   const [form, setForm] = useState({
