@@ -1,51 +1,178 @@
 // src/screens/RegisterScreen.js
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from "react-native";
-import { register } from "../api";
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+  ScrollView,
+  Platform,
+} from "react-native";
+import { Picker } from "@react-native-picker/picker";
+import { createAPI } from "../api";
 
 export default function RegisterScreen({ navigation }) {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [role, setRole] = useState("");
 
-  const doRegister = async () => {
-    if (!name || !email || !password) return Alert.alert("Fill all fields");
+  const handleRegister = async () => {
+    if (!name || !email || !password || !confirmPassword || !role) {
+      Alert.alert("Error", "Please fill in all fields.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match.");
+      return;
+    }
+
     try {
-      setLoading(true);
-      const payload = { first_name: name.split(" ")[0] || name, last_name: name.split(" ").slice(1).join(" ") || "", email, password, role: "client" };
-      const res = await register(payload);
-      setLoading(false);
-      Alert.alert("Success", "Registered — please login");
-      navigation.replace("Login");
+      const api = await createAPI();
+      const res = await api.post("/auth/register", {
+        name,
+        email,
+        password,
+        role,
+      });
+
+      Alert.alert("Success", "Account created successfully!");
+      navigation.navigate("Login");
     } catch (err) {
-      setLoading(false);
-      console.error(err?.response?.data || err.message);
-      Alert.alert("Registration failed", err?.response?.data?.error || err?.response?.data?.message || "Unknown error");
+      console.error("❌ Registration failed:", err);
+      Alert.alert("Registration Failed", err.response?.data?.message || "Please try again later.");
     }
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Join VSXchangeZA</Text>
-      <TextInput placeholder="Full name" style={styles.input} value={name} onChangeText={setName} />
-      <TextInput placeholder="Email" style={styles.input} value={email} onChangeText={setEmail} keyboardType="email-address" autoCapitalize="none" />
-      <TextInput placeholder="Password" style={styles.input} value={password} onChangeText={setPassword} secureTextEntry />
-      <TouchableOpacity style={styles.button} onPress={doRegister}>
-        {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Register</Text>}
+
+      <TextInput
+        style={styles.input}
+        placeholder="Full Name"
+        value={name}
+        onChangeText={setName}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Confirm Password"
+        secureTextEntry
+        value={confirmPassword}
+        onChangeText={setConfirmPassword}
+      />
+
+      <Text style={styles.label}>Role</Text>
+      <View style={styles.pickerContainer}>
+        <Picker
+          selectedValue={role}
+          onValueChange={(itemValue) => setRole(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Select Role" value="" />
+          <Picker.Item label="Client" value="client" />
+          <Picker.Item label="Farmer" value="farmer" />
+          <Picker.Item label="Skilled Person" value="skilled" />
+        </Picker>
+      </View>
+
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Register</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity onPress={() => navigation.navigate("Login")} style={{ marginTop: 12 }}>
-        <Text style={{ color: "#444" }}>Already a client? Login</Text>
-      </TouchableOpacity>
-    </View>
+      <Text style={styles.switchText}>
+        Already a client?{" "}
+        <Text
+          style={styles.link}
+          onPress={() => navigation.navigate("Login")}
+        >
+          Login
+        </Text>
+      </Text>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: "center", padding: 20, backgroundColor: "#fff" },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 20, textAlign: "center" },
-  input: { borderWidth: 1, borderColor: "#ddd", padding: 12, borderRadius: 8, marginTop: 8 },
-  button: { backgroundColor: "#1f6feb", padding: 14, borderRadius: 8, marginTop: 16, alignItems: "center" },
-  btnText: { color: "#fff", fontWeight: "700" }
+  container: {
+    flexGrow: 1,
+    backgroundColor: "#0a0a0a",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  title: {
+    color: "#fff",
+    fontSize: 28,
+    fontWeight: "700",
+    marginBottom: 30,
+    textAlign: "center",
+  },
+  input: {
+    width: "100%",
+    backgroundColor: "#1a1a1a",
+    color: "#fff",
+    padding: 14,
+    marginBottom: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  label: {
+    alignSelf: "flex-start",
+    color: "#ccc",
+    marginBottom: 5,
+  },
+  pickerContainer: {
+    width: "100%",
+    backgroundColor: "#1a1a1a",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#333",
+    marginBottom: 20,
+  },
+  picker: {
+    color: "#fff",
+  },
+  button: {
+    backgroundColor: "#00C851",
+    padding: 16,
+    borderRadius: 8,
+    width: "100%",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "700",
+    fontSize: 16,
+  },
+  switchText: {
+    color: "#ccc",
+    fontSize: 14,
+  },
+  link: {
+    color: "#00C851",
+    fontWeight: "600",
+  },
 });
