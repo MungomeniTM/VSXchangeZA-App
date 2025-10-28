@@ -1,129 +1,58 @@
 // src/screens/LoginScreen.js
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  StyleSheet,
-  Alert,
-  ScrollView,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createAPI } from "../api";
+import { login } from "../api";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert("Error", "Please fill in all fields.");
-      return;
-    }
-
+  const submit = async () => {
+    if (!email || !password) return Alert.alert("Error", "Enter email and password.");
     try {
-      const api = await createAPI();
-      const res = await api.post("/auth/login", { email, password });
+      setLoading(true);
+      const res = await login({ email, password });
+      setLoading(false);
       const { token, user } = res.data;
-
       await AsyncStorage.setItem("token", token);
       await AsyncStorage.setItem("user", JSON.stringify(user));
-
-      Alert.alert("Welcome Back", `Hello, ${user.username || user.name}!`);
       navigation.replace("Dashboard");
     } catch (err) {
-      console.error("❌ Login failed:", err);
-      Alert.alert("Login Failed", err.response?.data?.message || "Please check your credentials.");
+      setLoading(false);
+      console.warn("Login failed:", err?.response?.data || err.message);
+      Alert.alert("Login failed", err?.response?.data?.detail || err?.response?.data?.message || "Invalid credentials");
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Welcome Back 👋</Text>
-      <Text style={styles.subtitle}>Sign in to continue to VSXchangeZA</Text>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{flex:1}}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.subtitle}>Sign in to continue</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        placeholderTextColor="#888"
-        keyboardType="email-address"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-      />
+        <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#9aa" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+        <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#9aa" secureTextEntry value={password} onChangeText={setPassword} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor="#888"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+        <TouchableOpacity style={styles.button} onPress={submit} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? "Signing in..." : "Login"}</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
-        <Text style={styles.buttonText}>Login</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.switchText}>
-        Don’t have an account?{" "}
-        <Text style={styles.link} onPress={() => navigation.navigate("Register")}>
-          Register
-        </Text>
-      </Text>
-    </ScrollView>
+        <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+          <Text style={styles.switch}>Create an account</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: "#0a0a0a",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  title: {
-    color: "#fff",
-    fontSize: 30,
-    fontWeight: "700",
-    marginBottom: 10,
-  },
-  subtitle: {
-    color: "#aaa",
-    fontSize: 15,
-    marginBottom: 30,
-  },
-  input: {
-    width: "100%",
-    backgroundColor: "#1a1a1a",
-    color: "#fff",
-    padding: 14,
-    marginBottom: 15,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#333",
-  },
-  button: {
-    backgroundColor: "#00C851",
-    padding: 16,
-    borderRadius: 8,
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  switchText: {
-    color: "#ccc",
-    fontSize: 14,
-  },
-  link: {
-    color: "#00C851",
-    fontWeight: "600",
-  },
+  container: { flexGrow: 1, padding: 20, backgroundColor: "#0d1117", alignItems: "center", justifyContent: "center" },
+  title: { color: "#fff", fontSize: 28, fontWeight: "800" },
+  subtitle: { color: "#9aa", marginBottom: 20 },
+  input: { width: "100%", backgroundColor: "#161b22", color: "#fff", padding: 12, marginBottom: 12, borderRadius: 8, borderWidth: 1, borderColor: "#222" },
+  button: { width: "100%", backgroundColor: "#00C851", padding: 14, borderRadius: 8, alignItems: "center", marginTop: 10 },
+  buttonText: { color: "#fff", fontWeight: "700" },
+  switch: { color: "#9aa", marginTop: 12 }
 });

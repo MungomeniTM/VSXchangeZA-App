@@ -1,27 +1,32 @@
 // src/screens/DashboardScreen.js
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, FlatList, StyleSheet, ActivityIndicator } from "react-native";
+import { View, Text, FlatList, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { fetchPosts } from "../api";
+import { fetchPosts, createAPI } from "../api";
+import PostCard from "../components/PostCard";
+import Header from "../components/Header";
 
 export default function DashboardScreen({ navigation }) {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       const res = await fetchPosts();
       setPosts(res.data || []);
-      setLoading(false);
     } catch (err) {
-      console.error(err);
+      console.warn("Fetch posts failed:", err?.response?.data || err.message);
+      Alert.alert("Error", "Unable to load posts.");
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    const sub = navigation.addListener("focus", load);
     load();
+    return sub;
   }, []);
 
   const logout = async () => {
@@ -30,33 +35,36 @@ export default function DashboardScreen({ navigation }) {
     navigation.replace("Login");
   };
 
-  const renderItem = ({ item }) => (
-    <View style={styles.card}>
-      <Text style={styles.name}>{item.user?.first_name || "Unknown"}</Text>
-      <Text style={styles.content}>{item.text || item.content}</Text>
-      {item.media_url ? <Text style={styles.media}>[Media]</Text> : null}
-    </View>
-  );
+  const onApprove = async (item) => {
+    try {
+      const api = await createAPI();
+      await api.post(`/posts/${item._id || item.id}/approve`);
+      Alert.alert("Approved", "You approved the post.");
+      load();
+    } catch (err) {
+      console.warn(err);
+      Alert.alert("Error", "Could not approve.");
+    }
+  };
+
+  const onComment = (item) => {
+    Alert.alert("Comment", "Comment UI not implemented yet.");
+  };
+
+  const onShare = (item) => {
+    Alert.alert("Share", "Share link or share sheet not implemented yet.");
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: "#fff" }}>
-      <View style={styles.header}>
-        <Text style={styles.hTitle}>VSXchangeZA</Text>
-        <TouchableOpacity onPress={logout}><Text style={{ color: "#1f6feb" }}>Logout</Text></TouchableOpacity>
-      </View>
-
-      {loading ? <ActivityIndicator style={{ marginTop: 30 }} /> :
-        <FlatList data={posts} keyExtractor={p => p._id || p.id} renderItem={renderItem} contentContainerStyle={{ padding: 12 }} />
-      }
+    <View style={{ flex: 1, backgroundColor: "#0d1117" }}>
+      <Header title="VSXchangeZA" onLogout={logout} />
+      {loading ? <ActivityIndicator style={{ marginTop: 30 }} /> : (
+        <FlatList data={posts} keyExtractor={(p) => p._id || p.id} renderItem={({ item }) => (
+          <PostCard item={item} onApprove={onApprove} onComment={onComment} onShare={onShare} />
+        )} contentContainerStyle={{ padding: 12 }} />
+      )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  header: { padding: 16, flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomColor: "#eee", borderBottomWidth: 1 },
-  hTitle: { fontSize: 20, fontWeight: "700" },
-  card: { backgroundColor: "#fff", padding: 12, borderRadius: 8, shadowColor: "#000", shadowOpacity: 0.06, marginBottom: 12, borderWidth: 1, borderColor: "#f1f1f1" },
-  name: { fontWeight: "700" },
-  content: { marginTop: 6, color: "#333" },
-  media: { marginTop: 8, color: "#888" }
-});
+const styles = StyleSheet.create({});
