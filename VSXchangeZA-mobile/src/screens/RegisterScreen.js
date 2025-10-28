@@ -8,171 +8,90 @@ import {
   StyleSheet,
   Alert,
   ScrollView,
-  Platform,
+  KeyboardAvoidingView,
+  Platform
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { createAPI } from "../api";
+import { register } from "../api";
 
 export default function RegisterScreen({ navigation }) {
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [role, setRole] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleRegister = async () => {
-    if (!name || !email || !password || !confirmPassword || !role) {
-      Alert.alert("Error", "Please fill in all fields.");
-      return;
+  const submit = async () => {
+    if (!email || !password || !firstName || !role || !confirmPassword) {
+      return Alert.alert("Error", "Please fill all required fields.");
     }
-    if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match.");
-      return;
-    }
+    if (password !== confirmPassword) return Alert.alert("Error", "Passwords do not match.");
 
     try {
-      const api = await createAPI();
-      const res = await api.post("/auth/register", {
-        name,
+      setLoading(true);
+      const payload = {
+        first_name: firstName,
+        last_name: lastName,
         email,
         password,
-        role,
-      });
-
-      Alert.alert("Success", "Account created successfully!");
-      navigation.navigate("Login");
+        role
+      };
+      const res = await register(payload);
+      setLoading(false);
+      Alert.alert("Success", "Registered. Please login.");
+      navigation.replace("Login");
     } catch (err) {
-      console.error("❌ Registration failed:", err);
-      Alert.alert("Registration Failed", err.response?.data?.message || "Please try again later.");
+      setLoading(false);
+      console.warn("Register error:", err?.response?.data || err?.message);
+      Alert.alert("Registration failed", err?.response?.data?.detail || err?.response?.data?.message || "Server error");
     }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Join VSXchangeZA</Text>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <Text style={styles.title}>Join VSXchangeZA</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Full Name"
-        value={name}
-        onChangeText={setName}
-      />
+        <View style={{ width: "100%", flexDirection: "row", gap: 8 }}>
+          <TextInput style={[styles.input, { flex: 1 }]} placeholder="First name" placeholderTextColor="#9aa" value={firstName} onChangeText={setFirstName} />
+          <TextInput style={[styles.input, { flex: 1 }]} placeholder="Last name" placeholderTextColor="#9aa" value={lastName} onChangeText={setLastName} />
+        </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
+        <TextInput style={styles.input} placeholder="Email" placeholderTextColor="#9aa" keyboardType="email-address" autoCapitalize="none" value={email} onChangeText={setEmail} />
+        <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#9aa" secureTextEntry value={password} onChangeText={setPassword} />
+        <TextInput style={styles.input} placeholder="Confirm Password" placeholderTextColor="#9aa" secureTextEntry value={confirmPassword} onChangeText={setConfirmPassword} />
 
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+        <Text style={styles.label}>Role</Text>
+        <View style={styles.pickerWrap}>
+          <Picker selectedValue={role} onValueChange={(v) => setRole(v)}>
+            <Picker.Item label="Select Role" value="" />
+            <Picker.Item label="Client" value="client" />
+            <Picker.Item label="Farmer" value="farmer" />
+            <Picker.Item label="Skilled Person" value="skilled" />
+          </Picker>
+        </View>
 
-      <TextInput
-        style={styles.input}
-        placeholder="Confirm Password"
-        secureTextEntry
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-      />
+        <TouchableOpacity style={styles.button} onPress={submit} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? "Registering..." : "Register"}</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.label}>Role</Text>
-      <View style={styles.pickerContainer}>
-        <Picker
-          selectedValue={role}
-          onValueChange={(itemValue) => setRole(itemValue)}
-          style={styles.picker}
-        >
-          <Picker.Item label="Select Role" value="" />
-          <Picker.Item label="Client" value="client" />
-          <Picker.Item label="Farmer" value="farmer" />
-          <Picker.Item label="Skilled Person" value="skilled" />
-        </Picker>
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={handleRegister}>
-        <Text style={styles.buttonText}>Register</Text>
-      </TouchableOpacity>
-
-      <Text style={styles.switchText}>
-        Already a client?{" "}
-        <Text
-          style={styles.link}
-          onPress={() => navigation.navigate("Login")}
-        >
-          Login
-        </Text>
-      </Text>
-    </ScrollView>
+        <TouchableOpacity onPress={() => navigation.navigate("Login")}>
+          <Text style={styles.switch}>Already a client? Login</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flexGrow: 1,
-    backgroundColor: "#0a0a0a",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
-  },
-  title: {
-    color: "#fff",
-    fontSize: 28,
-    fontWeight: "700",
-    marginBottom: 30,
-    textAlign: "center",
-  },
-  input: {
-    width: "100%",
-    backgroundColor: "#1a1a1a",
-    color: "#fff",
-    padding: 14,
-    marginBottom: 15,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#333",
-  },
-  label: {
-    alignSelf: "flex-start",
-    color: "#ccc",
-    marginBottom: 5,
-  },
-  pickerContainer: {
-    width: "100%",
-    backgroundColor: "#1a1a1a",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#333",
-    marginBottom: 20,
-  },
-  picker: {
-    color: "#fff",
-  },
-  button: {
-    backgroundColor: "#00C851",
-    padding: 16,
-    borderRadius: 8,
-    width: "100%",
-    alignItems: "center",
-    marginBottom: 20,
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "700",
-    fontSize: 16,
-  },
-  switchText: {
-    color: "#ccc",
-    fontSize: 14,
-  },
-  link: {
-    color: "#00C851",
-    fontWeight: "600",
-  },
+  container: { flexGrow: 1, padding: 20, backgroundColor: "#0d1117", alignItems: "center", justifyContent: "center" },
+  title: { color: "#fff", fontSize: 28, fontWeight: "800", marginBottom: 20 },
+  input: { width: "100%", backgroundColor: "#161b22", color: "#fff", padding: 12, marginBottom: 12, borderRadius: 8, borderWidth: 1, borderColor: "#222" },
+  label: { alignSelf: "flex-start", color: "#9aa", marginBottom: 6 },
+  pickerWrap: { width: "100%", backgroundColor: "#161b22", borderRadius: 8, marginBottom: 18, borderWidth: 1, borderColor: "#222" },
+  button: { width: "100%", backgroundColor: "#00C851", padding: 14, borderRadius: 8, alignItems: "center", marginTop: 6 },
+  buttonText: { color: "#fff", fontWeight: "700" },
+  switch: { color: "#9aa", marginTop: 14 }
 });
