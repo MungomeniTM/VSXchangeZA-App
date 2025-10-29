@@ -1,23 +1,25 @@
 // src/api.js
-// src/api.js
 import axios from "axios";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import * as Network from "expo-network";
 import { Platform } from "react-native";
 
+// 👇 Optional: manually override your Ngrok URL here
+// Replace this with your current Ngrok link (include /api at the end)
+const MANUAL_NGROK_URL = "https://abcd1234.ngrok-free.app/api";
+
+// Where we store ngrok URL (if saved in-app)
 const NGROK_FILE = `${FileSystem.documentDirectory}ngrok_url.txt`;
 
-// 🧠 Default fallback for local testing
+// 🧠 Default fallback for emulator/local dev
 const FALLBACK_LOCAL =
   Platform.OS === "android"
     ? "http://10.0.2.2:5000/api"
     : "http://localhost:5000/api";
 
 /**
- * 🧩 STEP 1 — Save Ngrok or backend URL persistently
- * Example usage:
- * await setAPIBaseURL("https://abc123.ngrok.io/api");
+ * ✅ STEP 1 — Save a new Ngrok or backend URL
  */
 export async function setAPIBaseURL(url) {
   try {
@@ -31,10 +33,16 @@ export async function setAPIBaseURL(url) {
 }
 
 /**
- * 🧩 STEP 2 — Load the API base URL automatically
+ * ✅ STEP 2 — Automatically load the best backend URL
  */
 export async function getAPIBaseURL() {
-  // 1️⃣ Check for manually saved ngrok URL
+  // 0️⃣ Use manual Ngrok override if set
+  if (MANUAL_NGROK_URL && MANUAL_NGROK_URL.startsWith("http")) {
+    console.log("🌍 Using MANUAL Ngrok URL:", MANUAL_NGROK_URL);
+    return MANUAL_NGROK_URL;
+  }
+
+  // 1️⃣ Check saved Ngrok URL in app storage
   try {
     const cached = await FileSystem.readAsStringAsync(NGROK_FILE);
     if (cached && cached.trim().startsWith("http")) {
@@ -45,7 +53,7 @@ export async function getAPIBaseURL() {
     // no saved URL
   }
 
-  // 2️⃣ Try detect local IP dynamically (for LAN testing)
+  // 2️⃣ Detect local IP dynamically (for LAN testing)
   try {
     const ip = await Network.getIpAddressAsync();
     if (ip) {
@@ -57,19 +65,20 @@ export async function getAPIBaseURL() {
     console.warn("⚠️ Could not detect local IP:", err.message || err);
   }
 
-  // 3️⃣ Fall back to emulator localhost
+  // 3️⃣ Fallback to emulator localhost
   console.log("📦 Using fallback local:", FALLBACK_LOCAL);
   return FALLBACK_LOCAL;
 }
 
 /**
- * 🧩 STEP 3 — Create pre-configured Axios instance
+ * ✅ STEP 3 — Create pre-configured Axios instance
  */
 export async function createAPI() {
   const baseURL = await getAPIBaseURL();
+
   const instance = axios.create({
     baseURL,
-    timeout: 15000,
+    timeout: 20000,
     headers: { Accept: "application/json" },
   });
 
@@ -80,16 +89,16 @@ export async function createAPI() {
     return config;
   });
 
-  // 🧠 Handle errors cleanly
+  // 🧠 Detailed error handling
   instance.interceptors.response.use(
     (res) => res,
     (err) => {
       if (err.response) {
-        console.error("❌ Server responded with:", err.response.status, err.response.data);
+        console.error("❌ Server Error:", err.response.status, err.response.data);
       } else if (err.request) {
-        console.error("⚠️ Network error (no response):", err.message);
+        console.error("⚠️ Network Error (no response):", err.message);
       } else {
-        console.error("🚨 Setup error:", err.message);
+        console.error("🚨 Request Setup Error:", err.message);
       }
       throw err;
     }
@@ -99,7 +108,7 @@ export async function createAPI() {
 }
 
 /**
- * 🚀 STEP 4 — Define reusable API calls
+ * 🚀 STEP 4 — Reusable API routes
  */
 export async function register(payload) {
   const api = await createAPI();
