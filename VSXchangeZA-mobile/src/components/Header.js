@@ -1,18 +1,30 @@
 // src/components/Header.js
 import React from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity } from "react-native";
+import { AntDesign, Feather } from "@expo/vector-icons";
+import styles, { COLORS } from "../styles/dashboardStyles";
 
-export default function Header({ title, onLogout }) {
+export default function Header({ onOpenSidebar, onSearch }) {
   return (
-    <View style={styles.header}>
-      <Text style={styles.title}>{title}</Text>
-      {onLogout ? <TouchableOpacity onPress={onLogout}><Text style={styles.logout}>Logout</Text></TouchableOpacity> : null}
+    <View style={styles.headerRow}>
+      <TouchableOpacity onPress={onOpenSidebar} accessibilityLabel="Open menu">
+        <Feather name="menu" size={22} color={COLORS.text} />
+      </TouchableOpacity>
+
+      <Text style={styles.brand}>VSXchangeZA</Text>
+
+      <View style={{ flex: 1, marginLeft: 12, marginRight: 12 }}>
+        <TextInput
+          placeholder="Search skills, people, farms…"
+          placeholderTextColor={COLORS.muted}
+          style={styles.searchInput}
+          onSubmitEditing={(e) => onSearch?.(e.nativeEvent.text)}
+        />
+      </View>
+
+      <TouchableOpacity onPress={() => onSearch?.("messages")}>
+        <AntDesign name="message1" size={20} color={COLORS.text} />
+      </TouchableOpacity>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  header: { padding: 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center", borderBottomColor: "#111827", borderBottomWidth: 1, backgroundColor: "#0d1117" },
-  title: { color: "#fff", fontWeight: "800", fontSize: 18 },
-  logout: { color: "#00C851", fontWeight: "700" }
-});
