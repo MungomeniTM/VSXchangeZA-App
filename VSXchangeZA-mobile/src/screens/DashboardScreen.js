@@ -95,5 +95,8 @@ export default function DashboardScreen({ navigation }) {
         <AnalyticsPanel style={styles.rightCol} />
       </View>
     </SafeAreaView>
+    <ScrollView>
+      <AnalyticsPanel />
+    </ScrollView>
   );
 }
