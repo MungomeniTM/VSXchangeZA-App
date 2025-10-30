@@ -14,7 +14,7 @@ import {
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
-import { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
+import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
 import { Canvas, Circle, useValue, runTiming } from '@shopify/react-native-skia';
 import AnalyticsPanel from '../components/AnalyticsPanel';
 import Sidebar from '../components/Sidebar';
@@ -41,7 +41,7 @@ export default function DashboardScreen() {
   const pulse = useValue(0);
   React.useEffect(() => {
     runTiming(pulse, 1, { duration: 2500 });
-  }, []);
+  }, [pulse]);
 
   return (
     <View style={{ flex: 1, backgroundColor: '#000' }}>
@@ -59,8 +59,72 @@ export default function DashboardScreen() {
           </TouchableOpacity>
           <Text style={styles.title}>VSXchangeZA</Text>
         </View>
-        <AnalyticsPanel style={styles.rightCol} />
-      </View>
-    </SafeAreaView>
+
+        {/* Sidebar */}
+        <Animated.View style={[styles.sidebarContainer, sidebarStyle]}>
+          <Sidebar onClose={toggleSidebar} />
+        </Animated.View>
+
+        {/* Main Scrollable Feed */}
+        <ScrollView
+          style={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: 120 }}
+        >
+          <AnalyticsPanel />
+        </ScrollView>
+
+        {/* Composer — for new posts or insights */}
+        <Composer />
+      </SafeAreaView>
+
+      {/* Skia Layer — cosmic pulse animation */}
+      <Canvas style={StyleSheet.absoluteFill}>
+        <Circle cx={200} cy={400} r={120 * pulse.current} color="rgba(0,255,255,0.1)" />
+      </Canvas>
+    </View>
   );
 }
+
+// =========================================================
+// Styles — minimal alien polish
+// =========================================================
+const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    paddingTop: 10,
+    backgroundColor: 'transparent',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  title: {
+    color: '#00FFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+    letterSpacing: 1.2,
+  },
+  menuBtn: {
+    padding: 6,
+  },
+  menuText: {
+    color: '#00FFFF',
+    fontSize: 24,
+  },
+  scroll: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  sidebarContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    bottom: 0,
+    width: 260,
+    zIndex: 10,
+  },
+});
