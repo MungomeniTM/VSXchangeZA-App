@@ -7,7 +7,7 @@ import { Platform } from "react-native";
 
 // 👇 Optional: manually override your Ngrok URL here
 // Replace this with your current Ngrok link (include /api at the end)
-const MANUAL_NGROK_URL = "https://abcd1234.ngrok-free.app/api";
+const MANUAL_NGROK_URL = "https://hugo-presurgical-rachelle.ngrok-free.dev/api";
 
 // Where we store ngrok URL (if saved in-app)
 const NGROK_FILE = `${FileSystem.documentDirectory}ngrok_url.txt`;
