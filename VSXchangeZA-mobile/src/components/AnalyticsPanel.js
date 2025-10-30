@@ -1,81 +1,66 @@
-// src/components/AnalyticsPanel.js
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { View, Text, Dimensions } from "react-native";
 import { LineChart } from "react-native-chart-kit";
-import styles, { COLORS } from "../styles/dashboardStyles";
-import { getAnalytics } from "../api";
+import { Canvas, Skia, useValue, runTiming, vec, Circle, useComputedValue } from "@shopify/react-native-skia";
+import styles from "../styles/dashboardStyles";
 
-const W = Dimensions.get("window").width - 32;
+const screenWidth = Dimensions.get("window").width;
 
 export default function AnalyticsPanel() {
-  const [data, setData] = useState({
-    labels: ["Jan", "Feb", "Mar", "Apr", "May"],
-    series: [12, 18, 25, 22, 28],
-  });
-  const [kpis, setKpis] = useState({ k1: "—", k2: "—", k3: "—" });
-
+  // small skia pulse behind KPIs
+  const t = useValue(0);
   useEffect(() => {
-    let mounted = true;
-    (async () => {
-      try {
-        const res = await getAnalytics();
-        if (!mounted) return;
-        // expected structure: { labels: [], series: [], kpis: {k1,k2,k3}, stats: {users,posts,farms}}
-        if (res?.data) {
-          const dd = res.data;
-          setData({
-            labels: dd.labels || data.labels,
-            series: dd.series || data.series,
-          });
-          setKpis(dd.kpis || kpis);
-        }
-      } catch (err) {
-        // ignore (keep demo data)
-      }
-    })();
-    return () => (mounted = false);
+    runTiming(t, 1, { duration: 3000, easing: Skia.Easing.inOut(Skia.Easing.cubic) }, () => {
+      t.current = 0;
+      // loop
+      runTiming(t, 1, { duration: 3000 }, () => {});
+    });
   }, []);
+
+  const pulse = useComputedValue(() => 1 + Math.sin((t.current || 0) * Math.PI * 2) * 0.08, [t]);
+
+  const data = {
+    labels: ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"],
+    datasets: [{ data: [20,45,28,80,99,43,65], strokeWidth: 2 }]
+  };
 
   return (
     <View style={styles.analyticsCard}>
-      <Text style={{ color: COLORS.text, fontWeight: "700", marginBottom: 8 }}>Data Analytics Preview</Text>
-
+      <Text style={styles.analyticsTitle}>Data Analytics Preview</Text>
       <LineChart
-        data={{
-          labels: data.labels,
-          datasets: [{ data: data.series }],
-        }}
-        width={W}
-        height={150}
-        yAxisLabel=""
+        data={data}
+        width={screenWidth * 0.28}
+        height={160}
         chartConfig={{
-          backgroundColor: COLORS.bg,
-          backgroundGradientFrom: COLORS.bg,
-          backgroundGradientTo: COLORS.bg,
+          backgroundGradientFrom: "#0b0c0f",
+          backgroundGradientTo: "#0b0c0f",
+          color: (opacity = 1) => `rgba(0,240,168,${opacity})`,
+          strokeWidth: 2,
           decimalPlaces: 0,
-          color: (opacity = 1) => `rgba(0,240,168, ${opacity})`,
-          labelColor: () => COLORS.muted,
-          style: { borderRadius: 12 },
-          propsForDots: { r: "4", strokeWidth: "2", stroke: COLORS.mint },
+          useShadowColorFromDataset: false,
         }}
         bezier
-        style={{ borderRadius: 12 }}
+        style={{ borderRadius: 12, marginBottom: 12 }}
       />
 
-      <View style={{ marginTop: 10, flexDirection: "row", justifyContent: "space-between" }}>
-        <View>
-          <Text style={{ color: COLORS.muted }}>Skill demand</Text>
-          <Text style={{ color: COLORS.blue, fontWeight: "800" }}>{kpis.k1 || "—"}</Text>
+      <View style={styles.kpiRow}>
+        <View style={styles.kpi}>
+          <Text style={styles.kpiValue}>↑ 42%</Text>
+          <Text style={styles.kpiLabel}>Skill demand</Text>
         </View>
-        <View>
-          <Text style={{ color: COLORS.muted }}>Farm growth</Text>
-          <Text style={{ color: COLORS.blue, fontWeight: "800" }}>{kpis.k2 || "—"}</Text>
+        <View style={styles.kpi}>
+          <Text style={styles.kpiValue}>↑ 18%</Text>
+          <Text style={styles.kpiLabel}>Farm growth</Text>
         </View>
-        <View>
-          <Text style={{ color: COLORS.muted }}>Avg approvals</Text>
-          <Text style={{ color: COLORS.blue, fontWeight: "800" }}>{kpis.k3 || "—"}</Text>
+        <View style={styles.kpi}>
+          <Text style={styles.kpiValue}>120+</Text>
+          <Text style={styles.kpiLabel}>Avg approvals</Text>
         </View>
       </View>
+
+      <Canvas style={{ height: 40, width: "100%" }}>
+        <Circle cx={50} cy={20} r={10} color="#00f0a8" opacity={0.08} transform={[{ scale: pulse }]} />
+      </Canvas>
     </View>
   );
 }
