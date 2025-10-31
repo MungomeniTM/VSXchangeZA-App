@@ -16,7 +16,6 @@ import {
   Canvas,
   Path,
   Skia,
-  useSharedValueEffect,
   useValue,
   useComputedValue,
   LinearGradient,
@@ -26,26 +25,34 @@ import {
 const { width } = Dimensions.get("window");
 
 export default function AnalyticsPanel() {
-  // ==============================
-  // Cosmic Data Points
-  // ==============================
+  // ============================================================
+  // Unified Shared Values — (Prevent redeclaration conflicts)
+  // ============================================================
   const t = useSharedValue(0);
-  const kpi1 = useSharedValue(0);
-  const kpi2 = useSharedValue(0);
-  const kpi3 = useSharedValue(0);
+  const kpi = {
+    users: useSharedValue(0),
+    collabs: useSharedValue(0),
+    projects: useSharedValue(0),
+  };
 
+  // ============================================================
+  // Initialize cosmic animation
+  // ============================================================
   useEffect(() => {
-    // Looping animation — smooth breathing wave
-    t.value = withRepeat(withTiming(1, { duration: 6000, easing: Easing.inOut(Easing.ease) }), -1, true);
-    kpi1.value = withTiming(2450, { duration: 4000, easing: Easing.out(Easing.cubic) });
-    kpi2.value = withTiming(3860, { duration: 4500, easing: Easing.out(Easing.cubic) });
-    kpi3.value = withTiming(1780, { duration: 4200, easing: Easing.out(Easing.cubic) });
+    t.value = withRepeat(
+      withTiming(1, { duration: 6000, easing: Easing.inOut(Easing.ease) }),
+      -1,
+      true
+    );
+
+    kpi.users.value = withTiming(2450, { duration: 4000, easing: Easing.out(Easing.cubic) });
+    kpi.collabs.value = withTiming(3860, { duration: 4500, easing: Easing.out(Easing.cubic) });
+    kpi.projects.value = withTiming(1780, { duration: 4200, easing: Easing.out(Easing.cubic) });
   }, []);
 
-  // ==============================
-  // Animated Path
-  // ==============================
-  const pathValue = useValue(0);
+  // ============================================================
+  // Skia Wave Path
+  // ============================================================
   const path = useComputedValue(() => {
     const amplitude = 30;
     const frequency = 4;
@@ -54,31 +61,39 @@ export default function AnalyticsPanel() {
     p.moveTo(0, baseline);
 
     for (let i = 0; i <= width; i++) {
-      const y = baseline + Math.sin((i / width) * Math.PI * frequency + t.value * Math.PI * 2) * amplitude;
+      const y =
+        baseline +
+        Math.sin((i / width) * Math.PI * frequency + t.value * Math.PI * 2) *
+          amplitude;
       p.lineTo(i, y);
     }
 
     return p;
   }, [t]);
 
-  // ==============================
-  // Animated KPI Values
-  // ==============================
+  // ============================================================
+  // KPI Animated Text Component
+  // ============================================================
   const AnimatedText = ({ value, label, color }) => {
-    const animatedStyle = useAnimatedStyle(() => ({
-      transform: [{ scale: withTiming(1 + Math.sin(t.value * Math.PI * 2) * 0.02) }],
+    const style = useAnimatedStyle(() => ({
+      transform: [{ scale: 1 + Math.sin(t.value * Math.PI * 2) * 0.02 }],
     }));
+
     return (
-      <Animated.View style={[styles.kpi, animatedStyle]}>
+      <Animated.View style={[styles.kpi, style]}>
         <Text style={[styles.kpiValue, { color }]}>{Math.round(value.value)}</Text>
         <Text style={styles.kpiLabel}>{label}</Text>
       </Animated.View>
     );
   };
 
+  // ============================================================
+  // Render Cosmic Analytics
+  // ============================================================
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Analytics Overview</Text>
+
       <Canvas style={styles.chart}>
         <Path path={path} style="stroke" strokeWidth={3}>
           <LinearGradient
@@ -90,14 +105,17 @@ export default function AnalyticsPanel() {
       </Canvas>
 
       <View style={styles.kpiRow}>
-        <AnimatedText value={kpi1} label="Active Users" color="#1e90ff" />
-        <AnimatedText value={kpi2} label="Collaborations" color="#00f0a8" />
-        <AnimatedText value={kpi3} label="Projects" color="#32cd32" />
+        <AnimatedText value={kpi.users} label="Active Users" color="#1e90ff" />
+        <AnimatedText value={kpi.collabs} label="Collaborations" color="#00f0a8" />
+        <AnimatedText value={kpi.projects} label="Projects" color="#32cd32" />
       </View>
     </View>
   );
 }
 
+// ============================================================
+// Styles — Cosmic Minimalism
+// ============================================================
 const styles = StyleSheet.create({
   container: {
     backgroundColor: "rgba(255,255,255,0.02)",

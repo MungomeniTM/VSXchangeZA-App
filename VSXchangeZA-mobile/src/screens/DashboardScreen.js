@@ -4,7 +4,7 @@
 //  DashboardScreen.js — flawless across iOS, Android & Web
 // ==============================
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -25,7 +25,7 @@ import CosmicBackground from '../components/CosmicBackground';
 // Cosmic Dashboard
 // =========================================================
 export default function DashboardScreen() {
-  // sidebar toggle state
+  // Sidebar toggle state
   const sidebarOpen = useSharedValue(0);
 
   const sidebarStyle = useAnimatedStyle(() => ({
@@ -38,19 +38,19 @@ export default function DashboardScreen() {
   };
 
   // Skia Cosmic Pulse (background motion)
-  const pulse = useSkiaValue(0);
+  const pulse = useValue(0);
   React.useEffect(() => {
     runTiming(pulse, 1, { duration: 2500 });
-  }, [pulse]);
+  }, []);
 
   return (
-    <View style={{ flex: 1, backgroundColor: '#000' }}>
+    <View style={styles.container}>
       <StatusBar barStyle="light-content" />
 
       {/* Cosmic Background */}
       <CosmicBackground />
 
-      {/* Safe Area Container */}
+      {/* Safe Area */}
       <SafeAreaView style={styles.safe}>
         {/* Header */}
         <View style={styles.header}>
@@ -65,7 +65,7 @@ export default function DashboardScreen() {
           <Sidebar onClose={toggleSidebar} />
         </Animated.View>
 
-        {/* Main Scrollable Feed */}
+        {/* Scrollable Feed */}
         <ScrollView
           style={styles.scroll}
           showsVerticalScrollIndicator={false}
@@ -74,11 +74,11 @@ export default function DashboardScreen() {
           <AnalyticsPanel />
         </ScrollView>
 
-        {/* Composer — for new posts or insights */}
+        {/* Composer */}
         <Composer />
       </SafeAreaView>
 
-      {/* Skia Layer — cosmic pulse animation */}
+      {/* Cosmic Pulse */}
       <Canvas style={StyleSheet.absoluteFill}>
         <Circle cx={200} cy={400} r={120 * pulse.current} color="rgba(0,255,255,0.1)" />
       </Canvas>
@@ -87,9 +87,13 @@ export default function DashboardScreen() {
 }
 
 // =========================================================
-// Styles — minimal alien polish
+// Styles — Minimal Alien Polish
 // =========================================================
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#000',
+  },
   safe: {
     flex: 1,
     paddingTop: 10,
