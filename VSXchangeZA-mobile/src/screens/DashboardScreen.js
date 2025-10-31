@@ -15,7 +15,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
-import { Canvas, Circle, useSharedValue as useSkiaValue, runTiming } from '@shopify/react-native-skia';
+import { Canvas, Circle, useValue, runTiming } from '@shopify/react-native-skia';
 import AnalyticsPanel from '../components/AnalyticsPanel';
 import Sidebar from '../components/Sidebar';
 import Composer from '../components/Composer';
@@ -37,11 +37,11 @@ export default function DashboardScreen() {
     sidebarOpen.value = sidebarOpen.value ? 0 : 1;
   };
 
-  // Skia Cosmic Pulse (background motion)
+  // Skia cosmic pulse
   const pulse = useValue(0);
-  React.useEffect(() => {
+  useEffect(() => {
     runTiming(pulse, 1, { duration: 2500 });
-  }, []);
+  }, [pulse]);
 
   return (
     <View style={styles.container}>
