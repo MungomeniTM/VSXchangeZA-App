@@ -1,6 +1,6 @@
 // ==============================
 // AnalyticsPanel.js — VSXchangeZA
-// Cosmic Alien-Grade Edition 👽
+// Cosmic Alien-Grade Edition 👽 (No Skia)
 // ==============================
 
 import React, { useEffect } from "react";
@@ -12,21 +12,12 @@ import Animated, {
   withRepeat,
   Easing,
 } from "react-native-reanimated";
-import {
-  Canvas,
-  Path,
-  Skia,
-  useValue,
-  useComputedValue,
-  LinearGradient,
-  vec,
-} from "@shopify/react-native-skia";
 
 const { width } = Dimensions.get("window");
 
 export default function AnalyticsPanel() {
   // ============================================================
-  // Unified Shared Values — (Prevent redeclaration conflicts)
+  // Shared values
   // ============================================================
   const t = useSharedValue(0);
   const kpi = {
@@ -36,7 +27,7 @@ export default function AnalyticsPanel() {
   };
 
   // ============================================================
-  // Initialize cosmic animation
+  // Initialize animations
   // ============================================================
   useEffect(() => {
     t.value = withRepeat(
@@ -44,35 +35,21 @@ export default function AnalyticsPanel() {
       -1,
       true
     );
-
     kpi.users.value = withTiming(2450, { duration: 4000, easing: Easing.out(Easing.cubic) });
     kpi.collabs.value = withTiming(3860, { duration: 4500, easing: Easing.out(Easing.cubic) });
     kpi.projects.value = withTiming(1780, { duration: 4200, easing: Easing.out(Easing.cubic) });
   }, []);
 
   // ============================================================
-  // Skia Wave Path
+  // Fake wave background (simple shimmer using opacity + scale)
   // ============================================================
-  const path = useComputedValue(() => {
-    const amplitude = 30;
-    const frequency = 4;
-    const baseline = 80;
-    const p = Skia.Path.Make();
-    p.moveTo(0, baseline);
-
-    for (let i = 0; i <= width; i++) {
-      const y =
-        baseline +
-        Math.sin((i / width) * Math.PI * frequency + t.value * Math.PI * 2) *
-          amplitude;
-      p.lineTo(i, y);
-    }
-
-    return p;
-  }, [t]);
+  const waveStyle = useAnimatedStyle(() => ({
+    opacity: 0.2 + Math.sin(t.value * Math.PI * 2) * 0.15,
+    transform: [{ scaleX: 1 + Math.sin(t.value * Math.PI * 2) * 0.05 }],
+  }));
 
   // ============================================================
-  // KPI Animated Text Component
+  // Animated KPI text
   // ============================================================
   const AnimatedText = ({ value, label, color }) => {
     const style = useAnimatedStyle(() => ({
@@ -88,21 +65,15 @@ export default function AnalyticsPanel() {
   };
 
   // ============================================================
-  // Render Cosmic Analytics
+  // Render
   // ============================================================
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Analytics Overview</Text>
 
-      <Canvas style={styles.chart}>
-        <Path path={path} style="stroke" strokeWidth={3}>
-          <LinearGradient
-            start={vec(0, 0)}
-            end={vec(width, 0)}
-            colors={["#1e90ff", "#00f0a8", "#32cd32"]}
-          />
-        </Path>
-      </Canvas>
+      <View style={styles.chartWrapper}>
+        <Animated.View style={[styles.fakeWave, waveStyle]} />
+      </View>
 
       <View style={styles.kpiRow}>
         <AnimatedText value={kpi.users} label="Active Users" color="#1e90ff" />
@@ -114,7 +85,7 @@ export default function AnalyticsPanel() {
 }
 
 // ============================================================
-// Styles — Cosmic Minimalism
+// Styles — clean cosmic minimalism
 // ============================================================
 const styles = StyleSheet.create({
   container: {
@@ -137,9 +108,18 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1.2,
   },
-  chart: {
+  chartWrapper: {
     width: "100%",
     height: 120,
+    overflow: "hidden",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  fakeWave: {
+    width: width * 0.8,
+    height: 80,
+    backgroundColor: "linear-gradient(90deg, #1e90ff, #00f0a8, #32cd32)",
+    borderRadius: 50,
   },
   kpiRow: {
     flexDirection: "row",
