@@ -1,7 +1,7 @@
-// ==============================
+// ======================================================
 // Composer.js — VSXchangeZA
-// Cosmic Alien-Grade Edition 👽
-// ==============================
+// Galactic Intelligence Edition 👽
+// ======================================================
 
 import React, { useState } from "react";
 import {
@@ -11,8 +11,16 @@ import {
   Text,
   Image,
   Alert,
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import * as Haptics from "expo-haptics";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+} from "react-native-reanimated";
 import styles from "../styles/dashboardStyles";
 import { createAPI } from "../api";
 
@@ -21,9 +29,33 @@ export default function Composer({ onPosted }) {
   const [fileUri, setFileUri] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // ==============================
-  // Media Picker (optimized for Expo)
-  // ==============================
+  // ======================================================
+  // Cosmic animation values
+  // ======================================================
+  const pulse = useSharedValue(0);
+  const glow = useSharedValue(0);
+
+  const animatedAttach = useAnimatedStyle(() => {
+    const scale = interpolate(pulse.value, [0, 1], [1, 1.08]);
+    const opacity = interpolate(pulse.value, [0, 1], [0.5, 1]);
+    return {
+      transform: [{ scale }],
+      opacity,
+      shadowColor: "#0ff",
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.3,
+      shadowRadius: 10,
+    };
+  });
+
+  const animatedPost = useAnimatedStyle(() => {
+    const scale = interpolate(glow.value, [0, 1], [1, 1.05]);
+    return { transform: [{ scale }] };
+  });
+
+  // ======================================================
+  // Media Picker
+  // ======================================================
   const pickMedia = async () => {
     try {
       const res = await ImagePicker.launchImageLibraryAsync({
@@ -32,8 +64,13 @@ export default function Composer({ onPosted }) {
         aspect: [4, 3],
         quality: 0.7,
       });
+
       if (!res.canceled && res.assets?.length > 0) {
         setFileUri(res.assets[0].uri);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+        pulse.value = withTiming(1, { duration: 200 }, () => {
+          pulse.value = withTiming(0, { duration: 400 });
+        });
       }
     } catch (err) {
       console.warn("media picker error:", err);
@@ -41,18 +78,20 @@ export default function Composer({ onPosted }) {
     }
   };
 
-  // ==============================
-  // Post Submit Handler
-  // ==============================
+  // ======================================================
+  // Submit Post
+  // ======================================================
   const submit = async () => {
     if (!text.trim() && !fileUri) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return Alert.alert("Empty Post", "Write something or attach a file.");
     }
 
     try {
       setLoading(true);
-      const api = await createAPI();
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
+      const api = await createAPI();
       const form = new FormData();
       form.append("text", text);
 
@@ -69,21 +108,27 @@ export default function Composer({ onPosted }) {
         headers: { "Content-Type": "multipart/form-data" },
       });
 
-      // Reset after success
+      // Success feedback
+      glow.value = withTiming(1, { duration: 300 }, () => {
+        glow.value = withTiming(0, { duration: 400 });
+      });
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
       setText("");
       setFileUri(null);
       onPosted?.();
     } catch (err) {
       console.warn("post error:", err);
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       Alert.alert("Error", "Could not create post. Try again.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ==============================
-  // Render Composer UI
-  // ==============================
+  // ======================================================
+  // Render UI
+  // ======================================================
   return (
     <View style={styles.composerCard}>
       {/* Input Row */}
@@ -94,14 +139,14 @@ export default function Composer({ onPosted }) {
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="Share your work, project, or insight…"
+          placeholder="Broadcast your brilliance to the galaxy…"
           placeholderTextColor="#9aa"
           style={styles.composerInput}
           multiline
         />
       </View>
 
-      {/* Preview */}
+      {/* Media Preview */}
       {fileUri && (
         <Image
           source={{ uri: fileUri }}
@@ -110,11 +155,13 @@ export default function Composer({ onPosted }) {
         />
       )}
 
-      {/* Actions */}
+      {/* Action Row */}
       <View style={styles.composerActions}>
-        <TouchableOpacity style={styles.ghostBtn} onPress={pickMedia}>
-          <Text style={styles.ghostText}>Attach</Text>
-        </TouchableOpacity>
+        <Animated.View style={animatedAttach}>
+          <TouchableOpacity style={styles.ghostBtn} onPress={pickMedia}>
+            <Text style={styles.ghostText}>Attach</Text>
+          </TouchableOpacity>
+        </Animated.View>
 
         <View style={{ flex: 1 }} />
 
@@ -125,15 +172,17 @@ export default function Composer({ onPosted }) {
           <Text style={styles.ghostText}>Preview</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.primaryBtnSmall}
-          onPress={submit}
-          disabled={loading}
-        >
-          <Text style={styles.primaryBtnText}>
-            {loading ? "Posting..." : "Post"}
-          </Text>
-        </TouchableOpacity>
+        <Animated.View style={animatedPost}>
+          <TouchableOpacity
+            style={styles.primaryBtnSmall}
+            onPress={submit}
+            disabled={loading}
+          >
+            <Text style={styles.primaryBtnText}>
+              {loading ? "Transmitting..." : "Post 🚀"}
+            </Text>
+          </TouchableOpacity>
+        </Animated.View>
       </View>
     </View>
   );
