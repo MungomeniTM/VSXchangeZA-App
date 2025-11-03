@@ -1,20 +1,7 @@
-// ============================================================
-// CosmicBackground.js — VSXchangeZA
-// Alien Nebula Matrix 👽 (No Skia, Pure Reanimated + RN)
-// ============================================================
-
-import React, { useEffect } from "react";
-import { View, StyleSheet, Dimensions } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withRepeat,
-  Easing,
-  interpolate,
-} from "react-native-reanimated";
-
-const { width, height } = Dimensions.get("window");
+// src/components/CosmicBackground.js
+import React from "react";
+import { View, StyleSheet } from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withRepeat, withTiming, Easing } from "react-native-reanimated";
 
 export default function CosmicBackground() {
   // ============================================================
@@ -36,7 +23,7 @@ export default function CosmicBackground() {
       -1,
       true
     );
-  }, [phase, glow]);
+  }, []);
 
   // ============================================================
   // Layers — nebula cores + shifting gradients
@@ -88,53 +75,16 @@ export default function CosmicBackground() {
     };
   });
 
-  // ============================================================
-  // Render — layers of shifting cosmic plasma
-  // ============================================================
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Animated.View style={[styles.nebula, styles.nebula1, nebula1]} />
-      <Animated.View style={[styles.nebula, styles.nebula2, nebula2]} />
-      <Animated.View style={[styles.nebula, styles.nebula3, nebula3]} />
-
-      {/* Dim cosmic haze overlay */}
-      <View style={styles.overlay} />
+      <Animated.View style={[styles.layer, { backgroundColor: "#001019" }, glowStyle]} />
+      <Animated.View style={[styles.circle, { backgroundColor: "#002033", right: 30, top: 80, opacity: 0.12 }]} />
+      <Animated.View style={[styles.circle, { backgroundColor: "#003040", left: 20, top: 220, opacity: 0.1 }]} />
     </View>
   );
 }
 
-// ============================================================
-// Styles — smooth alien atmosphere
-// ============================================================
 const styles = StyleSheet.create({
-  nebula: {
-    position: "absolute",
-    borderRadius: 9999,
-    blurRadius: 120,
-  },
-  nebula1: {
-    width: width * 0.9,
-    height: width * 0.9,
-    backgroundColor: "rgba(0,255,255,0.25)",
-    top: height * 0.05,
-    left: -width * 0.25,
-  },
-  nebula2: {
-    width: width * 0.7,
-    height: width * 0.7,
-    backgroundColor: "rgba(0,128,255,0.3)",
-    bottom: height * 0.15,
-    right: -width * 0.2,
-  },
-  nebula3: {
-    width: width * 0.8,
-    height: width * 0.8,
-    backgroundColor: "rgba(255,0,128,0.2)",
-    top: height * 0.35,
-    left: width * 0.25,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(0,0,20,0.6)",
-  },
+  layer: { ...StyleSheet.absoluteFillObject },
+  circle: { position: "absolute", width: 220, height: 220, borderRadius: 110 },
 });
