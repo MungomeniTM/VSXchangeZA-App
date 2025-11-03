@@ -36,7 +36,7 @@ export default function CosmicBackground() {
       -1,
       true
     );
-  }, []);
+  }, [phase, glow]);
 
   // ============================================================
   // Layers — nebula cores + shifting gradients

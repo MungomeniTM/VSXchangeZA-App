@@ -65,3 +65,45 @@ export default StyleSheet.create({
   kpiLabel: { color: "#9aa3ad", fontSize: 12 },
   feedList: { paddingBottom: 60 },
 });
+// =========================================================
+// Styles — sleek alien polish
+// =========================================================
+export const styles = StyleSheet.create({
+  safe: {
+    flex: 1,
+    paddingTop: 10,
+    backgroundColor: 'transparent',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  title: {
+    color: '#00FFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+    letterSpacing: 1.2,
+  },
+  menuBtn: {
+    padding: 6,
+  },
+  menuText: {
+    color: '#00FFFF',
+    fontSize: 24,
+  },
+  scroll: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  sidebarContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    bottom: 0,
+    width: 260,
+    zIndex: 10,
+  },
+});
