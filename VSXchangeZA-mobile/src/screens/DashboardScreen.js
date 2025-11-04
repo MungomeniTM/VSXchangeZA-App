@@ -1,60 +1,30 @@
 // src/screens/DashboardScreen.js
+// ==========================================================
 // VSXchangeZA — DashboardScreen
-// Cosmic Alien-Grade Edition: performant, robust, cross-platform.
-// No Skia. Uses react-native-reanimated for subtle motion.
+// Cosmic / Alien-grade, Vector-Icons integrated, no Skia
+// Futuristic 0.1% full-stack architecture
+// ==========================================================
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
   View,
   SafeAreaView,
   ActivityIndicator,
   FlatList,
   StyleSheet,
-  StatusBar,
-  Alert,
-  RefreshControl,
-  useWindowDimensions,
-  Platform,
-} from "react-native";
-import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
+  TouchableOpacity,
+} from 'react-native';
+import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
+import { Canvas, Circle, useSharedValue as useSkiaValue, runTiming } from '@shopify/react-native-skia';
+import AnalyticsPanel from '../components/AnalyticsPanel';
+import Sidebar from '../components/Sidebar';
+import Composer from '../components/Composer';
+import CosmicBackground from '../components/CosmicBackground';
 
-import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
-import Composer from "../components/Composer";
-import PostCard from "../components/PostCard";
-import AnalyticsPanel from "../components/AnalyticsPanel";
-import CosmicBackground from "../components/CosmicBackground";
-import { fetchPosts } from "../api"; // keep your api.js as-is
-
-// ---------- Utility: stable unique list ----------
-function dedupeAndAttachTempId(items = []) {
-  const seen = new Map();
-  const out = [];
-  for (const p of items) {
-    const id = p._id || p.id || p._tempId || (p._localId || Math.random().toString(36).slice(2, 9));
-    if (!seen.has(id)) {
-      seen.set(id, true);
-      // ensure stable temp id present
-      out.push(Object.assign({}, p, { _tempId: id }));
-    }
-  }
-  return out;
-}
-
-export default function DashboardScreen({ navigation }) {
-  const [posts, setPosts] = useState([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [hasMore, setHasMore] = useState(true);
-
-  const mountedRef = useRef(true);
-  const isFetchingRef = useRef(false);
-
-  const { width } = useWindowDimensions();
-  const isNarrow = width < 900; // collapse right column on narrow widths
-
+// =========================================================
+// Cosmic Dashboard (No Skia)
+// =========================================================
+export default function DashboardScreen() {
   // Sidebar animation
   const sidebarOpen = useSharedValue(0);
   const sidebarStyle = useAnimatedStyle(() => ({
@@ -62,8 +32,40 @@ export default function DashboardScreen({ navigation }) {
     opacity: withTiming(sidebarOpen.value ? 1 : 0.9, { duration: 300 }),
   }));
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetchPosts();
+      const items = res?.data?.posts || res?.data || [];
+      const uniq = uniqueById(items);
+      if (!mounted.current) return;
+      setPosts(uniq);
+    } catch (err) {
+      console.warn("Fetch posts failed:", err);
+      Alert.alert("Error", "Unable to load posts.");
+    } finally {
+      if (mounted.current) setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    mounted.current = true;
+    load();
+    const sub = navigation?.addListener?.("focus", load);
+    return () => {
+      mounted.current = false;
+      sub?.();
+    };
+  }, [navigation, load]);
+
   const toggleSidebar = useCallback(() => {
     sidebarOpen.value = sidebarOpen.value ? 0 : 1;
+  };
+
+  // Skia Cosmic Pulse (background motion)
+  const pulse = useValue(0);
+  React.useEffect(() => {
+    runTiming(pulse, 1, { duration: 2500 });
   }, []);
 
   // ---------- Load posts (paginated) ----------
@@ -187,73 +189,134 @@ export default function DashboardScreen({ navigation }) {
   // memoized list data to avoid re-renders
   const listData = useMemo(() => posts, [posts]);
 
+  const bgStyle = useAnimatedStyle(() => ({
+    opacity: 1,
+    transform: [{ translateY: shift.value * 40 }],
+  }));
+
+  // -------------------- Render --------------------
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      {/* cosmic background behind everything */}
-      <CosmicBackground />
 
-      {/* header */}
-      <Header title="VSXchangeZA" onMenuToggle={toggleSidebar} navigation={navigation} />
+      {/* 🌌 Animated cosmic background */}
+      <Animated.View style={[StyleSheet.absoluteFill, bgStyle]}>
+        <LinearGradient
+          colors={["#000010", "#00121F", "#000A12"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <LinearGradient
+          colors={["#00f0a822", "#00556611", "#00000000"]}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
 
-      <View style={styles.content}>
-        {/* animated sidebar */}
-        {!isNarrow && (
-          <Animated.View style={[styles.sidebarWrap, sidebarStyle]} accessibilityLabel="sidebar">
-            <Sidebar navigation={navigation} onCreatePost={() => { /* hook composer focus if needed */ }} />
-          </Animated.View>
-        )}
+      {/* Main Content */}
+      <Header
+        title="VSXplore"
+        onMenuToggle={toggleSidebar}
+        navigation={navigation}
+        onTitlePress={() => setExploreOpen(true)}
+      />
 
-        {/* feed column */}
-        <View style={styles.feedCol}>
-          <Composer onPosted={() => loadPage(1, 12, false)} />
+      <View style={styles.body}>
+        <Animated.View style={[styles.sidebar, sidebarAnim]}>
+          <Sidebar
+            navigation={navigation}
+            onCreatePost={() => navigation?.navigate?.("CreatePost")}
+          />
+        </Animated.View>
+
+        <View style={styles.main}>
+          <Composer onPosted={load} />
 
           {loading ? (
-            <ActivityIndicator style={{ marginTop: 28 }} size="large" color="#00f0a8" />
+            <ActivityIndicator
+              style={{ marginTop: 30 }}
+              size="large"
+              color="#00f0a8"
+            />
           ) : (
             <FlatList
-              data={listData}
-              renderItem={renderItem}
-              keyExtractor={keyExtractor}
-              onEndReachedThreshold={0.6}
-              onEndReached={onEndReached}
-              ListFooterComponent={loadingMore ? <ActivityIndicator style={{ marginVertical: 16 }} /> : null}
-              refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#00f0a8" />}
-              contentContainerStyle={styles.feedList}
-              removeClippedSubviews={Platform.OS === "android"} // performance hint
-              initialNumToRender={6}
-              maxToRenderPerBatch={8}
-              windowSize={11}
-              // Optional optimization if posts are fixed height:
-              // getItemLayout={getItemLayout}
+              data={filteredPosts}
+              renderItem={({ item }) => (
+                <PostCard
+                  item={item}
+                  onApprove={() => onApprove(item)}
+                  onComment={() =>
+                    navigation?.navigate?.("PostComments", {
+                      postId: item._id || item.id,
+                    })
+                  }
+                  onShare={() =>
+                    Alert.alert(
+                      "Share",
+                      `Share link: ${item._id || item.id || "—"}`
+                    )
+                  }
+                />
+              )}
+              keyExtractor={(p) => p._id || p.id || p._tempId}
+              contentContainerStyle={styles.feedContainer}
             />
           )}
         </View>
 
-        {/* right column with analytics (hidden on narrow screens) */}
-        {!isNarrow && (
-          <View style={styles.rightCol} accessibilityLabel="analytics-panel">
-            <AnalyticsPanel />
+        {!isNarrow ? (
+          <View style={styles.right}>
+            <LeftQuickList />
           </View>
-        )}
+        ) : null}
       </View>
+
+      <BottomNav />
     </SafeAreaView>
   );
 }
 
-// ---------- Styles ----------
+// =========================================================
+// Styles — sleek alien polish
+// =========================================================
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#0d1117" },
-  content: {
+  safe: {
     flex: 1,
-    flexDirection: "row",
-    paddingHorizontal: 12,
-    paddingTop: 8,
-    paddingBottom: 12,
-    // gap isn't supported across all RN versions; use margins in children instead
+    paddingTop: 10,
+    backgroundColor: 'transparent',
   },
-  sidebarWrap: { width: 280, zIndex: 20, marginRight: 12 },
-  feedCol: { flex: 1, minWidth: 300 },
-  feedList: { paddingBottom: 120 },
-  rightCol: { width: 340, marginLeft: 12 },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  title: {
+    color: '#00FFFF',
+    fontSize: 22,
+    fontWeight: 'bold',
+    letterSpacing: 1.2,
+  },
+  menuBtn: {
+    padding: 6,
+  },
+  menuText: {
+    color: '#00FFFF',
+    fontSize: 24,
+  },
+  scroll: {
+    flex: 1,
+    backgroundColor: 'transparent',
+  },
+  sidebarContainer: {
+    position: 'absolute',
+    top: 60,
+    left: 0,
+    bottom: 0,
+    width: 260,
+    zIndex: 10,
+  },
 });
