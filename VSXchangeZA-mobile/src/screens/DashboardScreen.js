@@ -1,9 +1,9 @@
 // src/screens/DashboardScreen.js
-// ==============================
+// ==========================================================
 // VSXchangeZA — DashboardScreen
-// Cosmic / Alien-grade, Reanimated-powered, no Skia
-// Paste into src/screens/DashboardScreen.js
-// ==============================
+// Cosmic / Alien-grade, Vector-Icons integrated, no Skia
+// Futuristic 0.1% full-stack architecture
+// ==========================================================
 
 import React, { useCallback, useEffect, useState, useRef } from "react";
 import {
@@ -25,15 +25,20 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
+  withSpring,
   Easing,
 } from "react-native-reanimated";
+import Icon from "react-native-vector-icons/Ionicons";
 
-import Header from "../components/Header"; // existing header (title + menu)
-import Composer from "../components/Composer"; // existing composer (create post)
-import PostCard from "../components/PostCard"; // existing post card
-import AnalyticsPanel from "../components/AnalyticsPanel"; // existing analytics (optional)
-import Sidebar from "../components/Sidebar"; // optional; used for left panel
-import { fetchPosts, approvePost } from "../api"; // keep your api.js as-is
+// 🪐 ADD: cosmic gradient import
+import { LinearGradient } from "expo-linear-gradient";
+
+import Header from "../components/Header";
+import Composer from "../components/Composer";
+import PostCard from "../components/PostCard";
+import AnalyticsPanel from "../components/AnalyticsPanel";
+import Sidebar from "../components/Sidebar";
+import { fetchPosts, approvePost } from "../api";
 
 // --------------------
 // Utilities
@@ -41,17 +46,18 @@ import { fetchPosts, approvePost } from "../api"; // keep your api.js as-is
 function uniqueById(items = []) {
   const map = new Map();
   for (const p of items) {
-    const id = p._id || p.id || (p._tempId || Math.random().toString(36).slice(2, 9));
+    const id =
+      p._id || p.id || p._tempId || Math.random().toString(36).slice(2, 9);
     if (!map.has(id)) map.set(id, { ...p, _tempId: id });
   }
   return Array.from(map.values());
 }
 
-// simple responsive clamp
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // --------------------
-// Skill set (default)
+// Skill set
+// --------------------
 const SKILLS = [
   "Carpentry",
   "Electrical",
@@ -72,27 +78,40 @@ export default function DashboardScreen({ navigation }) {
   const { width } = useWindowDimensions();
   const isNarrow = width < 760;
 
-  // state
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const mounted = useRef(true);
 
-  // sidebar animation
   const sidebarOpen = useSharedValue(isNarrow ? 0 : 1);
   const sidebarAnim = useAnimatedStyle(() => ({
-    transform: [{ translateX: withTiming(sidebarOpen.value ? 0 : -300, { duration: 360, easing: Easing.out(Easing.cubic) }) }],
+    transform: [
+      {
+        translateX: withTiming(sidebarOpen.value ? 0 : -300, {
+          duration: 360,
+          easing: Easing.out(Easing.cubic),
+        }),
+      },
+    ],
     opacity: withTiming(sidebarOpen.value ? 1 : 0.9, { duration: 260 }),
   }));
 
-  // explore modal (top VSXplore)
   const [exploreOpen, setExploreOpen] = useState(false);
   const [skillQuery, setSkillQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState(new Set());
-
-  // fab state
   const [fabOpen, setFabOpen] = useState(false);
 
-  // load posts (dedupe + stable keys)
+  const rotation = useSharedValue(0);
+  const fabStyle = useAnimatedStyle(() => ({
+    transform: [
+      {
+        rotate: `${withSpring(rotation.value, {
+          damping: 12,
+          stiffness: 120,
+        })}deg`,
+      },
+    ],
+  }));
+
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -102,7 +121,7 @@ export default function DashboardScreen({ navigation }) {
       if (!mounted.current) return;
       setPosts(uniq);
     } catch (err) {
-      console.warn("Fetch posts failed:", err?.response?.data || err?.message || err);
+      console.warn("Fetch posts failed:", err);
       Alert.alert("Error", "Unable to load posts.");
     } finally {
       if (mounted.current) setLoading(false);
@@ -113,326 +132,296 @@ export default function DashboardScreen({ navigation }) {
     mounted.current = true;
     load();
     const sub = navigation?.addListener?.("focus", load);
-    return () => { mounted.current = false; sub?.(); };
+    return () => {
+      mounted.current = false;
+      sub?.();
+    };
   }, [navigation, load]);
 
-  // toggle sidebar
-  const toggleSidebar = () => { sidebarOpen.value = sidebarOpen.value ? 0 : 1; };
+  const toggleSidebar = () => {
+    sidebarOpen.value = sidebarOpen.value ? 0 : 1;
+  };
 
-  // approve handler (optimistic)
   const onApprove = async (item) => {
     try {
-      setPosts(prev => prev.map(p => (p._id === item._id ? { ...p, approvals: (p.approvals || 0) + 1 } : p)));
-      // call api (approvePost exported from api.js)
+      setPosts((prev) =>
+        prev.map((p) =>
+          p._id === item._id
+            ? { ...p, approvals: (p.approvals || 0) + 1 }
+            : p
+        )
+      );
       if (approvePost) await approvePost(item._id || item.id);
     } catch (err) {
       console.warn("approve error:", err);
       Alert.alert("Error", "Could not approve.");
-      // rollback: reload
       load();
     }
   };
 
-  // filter posts by active skill filters & search
-  const filteredPosts = posts.filter(p => {
+  const filteredPosts = posts.filter((p) => {
     if (!activeFilters.size) return true;
-    const userSkills = (p.user?.skills || p.skills || []).map(s => String(s || "").toLowerCase());
+    const userSkills = (p.user?.skills || p.skills || []).map((s) =>
+      String(s || "").toLowerCase()
+    );
     for (const f of activeFilters) {
-      if (userSkills.includes(String(f).toLowerCase()) || (p.tags || []).map(t => String(t).toLowerCase()).includes(String(f).toLowerCase())) {
+      if (
+        userSkills.includes(String(f).toLowerCase()) ||
+        (p.tags || [])
+          .map((t) => String(t).toLowerCase())
+          .includes(String(f).toLowerCase())
+      ) {
         return true;
       }
     }
     return false;
   });
 
-  // search skills for explore panel
-  const skillHits = SKILLS.filter(s => s.toLowerCase().includes(skillQuery.trim().toLowerCase()));
+  const skillHits = SKILLS.filter((s) =>
+    s.toLowerCase().includes(skillQuery.trim().toLowerCase())
+  );
 
-  // bottom nav
+  // -------------------- Bottom Navigation --------------------
   const BottomNav = () => (
     <View style={styles.bottomNavWrap}>
       <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.bottomBtn} onPress={() => navigation?.navigate?.("Dashboard")}>
-          <Text style={styles.bottomIcon}>🏠</Text>
+        <TouchableOpacity
+          style={styles.bottomBtn}
+          onPress={() => navigation?.navigate?.("Dashboard")}
+        >
+          <Icon name="home-outline" size={24} color="#00f0a8" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.bottomBtn} onPress={() => setExploreOpen(true)}>
-          <Text style={styles.bottomIcon}>🔍</Text>
+        <TouchableOpacity
+          style={styles.bottomBtn}
+          onPress={() => setExploreOpen(true)}
+        >
+          <Icon name="search-outline" size={24} color="#00f0a8" />
         </TouchableOpacity>
 
         <View style={{ width: 56 }} />
 
-        <TouchableOpacity style={styles.bottomBtn} onPress={() => navigation?.navigate?.("Messages")}>
-          <Text style={styles.bottomIcon}>💬</Text>
+        <TouchableOpacity
+          style={styles.bottomBtn}
+          onPress={() => navigation?.navigate?.("Messages")}
+        >
+          <Icon name="chatbubble-ellipses-outline" size={24} color="#00f0a8" />
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.bottomBtn} onPress={() => navigation?.navigate?.("Profile")}>
-          <Text style={styles.bottomIcon}>👤</Text>
+        <TouchableOpacity
+          style={styles.bottomBtn}
+          onPress={() => navigation?.navigate?.("Profile")}
+        >
+          <Icon name="person-outline" size={24} color="#00f0a8" />
         </TouchableOpacity>
       </View>
 
-      {/* FAB */}
-      <TouchableOpacity
-        activeOpacity={0.9}
-        onPress={() => { setFabOpen(v => !v); navigation?.navigate?.("CreatePost"); }}
-        style={styles.fab}
-      >
-        <Text style={styles.fabText}>＋</Text>
-      </TouchableOpacity>
+      {/* Floating Action Button */}
+      <Animated.View style={[styles.fab, fabStyle]}>
+        <TouchableOpacity
+          activeOpacity={0.9}
+          onPress={() => {
+            rotation.value += 45;
+            setFabOpen((v) => !v);
+            navigation?.navigate?.("CreatePost");
+          }}
+        >
+          <Icon name="add-circle" size={64} color="#00f0a8" />
+        </TouchableOpacity>
+      </Animated.View>
     </View>
   );
 
-  // render post list item wrapper to pass handlers
-  const renderItem = ({ item }) => (
-    <PostCard
-      item={item}
-      onApprove={() => onApprove(item)}
-      onComment={() => navigation?.navigate?.("PostComments", { postId: item._id || item.id })}
-      onShare={() => Alert.alert("Share", `Share link: ${item._id || item.id || "—"}`)}
-    />
-  );
-
-  // Quick left links (Analytics, Farms, Collaborate, Equipment)
+  // -------------------- Quick Access Section --------------------
   const LeftQuickList = () => (
     <View accessible style={styles.leftQuick}>
-      <TouchableOpacity style={styles.quickItem} onPress={() => navigation?.navigate?.("Analytics")}>
-        <Text style={styles.quickLabel}>Analytics</Text>
+      <TouchableOpacity
+        style={styles.quickItem}
+        onPress={() => navigation?.navigate?.("Analytics")}
+      >
+        <Icon name="analytics-outline" size={18} color="#00f0a8" />
+        <Text style={styles.quickLabel}> Analytics</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.quickItem} onPress={() => navigation?.navigate?.("Farms")}>
-        <Text style={styles.quickLabel}>Farms</Text>
+      <TouchableOpacity
+        style={styles.quickItem}
+        onPress={() => navigation?.navigate?.("Farms")}
+      >
+        <Icon name="leaf-outline" size={18} color="#00f0a8" />
+        <Text style={styles.quickLabel}> Farms</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.quickItem} onPress={() => navigation?.navigate?.("Collaborate")}>
-        <Text style={styles.quickLabel}>Collaborate</Text>
+      <TouchableOpacity
+        style={styles.quickItem}
+        onPress={() => navigation?.navigate?.("Collaborate")}
+      >
+        <Icon name="people-outline" size={18} color="#00f0a8" />
+        <Text style={styles.quickLabel}> Collaborate</Text>
       </TouchableOpacity>
 
-      <TouchableOpacity style={styles.quickItem} onPress={() => navigation?.navigate?.("Equipment")}>
-        <Text style={styles.quickLabel}>Equipment</Text>
+      <TouchableOpacity
+        style={styles.quickItem}
+        onPress={() => navigation?.navigate?.("Equipment")}
+      >
+        <Icon name="construct-outline" size={18} color="#00f0a8" />
+        <Text style={styles.quickLabel}> Equipment</Text>
       </TouchableOpacity>
     </View>
   );
 
+  // -------------------- ✨ Cosmic Background Animation --------------------
+  const shift = useSharedValue(0);
+  useEffect(() => {
+    const loop = () => {
+      shift.value = withTiming(1, { duration: 8000, easing: Easing.linear }, () => {
+        shift.value = 0;
+        loop();
+      });
+    };
+    loop();
+  }, []);
+
+  const bgStyle = useAnimatedStyle(() => ({
+    opacity: 1,
+    transform: [{ translateY: shift.value * 40 }],
+  }));
+
+  // -------------------- Render --------------------
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
+
+      {/* 🌌 Animated cosmic background */}
+      <Animated.View style={[StyleSheet.absoluteFill, bgStyle]}>
+        <LinearGradient
+          colors={["#000010", "#00121F", "#000A12"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <LinearGradient
+          colors={["#00f0a822", "#00556611", "#00000000"]}
+          start={{ x: 1, y: 0 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </Animated.View>
+
+      {/* Main Content */}
       <Header
         title="VSXplore"
         onMenuToggle={toggleSidebar}
         navigation={navigation}
-        // header also acts as "open explore" when pressed on title
         onTitlePress={() => setExploreOpen(true)}
       />
 
       <View style={styles.body}>
-        {/* Animated Sidebar (left) */}
         <Animated.View style={[styles.sidebar, sidebarAnim]}>
-          <Sidebar navigation={navigation} onCreatePost={() => navigation?.navigate?.("CreatePost")} />
+          <Sidebar
+            navigation={navigation}
+            onCreatePost={() => navigation?.navigate?.("CreatePost")}
+          />
         </Animated.View>
 
-        {/* Main Column */}
         <View style={styles.main}>
-          {/* Composer at top */}
           <Composer onPosted={load} />
 
-          {/* Feed or loader */}
           {loading ? (
-            <ActivityIndicator style={{ marginTop: 30 }} size="large" color="#00f0a8" />
+            <ActivityIndicator
+              style={{ marginTop: 30 }}
+              size="large"
+              color="#00f0a8"
+            />
           ) : (
             <FlatList
               data={filteredPosts}
-              renderItem={renderItem}
+              renderItem={({ item }) => (
+                <PostCard
+                  item={item}
+                  onApprove={() => onApprove(item)}
+                  onComment={() =>
+                    navigation?.navigate?.("PostComments", {
+                      postId: item._id || item.id,
+                    })
+                  }
+                  onShare={() =>
+                    Alert.alert(
+                      "Share",
+                      `Share link: ${item._id || item.id || "—"}`
+                    )
+                  }
+                />
+              )}
               keyExtractor={(p) => p._id || p.id || p._tempId}
               contentContainerStyle={styles.feedContainer}
-              ListHeaderComponent={() => (
-                <>
-                  {/* compact analytics preview */}
-                  <View style={styles.analyticsWrapper}>
-                    <AnalyticsPanel />
-                  </View>
-
-                  {/* small skill-filter chips */}
-                  <View style={styles.chipsRow}>
-                    {SKILLS.slice(0, 6).map(s => {
-                      const active = activeFilters.has(s);
-                      return (
-                        <TouchableOpacity
-                          key={s}
-                          onPress={() => {
-                            setActiveFilters(prev => {
-                              const next = new Set(prev);
-                              if (next.has(s)) next.delete(s); else next.add(s);
-                              return next;
-                            });
-                          }}
-                          style={[styles.chip, active && styles.chipActive]}
-                          accessibilityRole="button"
-                        >
-                          <Text style={[styles.chipText, active && styles.chipTextActive]}>{s}</Text>
-                        </TouchableOpacity>
-                      );
-                    })}
-                  </View>
-                </>
-              )}
             />
           )}
         </View>
 
-        {/* Right column (only on wide screens) */}
         {!isNarrow ? (
           <View style={styles.right}>
             <LeftQuickList />
-            <View style={{ height: 12 }} />
-            <View style={styles.rightCard}>
-              <Text style={styles.rightTitle}>Nearby Projects</Text>
-              <Text style={styles.mutedSmall}>Enable location to see projects near you.</Text>
-              <TouchableOpacity style={styles.useGeo} onPress={() => Alert.alert("Geolocation", "Coming soon")}>
-                <Text style={styles.useGeoText}>Use my location</Text>
-              </TouchableOpacity>
-            </View>
           </View>
         ) : null}
       </View>
 
-      {/* Bottom navigation + FAB */}
       <BottomNav />
-
-      {/* Explore modal (top VSXplore panel) */}
-      <Modal visible={exploreOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={() => setExploreOpen(false)}>
-        <SafeAreaView style={styles.modalSafe}>
-          <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setExploreOpen(false)}>
-              <Text style={styles.modalClose}>Close</Text>
-            </TouchableOpacity>
-            <Text style={styles.modalTitle}>Find Skills</Text>
-            <View style={{ width: 58 }} />
-          </View>
-
-          <View style={styles.searchRow}>
-            <TextInput
-              value={skillQuery}
-              onChangeText={setSkillQuery}
-              placeholder="Search skills (carpenter, electrician, farming...)"
-              placeholderTextColor="#9aa3ad"
-              style={styles.searchInput}
-              autoCorrect={false}
-              autoCapitalize="none"
-            />
-          </View>
-
-          <View style={styles.skillList}>
-            {skillHits.length === 0 ? (
-              <Text style={styles.mutedSmall}>No results — try typing “farm” or “carpenter”</Text>
-            ) : skillHits.map(s => {
-              const active = activeFilters.has(s);
-              return (
-                <TouchableOpacity
-                  key={s}
-                  style={[styles.skillItem, active && styles.skillItemActive]}
-                  onPress={() => {
-                    setActiveFilters(prev => {
-                      const next = new Set(prev);
-                      if (next.has(s)) next.delete(s); else next.add(s);
-                      return next;
-                    });
-                  }}
-                >
-                  <Text style={[styles.skillLabel, active && styles.skillLabelActive]}>{s}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <View style={styles.modalFooter}>
-            <TouchableOpacity style={styles.modalAction} onPress={() => { setActiveFilters(new Set()); setSkillQuery(""); }}>
-              <Text style={styles.modalActionText}>Clear</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity style={[styles.modalAction, styles.modalActionPrimary]} onPress={() => { setExploreOpen(false); }}>
-              <Text style={[styles.modalActionText, styles.modalActionTextPrimary]}>Apply</Text>
-            </TouchableOpacity>
-          </View>
-        </SafeAreaView>
-      </Modal>
     </SafeAreaView>
   );
 }
 
 // --------------------
-// Styles — Alien-grade polish (responsive)
+// Styles (Intergalactic Polish)
 // --------------------
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#071018" },
-  body: { flex: 1, flexDirection: "row", gap: 12 },
-
-  // sidebar (left)
+  container: { flex: 1, backgroundColor: "#061015" },
+  body: { flex: 1, flexDirection: "row" },
   sidebar: { width: 280, zIndex: 20, padding: 8 },
-
-  // main feed
   main: { flex: 1, paddingHorizontal: 12 },
   feedContainer: { paddingBottom: clamp(140, 140, 240) },
-
-  analyticsWrapper: { marginBottom: 12 },
-
-  chipsRow: { flexDirection: "row", gap: 8, flexWrap: "wrap", marginBottom: 12 },
-
-  chip: { paddingVertical: 8, paddingHorizontal: 14, borderRadius: 999, backgroundColor: "rgba(255,255,255,0.02)", marginRight: 8 },
-  chipActive: { backgroundColor: "#00f0a8", shadowColor: "#00f0a8", shadowOpacity: 0.12, shadowRadius: 8 },
-  chipText: { color: "#cfeee6", fontWeight: "700" },
-  chipTextActive: { color: "#061015" },
-
-  // right column
+  leftQuick: {
+    backgroundColor: "rgba(255,255,255,0.02)",
+    padding: 12,
+    borderRadius: 12,
+  },
+  quickItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 12,
+  },
+  quickLabel: { color: "#e8e8ea", fontWeight: "600" },
   right: { width: 320, padding: 12 },
-  leftQuick: { backgroundColor: "rgba(255,255,255,0.01)", padding: 12, borderRadius: 12 },
-  quickItem: { paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: "rgba(255,255,255,0.02)" },
-  quickLabel: { color: "#e8e8ea", fontWeight: "700" },
-
-  rightCard: { marginTop: 12, padding: 12, borderRadius: 12, backgroundColor: "rgba(255,255,255,0.01)" },
-  rightTitle: { color: "#e8e8ea", fontWeight: "800", marginBottom: 6 },
-  mutedSmall: { color: "#9aa3ad", fontSize: 12 },
-
-  useGeo: { marginTop: 10, paddingVertical: 10, backgroundColor: "transparent", borderRadius: 10, borderWidth: 1, borderColor: "rgba(255,255,255,0.03)" },
-  useGeoText: { color: "#cfeee6", textAlign: "center" },
-
-  // bottom nav
-  bottomNavWrap: { position: "absolute", left: 0, right: 0, bottom: 10, alignItems: "center", zIndex: 40 },
-  bottomNav: { width: "92%", maxWidth: 960, flexDirection: "row", backgroundColor: "rgba(0,0,0,0.45)", borderRadius: 999, paddingVertical: 8, justifyContent: "space-around", alignItems: "center", borderWidth: 1, borderColor: "rgba(255,255,255,0.03)" },
-  bottomBtn: { padding: 8, alignItems: "center", justifyContent: "center" },
-  bottomIcon: { fontSize: 20, color: "#e8e8ea" },
-
+  bottomNavWrap: {
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 10,
+    alignItems: "center",
+    zIndex: 40,
+  },
+  bottomNav: {
+    width: "92%",
+    flexDirection: "row",
+    backgroundColor: "rgba(0,0,0,0.45)",
+    borderRadius: 999,
+    paddingVertical: 8,
+    justifyContent: "space-around",
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.05)",
+  },
+  bottomBtn: { padding: 8 },
   fab: {
     position: "absolute",
     right: "4%",
     bottom: 36,
-    width: 62,
-    height: 62,
-    borderRadius: 999,
-    backgroundColor: "#00f0a8",
+    width: 64,
+    height: 64,
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#00f0a8",
-    shadowOpacity: 0.28,
-    shadowRadius: 18,
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    elevation: 8,
   },
-  fabText: { color: "#061015", fontSize: 30, fontWeight: "900" },
-
-  // modal / explore
-  modalSafe: { flex: 1, backgroundColor: "#071018", padding: 12 },
-  modalHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", paddingVertical: 8 },
-  modalClose: { color: "#9aa3ad" },
-  modalTitle: { color: "#e8e8ea", fontWeight: "800", fontSize: 18 },
-  searchRow: { marginTop: 8 },
-  searchInput: { backgroundColor: "rgba(255,255,255,0.02)", padding: Platform.OS === "ios" ? 14 : 10, borderRadius: 12, color: "#e8e8ea" },
-  skillList: { marginTop: 12 },
-  skillItem: { padding: 12, borderRadius: 10, backgroundColor: "rgba(255,255,255,0.01)", marginBottom: 8 },
-  skillItemActive: { backgroundColor: "rgba(0,240,168,0.14)" },
-  skillLabel: { color: "#e8e8ea", fontWeight: "700" },
-  skillLabelActive: { color: "#00f0a8" },
-
-  modalFooter: { flexDirection: "row", justifyContent: "space-between", marginTop: "auto", paddingVertical: 12 },
-  modalAction: { paddingVertical: 12, paddingHorizontal: 20, borderRadius: 12, borderWidth: 1, borderColor: "rgba(255,255,255,0.03)" },
-  modalActionPrimary: { backgroundColor: "#00f0a8", borderColor: "transparent" },
-  modalActionText: { color: "#e8e8ea", fontWeight: "800" },
-  modalActionTextPrimary: { color: "#061015" },
 });
