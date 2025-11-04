@@ -10,19 +10,51 @@ import {
   ActivityIndicator,
   FlatList,
   StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
-import Animated, { useSharedValue, withTiming, useAnimatedStyle } from 'react-native-reanimated';
-import { Canvas, Circle, useSharedValue as useSkiaValue, runTiming } from '@shopify/react-native-skia';
-import AnalyticsPanel from '../components/AnalyticsPanel';
-import Sidebar from '../components/Sidebar';
-import Composer from '../components/Composer';
-import CosmicBackground from '../components/CosmicBackground';
+  StatusBar,
+  Alert,
+  RefreshControl,
+  useWindowDimensions,
+  Platform,
+} from "react-native";
+import Animated, { useSharedValue, useAnimatedStyle, withTiming } from "react-native-reanimated";
 
-// =========================================================
-// Cosmic Dashboard (No Skia)
-// =========================================================
-export default function DashboardScreen() {
+import Header from "../components/Header";
+import Sidebar from "../components/Sidebar";
+import Composer from "../components/Composer";
+import PostCard from "../components/PostCard";
+import AnalyticsPanel from "../components/AnalyticsPanel";
+import CosmicBackground from "../components/CosmicBackground";
+import { fetchPosts } from "../api"; // keep your api.js as-is
+
+// ---------- Utility: stable unique list ----------
+function dedupeAndAttachTempId(items = []) {
+  const seen = new Map();
+  const out = [];
+  for (const p of items) {
+    const id = p._id || p.id || p._tempId || (p._localId || Math.random().toString(36).slice(2, 9));
+    if (!seen.has(id)) {
+      seen.set(id, true);
+      // ensure stable temp id present
+      out.push(Object.assign({}, p, { _tempId: id }));
+    }
+  }
+  return out;
+}
+
+export default function DashboardScreen({ navigation }) {
+  const [posts, setPosts] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const mountedRef = useRef(true);
+  const isFetchingRef = useRef(false);
+
+  const { width } = useWindowDimensions();
+  const isNarrow = width < 900; // collapse right column on narrow widths
+
   // Sidebar animation
   const sidebarOpen = useSharedValue(0);
   const sidebarStyle = useAnimatedStyle(() => ({
@@ -30,15 +62,130 @@ export default function DashboardScreen() {
     opacity: withTiming(sidebarOpen.value ? 1 : 0.9, { duration: 300 }),
   }));
 
-  const toggleSidebar = () => {
+  const toggleSidebar = useCallback(() => {
     sidebarOpen.value = sidebarOpen.value ? 0 : 1;
-  };
-
-  // Skia Cosmic Pulse (background motion)
-  const pulse = useValue(0);
-  React.useEffect(() => {
-    runTiming(pulse, 1, { duration: 2500 });
   }, []);
+
+  // ---------- Load posts (paginated) ----------
+  const loadPage = useCallback(
+    async (p = 1, size = 12, append = false) => {
+      // prevent overlapping requests
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
+
+      if (p === 1 && !append) {
+        setLoading(true);
+      } else {
+        setLoadingMore(true);
+      }
+
+      try {
+        const res = await fetchPosts(); // your api function
+        // Accept flexible response shapes: { data: { posts: [...] } } or array directly
+        const items = res?.data?.posts || res?.data || res || [];
+        const normalized = dedupeAndAttachTempId(Array.isArray(items) ? items : []);
+        // If append, combine while preventing duplicates
+        setPosts((prev) => {
+          const combined = append ? [...prev, ...normalized] : normalized;
+          return dedupeAndAttachTempId(combined);
+        });
+
+        // detect hasMore by length (server should return page sizes)
+        setHasMore((normalized.length ?? 0) >= size);
+        setPage(p + 1);
+      } catch (err) {
+        console.warn("Fetch posts failed:", err?.response?.data || err?.message || err);
+        if (!append) Alert.alert("Error", "Unable to load feed right now.");
+      } finally {
+        if (mountedRef.current) {
+          setLoading(false);
+          setLoadingMore(false);
+          setRefreshing(false);
+        }
+        isFetchingRef.current = false;
+      }
+    },
+    []
+  );
+
+  // initial load
+  useEffect(() => {
+    mountedRef.current = true;
+    loadPage(1, 12, false);
+    return () => {
+      mountedRef.current = false;
+    };
+  }, [loadPage]);
+
+  // pull-to-refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    setHasMore(true);
+    setPage(1);
+    await loadPage(1, 12, false);
+  }, [loadPage]);
+
+  // infinite scroll trigger
+  const onEndReached = useCallback(() => {
+    if (loadingMore || loading || !hasMore) return;
+    // request next page (we pass page value)
+    loadPage(page, 12, true);
+  }, [loadingMore, loading, hasMore, page, loadPage]);
+
+  // Approve optimistic update + API call
+  const onApprove = useCallback(
+    async (item) => {
+      try {
+        setPosts((prev) =>
+          prev.map((p) => (p._id === item._id || p._tempId === item._tempId ? { ...p, approvals: (p.approvals || 0) + 1 } : p))
+        );
+        // dynamic import to avoid circular
+        const apiModule = await import("../api");
+        // prefer approvePost helper if available
+        if (apiModule.approvePost) {
+          await apiModule.approvePost(item._id || item.id);
+        } else {
+          // fallback: try hitting endpoint via createAPI
+          const createAPI = apiModule.default || apiModule.createAPI;
+          if (createAPI) {
+            const api = await createAPI();
+            await api.post(`/posts/${item._id || item.id}/approve`);
+          }
+        }
+      } catch (err) {
+        console.warn("Approve failed:", err);
+        Alert.alert("Error", "Could not approve the post.");
+      }
+    },
+    []
+  );
+
+  // Stable renderItem (memoized)
+  const renderItem = useCallback(
+    ({ item }) => {
+      return (
+        <PostCard
+          item={item}
+          onApprove={() => onApprove(item)}
+          onComment={() => navigation?.navigate?.("PostComments", { postId: item._id || item.id })}
+          onShare={() => {
+            // simple share fallback
+            Alert.alert("Share", `Share link: ${item._id ? `https://your.domain/posts/${item._id}` : "not available"}`);
+          }}
+        />
+      );
+    },
+    [navigation, onApprove]
+  );
+
+  // getItemLayout optimization if your items are fixed height (approx). Comment out if variable.
+  const getItemLayout = useCallback((_, index) => ({ length: 220, offset: 220 * index, index }), []);
+
+  // key extractor
+  const keyExtractor = useCallback((p) => p._id || p.id || p._tempId, []);
+
+  // memoized list data to avoid re-renders
+  const listData = useMemo(() => posts, [posts]);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -94,45 +241,19 @@ export default function DashboardScreen() {
   );
 }
 
-// =========================================================
-// Styles — sleek alien polish
-// =========================================================
+// ---------- Styles ----------
 const styles = StyleSheet.create({
-  safe: {
+  container: { flex: 1, backgroundColor: "#0d1117" },
+  content: {
     flex: 1,
-    paddingTop: 10,
-    backgroundColor: 'transparent',
+    flexDirection: "row",
+    paddingHorizontal: 12,
+    paddingTop: 8,
+    paddingBottom: 12,
+    // gap isn't supported across all RN versions; use margins in children instead
   },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginBottom: 10,
-  },
-  title: {
-    color: '#00FFFF',
-    fontSize: 22,
-    fontWeight: 'bold',
-    letterSpacing: 1.2,
-  },
-  menuBtn: {
-    padding: 6,
-  },
-  menuText: {
-    color: '#00FFFF',
-    fontSize: 24,
-  },
-  scroll: {
-    flex: 1,
-    backgroundColor: 'transparent',
-  },
-  sidebarContainer: {
-    position: 'absolute',
-    top: 60,
-    left: 0,
-    bottom: 0,
-    width: 260,
-    zIndex: 10,
-  },
+  sidebarWrap: { width: 280, zIndex: 20, marginRight: 12 },
+  feedCol: { flex: 1, minWidth: 300 },
+  feedList: { paddingBottom: 120 },
+  rightCol: { width: 340, marginLeft: 12 },
 });
