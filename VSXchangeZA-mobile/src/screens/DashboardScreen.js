@@ -5,7 +5,7 @@
 // Slide-up VSXplore modal (TikTok-style), responsive + robust
 // ==========================================================
 
-import React, { useCallback, useEffect, useState, useRef } from "react";
+import React, { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import {
   View,
   SafeAreaView,
@@ -27,9 +27,7 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   withTiming,
-  withSpring,
   Easing,
-  runOnJS,
 } from "react-native-reanimated";
 
 import Icon from "react-native-vector-icons/Ionicons";
@@ -69,14 +67,19 @@ const SKILLS = [
 
 // -------------------- DashboardScreen --------------------
 export default function DashboardScreen({ navigation }) {
+  // responsive
   const { width, height } = useWindowDimensions();
   const isNarrow = width < 760;
 
+  // dynamic sheet height (hook used inside component)
+  const sheetHeight = Math.min(680, Math.round(height * 0.78));
+
+  // data + lifecycle
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const mounted = useRef(true);
 
-  // Sidebar animation (left)
+  // left sidebar animation
   const sidebarOpen = useSharedValue(isNarrow ? 0 : 1);
   const sidebarAnim = useAnimatedStyle(() => ({
     transform: [
@@ -90,46 +93,55 @@ export default function DashboardScreen({ navigation }) {
     opacity: withTiming(sidebarOpen.value ? 1 : 0.92, { duration: 260 }),
   }));
 
-  // VSXplore modal (slide-up)
+  // VSXplore sheet (slide-up)
   const [exploreOpen, setExploreOpen] = useState(false);
-  const sheetY = useSharedValue(height); // start off-screen
+  const sheetY = useSharedValue(sheetHeight); // starts off-screen
+  useEffect(() => {
+    // whenever sheetHeight changes (orientation), keep sheetY consistent
+    if (!exploreOpen) sheetY.value = sheetHeight;
+  }, [sheetHeight]);
+
+  useEffect(() => {
+    if (exploreOpen) {
+      sheetY.value = withTiming(0, { duration: 420, easing: Easing.out(Easing.cubic) });
+    } else {
+      sheetY.value = withTiming(sheetHeight, { duration: 320, easing: Easing.in(Easing.cubic) });
+    }
+  }, [exploreOpen, sheetHeight]);
+
   const sheetAnim = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetY.value }],
-    shadowOpacity: exploreOpen ? 0.15 : 0,
+    shadowOpacity: exploreOpen ? 0.18 : 0,
   }));
 
-  // VSXplore top orb pulse
+  // top orb pulse
   const orbPulse = useSharedValue(1);
   useEffect(() => {
-    orbPulse.value = withTiming(1.06, { duration: 1200, easing: Easing.inOut(Easing.ease) });
-    // loop
-    let toggled = true;
+    let mountedFlag = true;
     const loop = () => {
-      orbPulse.value = withTiming(toggled ? 1.02 : 1.06, { duration: 1600, easing: Easing.inOut(Easing.ease) }, () => {
-        toggled = !toggled;
-        if (mounted.current) loop();
+      orbPulse.value = withTiming(1.06, { duration: 1100, easing: Easing.inOut(Easing.ease) }, () => {
+        if (!mountedFlag) return;
+        orbPulse.value = withTiming(1.02, { duration: 1200, easing: Easing.inOut(Easing.ease) }, () => {
+          if (!mountedFlag) return;
+          loop();
+        });
       });
     };
     loop();
-    return () => { mounted.current = false; };
+    return () => { mountedFlag = false; };
   }, []);
 
-  const orbStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: orbPulse.value }],
-    shadowRadius: 12,
-  }));
+  const orbStyle = useAnimatedStyle(() => ({ transform: [{ scale: orbPulse.value }], shadowRadius: 12 }));
 
-  // composer/fab rotation
+  // composer FAB rotation
   const rotation = useSharedValue(0);
-  const fabStyle = useAnimatedStyle(() => ({
-    transform: [{ rotateZ: `${rotation.value}deg` }, { scale: 1 }],
-  }));
+  const fabStyle = useAnimatedStyle(() => ({ transform: [{ rotateZ: `${rotation.value}deg` }, { scale: 1 }] }));
 
-  // VSXplore search state
+  // sheet / search state
   const [skillQuery, setSkillQuery] = useState("");
   const [activeFilters, setActiveFilters] = useState(new Set());
 
-  // data loading
+  // load posts (safe)
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -150,32 +162,19 @@ export default function DashboardScreen({ navigation }) {
     mounted.current = true;
     load();
     const sub = navigation?.addListener?.("focus", load);
-    return () => {
-      mounted.current = false;
-      sub?.();
-    };
+    return () => { mounted.current = false; sub?.(); };
   }, [navigation, load]);
 
-  // open/close explore modal (animated slide-up)
+  // open/close helpers
   const openExplore = (flag) => {
     setExploreOpen(flag);
-    if (flag) {
-      // bring sheet into view
-      sheetY.value = withTiming(0, { duration: 420, easing: Easing.out(Easing.cubic) });
-    } else {
-      sheetY.value = withTiming(height, { duration: 350, easing: Easing.in(Easing.cubic) });
-    }
   };
+  const toggleSidebar = () => { sidebarOpen.value = sidebarOpen.value ? 0 : 1; };
 
-  // toggle sidebar
-  const toggleSidebar = () => {
-    sidebarOpen.value = sidebarOpen.value ? 0 : 1;
-  };
-
-  // approve handler (optimistic)
+  // approve (optimistic)
   const onApprove = async (item) => {
     try {
-      setPosts((prev) => prev.map((p) => (p._id === item._id ? { ...p, approvals: (p.approvals || 0) + 1 } : p)));
+      setPosts(prev => prev.map(p => p._id === item._id ? { ...p, approvals: (p.approvals || 0) + 1 } : p));
       if (approvePost) await approvePost(item._id || item.id);
     } catch (err) {
       console.warn("approve error:", err);
@@ -184,25 +183,50 @@ export default function DashboardScreen({ navigation }) {
     }
   };
 
-  // filters + search
-  const filteredPosts = posts.filter((p) => {
-    if (!activeFilters.size && !skillQuery.trim()) return true;
-    const text = (p.text || p.body || "").toLowerCase();
-    const userSkills = (p.user?.skills || p.skills || []).map((s) => String(s || "").toLowerCase());
-    const tags = (p.tags || []).map((t) => String(t || "").toLowerCase());
-    const matchesQuery = skillQuery.trim() ? (text.includes(skillQuery.toLowerCase()) || userSkills.some(s => s.includes(skillQuery.toLowerCase())) || tags.some(t => t.includes(skillQuery.toLowerCase()))) : true;
-    if (!activeFilters.size) return matchesQuery;
-    // must match one active filter AND query
-    const matchesFilter = Array.from(activeFilters).some((f) => {
-      const ff = String(f).toLowerCase();
-      return userSkills.includes(ff) || tags.includes(ff) || (p.title || "").toLowerCase().includes(ff);
+  // filter logic: supports activeFilters + skillQuery
+  const filteredPosts = useMemo(() => {
+    if ((!activeFilters || activeFilters.size === 0) && !skillQuery.trim()) return posts;
+    const q = skillQuery.trim().toLowerCase();
+    return posts.filter(p => {
+      const text = (p.text || p.body || p.title || "").toLowerCase();
+      const userSkills = (p.user?.skills || p.skills || []).map(s => String(s || "").toLowerCase());
+      const tags = (p.tags || []).map(t => String(t || "").toLowerCase());
+      const matchesQuery = q ? (text.includes(q) || userSkills.some(s => s.includes(q)) || tags.some(t => t.includes(q))) : true;
+      if (!activeFilters || activeFilters.size === 0) return matchesQuery;
+      const matchesFilter = Array.from(activeFilters).some(f => {
+        const ff = String(f).toLowerCase();
+        return userSkills.includes(ff) || tags.includes(ff) || (p.title || "").toLowerCase().includes(ff);
+      });
+      return matchesQuery && matchesFilter;
     });
-    return matchesQuery && matchesFilter;
-  });
+  }, [posts, activeFilters, skillQuery]);
 
-  const skillHits = SKILLS.filter((s) => s.toLowerCase().includes(skillQuery.trim().toLowerCase()));
+  const skillHits = useMemo(() => SKILLS.filter(s => s.toLowerCase().includes(skillQuery.trim().toLowerCase())), [skillQuery]);
 
-  // quick nav items
+  // when chip tapped: immediately apply filter and close sheet (per your request)
+  const onSkillTap = (skill) => {
+    setActiveFilters(prev => {
+      const next = new Set(prev);
+      if (next.has(skill)) next.delete(skill); else next.add(skill);
+      return next;
+    });
+    // close sheet and keep filter applied
+    openExplore(false);
+  };
+
+  // render item (stable)
+  const renderItem = useCallback(({ item }) => (
+    <PostCard
+      item={item}
+      onApprove={() => onApprove(item)}
+      onComment={() => navigation?.navigate?.("PostComments", { postId: item._id || item.id })}
+      onShare={() => Alert.alert("Share", `Share link: ${item._id || item.id || "—"}`)}
+    />
+  ), [navigation]);
+
+  const keyExtractor = useCallback(p => p._id || p.id || p._tempId, []);
+
+  // quick access list component
   const LeftQuickList = () => (
     <View accessible style={styles.leftQuick}>
       <TouchableOpacity style={styles.quickItem} onPress={() => navigation?.navigate?.("Analytics")}>
@@ -227,7 +251,7 @@ export default function DashboardScreen({ navigation }) {
     </View>
   );
 
-  // Bottom Navigation + FAB
+  // Bottom Nav + orb + FAB
   const BottomNav = () => (
     <View style={styles.bottomNavWrap} pointerEvents="box-none">
       <View style={styles.bottomNav}>
@@ -261,7 +285,7 @@ export default function DashboardScreen({ navigation }) {
         </TouchableOpacity>
       </Animated.View>
 
-      {/* Top-center VSXplore orb (like TikTok center button on header) */}
+      {/* Top-center VSXplore orb */}
       <Animated.View style={[styles.topOrbWrap, orbStyle]}>
         <Pressable
           accessibilityRole="button"
@@ -276,31 +300,18 @@ export default function DashboardScreen({ navigation }) {
     </View>
   );
 
-  // render feed item
-  const renderItem = ({ item }) => (
-    <PostCard
-      item={item}
-      onApprove={() => onApprove(item)}
-      onComment={() => navigation?.navigate?.("PostComments", { postId: item._id || item.id })}
-      onShare={() => Alert.alert("Share", `Share link: ${item._id || item.id || "—"}`)}
-    />
-  );
-
-  // safe key extractor
-  const keyExtractor = (p) => p._id || p.id || p._tempId;
-
   // -------------------- Render --------------------
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" />
-      {/* animated cosmic background layers */}
+      {/* animated cosmic background (kept minimal for performance) */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.bgLayer]} pointerEvents="none" />
 
       {/* Header */}
       <Header title="VSXplore" onMenuToggle={toggleSidebar} navigation={navigation} onTitlePress={() => openExplore(true)} />
 
       <View style={styles.body}>
-        {/* left sidebar (animated) */}
+        {/* left sidebar */}
         <Animated.View style={[styles.sidebar, sidebarAnim]}>
           <Sidebar navigation={navigation} onCreatePost={() => navigation?.navigate?.("CreatePost")} />
         </Animated.View>
@@ -344,11 +355,11 @@ export default function DashboardScreen({ navigation }) {
       {/* VSXplore slide-up modal (custom animated sheet) */}
       <Modal visible={exploreOpen} transparent animationType="none" onRequestClose={() => openExplore(false)}>
         <View style={styles.sheetOverlay}>
-          {/* background tap to close */}
+          {/* tap overlay to close */}
           <TouchableOpacity style={styles.overlayTouchable} activeOpacity={1} onPress={() => openExplore(false)} />
 
-          {/* Animated sheet container */}
-          <Animated.View style={[styles.sheet, sheetAnim]}>
+          {/* Animated sheet */}
+          <Animated.View style={[styles.sheet, sheetAnim, { height: sheetHeight }]}>
             <View style={styles.sheetHeader}>
               <Text style={styles.sheetTitle}>Find skills & people</Text>
               <TouchableOpacity onPress={() => openExplore(false)}>
@@ -367,7 +378,7 @@ export default function DashboardScreen({ navigation }) {
                 autoCapitalize="none"
                 autoCorrect={false}
               />
-              <TouchableOpacity onPress={() => { setSkillQuery(""); }}>
+              <TouchableOpacity onPress={() => setSkillQuery("")}>
                 <Icon name="close-circle" size={20} color="#9aa3ad" />
               </TouchableOpacity>
             </View>
@@ -379,11 +390,7 @@ export default function DashboardScreen({ navigation }) {
                   <TouchableOpacity
                     key={s}
                     style={[styles.chip, active && styles.chipActive]}
-                    onPress={() => setActiveFilters((prev) => {
-                      const next = new Set(prev);
-                      if (next.has(s)) next.delete(s); else next.add(s);
-                      return next;
-                    })}
+                    onPress={() => onSkillTap(s)}
                   >
                     <Text style={[styles.chipText, active && styles.chipTextActive]}>{s}</Text>
                   </TouchableOpacity>
@@ -396,7 +403,7 @@ export default function DashboardScreen({ navigation }) {
                 <Text style={styles.sheetBtnText}>Clear</Text>
               </TouchableOpacity>
 
-              <TouchableOpacity style={[styles.sheetBtn, styles.sheetBtnPrimary]} onPress={() => { openExplore(false); }}>
+              <TouchableOpacity style={[styles.sheetBtn, styles.sheetBtnPrimary]} onPress={() => openExplore(false)}>
                 <Text style={[styles.sheetBtnText, styles.sheetBtnPrimaryText]}>Apply</Text>
               </TouchableOpacity>
             </View>
@@ -411,9 +418,8 @@ export default function DashboardScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#061015" },
   bgLayer: {
-    // stacked gradients + subtle noise look (pure RN)
+    // keep subtle layer for z-order & potential gradient overlays
     backgroundColor: "transparent",
-    // The visible effect is mostly in Header/top orb and LinearGradient in other places; we keep an invisible layer to allow z-order
   },
 
   body: { flex: 1, flexDirection: "row" },
@@ -468,11 +474,11 @@ const styles = StyleSheet.create({
   fabWrap: { position: "absolute", right: "5%", bottom: 44, zIndex: 80 },
   fabGradient: { width: 64, height: 64, borderRadius: 999, alignItems: "center", justifyContent: "center", elevation: 10, shadowColor: "#00f0a8", shadowOpacity: 0.3, shadowRadius: 14 },
 
-  // sheet (modal)
+  // sheet (modal) - height applied inline per device
   sheetOverlay: { flex: 1, justifyContent: "flex-end", backgroundColor: "rgba(0,0,0,0.28)" },
   overlayTouchable: { ...StyleSheet.absoluteFillObject },
   sheet: {
-    height: Math.min(680, Math.round(useWindowDimensions().height * 0.78)),
+    // height set dynamically inline to avoid hooks inside StyleSheet
     backgroundColor: "#071018",
     borderTopLeftRadius: 18,
     borderTopRightRadius: 18,
@@ -482,7 +488,7 @@ const styles = StyleSheet.create({
   },
   sheetHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
   sheetTitle: { color: "#e8e8ea", fontWeight: "800", fontSize: 16 },
-  sheetSearchRow: { flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: "rgba(255,255,255,0.02)", padding: 10, borderRadius: 12 },
+  sheetSearchRow: { flexDirection: "row", alignItems: "center", backgroundColor: "rgba(255,255,255,0.02)", padding: 10, borderRadius: 12, gap: 10 },
   sheetSearchInput: { flex: 1, paddingHorizontal: 8, color: "#e8e8ea", minHeight: 36 },
 
   sheetChips: { marginTop: 12, flexDirection: "row", flexWrap: "wrap", gap: 8 },
