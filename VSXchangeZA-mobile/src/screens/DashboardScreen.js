@@ -1,5 +1,5 @@
 // src/screens/DashboardScreen.js
-import React, { useEffect, useState, useRef, useCallback } from "react";
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -25,7 +25,7 @@ import { fetchPosts, createAPI } from "../api";
 
 const { width, height } = Dimensions.get('window');
 
-// Custom Gradient View (kept simple so it doesn't conflict with RN <-> Expo)
+// Custom Gradient View (kept simple)
 const GradientView = ({ colors, style, children }) => (
   <View style={[style, { overflow: 'hidden' }]}>
     <View
@@ -42,7 +42,7 @@ const GradientView = ({ colors, style, children }) => (
 );
 
 export default function DashboardScreen({ navigation }) {
-  // Data + UI state (unchanged)
+  // Data + UI state
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
@@ -51,31 +51,25 @@ export default function DashboardScreen({ navigation }) {
   const [exploreOpen, setExploreOpen] = useState(false);
   const [activeFilters, setActiveFilters] = useState(new Set());
 
-  // Anim values (Animated from react-native used earlier — kept)
+  // Anim values
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const sheetAnim = useRef(new Animated.Value(height)).current;
 
-  // Orb animation: pulsate + steady glow (we combine a looped scale animation and static shadow)
+  // Orb animations: pulsate + ripple
   const orbScale = useRef(new Animated.Value(1)).current;
-  const orbGlow = useRef(new Animated.Value(0.7)).current; // static-ish value used to drive subtle glow if needed
+  // ripple (on-press) - scale & opacity
+  const rippleScale = useRef(new Animated.Value(0)).current;
+  const rippleOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // entrance animations for page content (unchanged but stable)
+    // entrance animations
     Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 700,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 560,
-        useNativeDriver: true,
-      }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 700, useNativeDriver: true }),
+      Animated.timing(slideAnim, { toValue: 0, duration: 560, useNativeDriver: true }),
     ]).start();
 
-    // orb pulsate: smooth loop (scale between 0.96 and 1.08)
+    // orb pulsate loop
     const pulsate = Animated.loop(
       Animated.sequence([
         Animated.timing(orbScale, { toValue: 1.08, duration: 900, useNativeDriver: true }),
@@ -85,40 +79,24 @@ export default function DashboardScreen({ navigation }) {
     );
     pulsate.start();
 
-    // small steady glow driver (keeps a slight variation)
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(orbGlow, { toValue: 1, duration: 2000, useNativeDriver: false }),
-        Animated.timing(orbGlow, { toValue: 0.78, duration: 2000, useNativeDriver: false }),
-      ]),
-      { iterations: -1 }
-    ).start();
-
     return () => {
-      // stop animations safely by resetting values (no timers left running)
+      // stop loops (defensive)
       orbScale.stopAnimation();
-      orbGlow.stopAnimation();
+      rippleScale.stopAnimation();
+      rippleOpacity.stopAnimation();
     };
-  }, [fadeAnim, slideAnim, orbScale, orbGlow]);
+  }, [fadeAnim, slideAnim, orbScale, rippleScale, rippleOpacity]);
 
-  // sheet open/close animation (slide-up)
+  // sheet open/close
   useEffect(() => {
     if (exploreOpen) {
-      Animated.timing(sheetAnim, {
-        toValue: 0,
-        duration: 340,
-        useNativeDriver: true,
-      }).start();
+      Animated.timing(sheetAnim, { toValue: 0, duration: 340, useNativeDriver: true }).start();
     } else {
-      Animated.timing(sheetAnim, {
-        toValue: height,
-        duration: 260,
-        useNativeDriver: true,
-      }).start();
+      Animated.timing(sheetAnim, { toValue: height, duration: 260, useNativeDriver: true }).start();
     }
   }, [exploreOpen, sheetAnim]);
 
-  // Load user & posts (kept your logic but added stability)
+  // Load user & posts
   const loadUserData = useCallback(async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
@@ -135,7 +113,6 @@ export default function DashboardScreen({ navigation }) {
     setLoading(true);
     try {
       const res = await fetchPosts();
-      // support different response shapes
       const postsData = res?.data?.posts || res?.data || res || [];
       setPosts(Array.isArray(postsData) ? postsData : []);
     } catch (err) {
@@ -156,11 +133,32 @@ export default function DashboardScreen({ navigation }) {
     navigation.replace("Login");
   };
 
-  // PostCard component left intact and made resilient
+  // Filtering logic: WHEN activeFilters or searchQuery changes, feed updates immediately
+  const filteredPosts = useMemo(() => {
+    if ((!activeFilters || activeFilters.size === 0) && !searchQuery.trim()) return posts;
+    const q = (searchQuery || "").toLowerCase().trim();
+    return posts.filter((p) => {
+      // normalize fields
+      const text = (p.text || p.content || p.body || "").toLowerCase();
+      const tags = (p.tags || []).map((t) => String(t || "").toLowerCase());
+      const userSkills = (p.user?.skills || p.skills || []).map((s) => String(s || "").toLowerCase());
+      // search query match
+      const matchesQuery = q ? (text.includes(q) || tags.some((t) => t.includes(q)) || userSkills.some((s) => s.includes(q))) : true;
+      if (!activeFilters || activeFilters.size === 0) return matchesQuery;
+      // a post matches if any active filter is present in skills/tags/title/text
+      const matchesFilter = Array.from(activeFilters).some((f) => {
+        const ff = String(f || "").toLowerCase();
+        return userSkills.includes(ff) || tags.includes(ff) || text.includes(ff) || (p.title || "").toLowerCase().includes(ff);
+      });
+      return matchesQuery && matchesFilter;
+    });
+  }, [posts, activeFilters, searchQuery]);
+
+  // PostCard (resilient)
   const PostCard = ({ item }) => {
     const userName = item.user?.firstName || item.user?.username || item.author || 'Community Member';
     const userRole = item.user?.role || 'Member';
-    const userInitial = (userName && userName.charAt(0)) ? userName.charAt(0).toUpperCase() : 'C';
+    const userInitial = (userName && userName.charAt) ? userName.charAt(0).toUpperCase() : 'C';
     const postText = item.text || item.content || item.body || '';
     const postTime = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Recently';
     const likes = item.approvals || item.likes || 0;
@@ -212,27 +210,34 @@ export default function DashboardScreen({ navigation }) {
     );
   };
 
-  // Header: brand shrunk + centered VSXplore pill (search icon + text)
+  // Header - shrunk brand, center pill removed from header row and using floating orb instead,
+  // but we also keep small pill (in header) per earlier flows: we keep the small pill in header as requested earlier as well.
   const CosmicHeader = () => (
     <GradientView colors={['#000000', '#0f1116']} style={styles.cosmicHeader}>
       <View style={styles.headerTop}>
-        {/* Shrunk brand (smaller than before) */}
         <View style={styles.brandContainer}>
           <Text style={styles.brandTextSmall}>VSXchangeZA</Text>
           <View style={styles.glowDot} />
         </View>
 
-        {/* Centered VSXplore pill (absolute center above header row) */}
+        {/* small center pill inside header (kept but tiny) */}
         <TouchableOpacity
           activeOpacity={0.95}
-          onPress={() => setExploreOpen(true)}
-          style={styles.vsxplorePill}
+          onPress={() => {
+            // tiny ripple effect for header pill (non-blocking)
+            Animated.sequence([
+              Animated.timing(rippleScale, { toValue: 1, duration: 140, useNativeDriver: true }),
+              Animated.timing(rippleScale, { toValue: 0, duration: 160, useNativeDriver: true })
+            ]).start(() => {
+              rippleScale.setValue(0);
+              setExploreOpen(true);
+            });
+          }}
+          style={styles.smallHeaderPill}
         >
           <Icon name="search" size={16} color="#061015" />
-          <Text style={styles.vsxplorePillText}>VSXplore</Text>
         </TouchableOpacity>
 
-        {/* Right-side actions */}
         <View style={styles.headerActions}>
           <TouchableOpacity style={styles.iconButton} onPress={() => setExploreOpen(true)}>
             <Icon name="search-outline" size={20} color="#00f0a8" />
@@ -246,7 +251,6 @@ export default function DashboardScreen({ navigation }) {
         </View>
       </View>
 
-      {/* Welcome row (unchanged) */}
       <View style={styles.userWelcome}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
@@ -262,7 +266,6 @@ export default function DashboardScreen({ navigation }) {
     </GradientView>
   );
 
-  // StatsCard & QuickActions kept intact (Community Pulse will be part of analytics later)
   const StatsCard = () => (
     <Animated.View style={[styles.statsCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       <GradientView colors={['rgba(30,144,255,0.12)', 'rgba(0,240,168,0.12)']}>
@@ -296,13 +299,13 @@ export default function DashboardScreen({ navigation }) {
     <Animated.View style={[styles.quickActions, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {[
-          { icon: 'add-circle', label: 'Create Post', color: '#00f0a8' },
-          { icon: 'analytics', label: 'Analytics', color: '#1e90ff' },
-          { icon: 'people', label: 'Network', color: '#ff6b81' },
-          { icon: 'leaf', label: 'My Farm', color: '#a55eea' },
-          { icon: 'construct', label: 'Services', color: '#fed330' },
+          { icon: 'add-circle', label: 'Create Post', color: '#00f0a8', onPress: () => navigation.navigate('CreatePost') },
+          { icon: 'analytics', label: 'Analytics', color: '#1e90ff', onPress: () => navigation.navigate('Analytics') },
+          { icon: 'people', label: 'Network', color: '#ff6b81', onPress: () => navigation.navigate('Network') },
+          { icon: 'leaf', label: 'My Farm', color: '#a55eea', onPress: () => navigation.navigate('Farms') },
+          { icon: 'construct', label: 'Services', color: '#fed330', onPress: () => navigation.navigate('Services') },
         ].map((action, index) => (
-          <TouchableOpacity key={index} style={styles.quickActionItem}>
+          <TouchableOpacity key={index} style={styles.quickActionItem} onPress={action.onPress}>
             <View style={[styles.actionIcon, { backgroundColor: action.color }]}>
               <Icon name={action.icon} size={22} color="#000" />
             </View>
@@ -330,7 +333,7 @@ export default function DashboardScreen({ navigation }) {
     </View>
   );
 
-  // Explore sheet (kept logic; sheetAnim drives translateY)
+  // Explore sheet: chip taps immediately filter feed
   const ExploreSheet = () => (
     <Modal visible={exploreOpen} transparent animationType="none" onRequestClose={() => setExploreOpen(false)}>
       <View style={styles.sheetOverlay}>
@@ -352,23 +355,26 @@ export default function DashboardScreen({ navigation }) {
             </View>
 
             <View style={styles.skillsGrid}>
-              {['Carpentry', 'Electrical', 'Plumbing', 'Farming', 'Tech', 'Design', 'Marketing', 'Consulting'].map((skill) => (
-                <TouchableOpacity
-                  key={skill}
-                  style={[styles.skillChip, activeFilters.has(skill) && styles.skillChipActive]}
-                  onPress={() => {
-                    setActiveFilters(prev => {
-                      const next = new Set(prev);
-                      if (next.has(skill)) next.delete(skill); else next.add(skill);
-                      return next;
-                    });
-                    // keep behavior: close modal on tap (as you previously had)
-                    setExploreOpen(false);
-                  }}
-                >
-                  <Text style={[styles.skillText, activeFilters.has(skill) && styles.skillTextActive]}>{skill}</Text>
-                </TouchableOpacity>
-              ))}
+              {['Carpentry', 'Electrical', 'Plumbing', 'Farming', 'Tech', 'Design', 'Marketing', 'Consulting'].map((skill) => {
+                const active = activeFilters.has(skill);
+                return (
+                  <TouchableOpacity
+                    key={skill}
+                    style={[styles.skillChip, active && styles.skillChipActive]}
+                    onPress={() => {
+                      // immediate filter on tap
+                      setActiveFilters(prev => {
+                        const next = new Set(prev);
+                        if (next.has(skill)) next.delete(skill);
+                        else next.add(skill);
+                        return next;
+                      });
+                    }}
+                  >
+                    <Text style={[styles.skillText, active && styles.skillTextActive]}>{skill}</Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
 
             <TouchableOpacity style={styles.exploreButton} onPress={() => setExploreOpen(false)}>
@@ -381,27 +387,49 @@ export default function DashboardScreen({ navigation }) {
     </Modal>
   );
 
-  // Render
+  // VSXplore orb press handler (ripple then open)
+  const onOrbPress = () => {
+    // ripple: reset values then animate
+    rippleScale.setValue(0.2);
+    rippleOpacity.setValue(0.28);
+    Animated.parallel([
+      Animated.timing(rippleScale, { toValue: 1.6, duration: 360, useNativeDriver: true }),
+      Animated.timing(rippleOpacity, { toValue: 0, duration: 360, useNativeDriver: true }),
+    ]).start(() => {
+      // reset
+      rippleScale.setValue(0);
+      rippleOpacity.setValue(0);
+      setExploreOpen(true);
+    });
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
 
-      {/* Floating centered orb above header (both pulsating + steady glow) */}
+      {/* Floating centered orb above header (pulsating) with VSXplore text inside */}
       <Animated.View
         pointerEvents="box-none"
         style={[
           styles.floatingOrb,
           {
-            transform: [{ translateY: -12 }, { scale: orbScale }],
-            opacity: 1,
-            // small dynamic shadow intensity using orbGlow value (not using useNativeDriver for this)
-            shadowOpacity: orbGlow.__getValue ? (0.16 * orbGlow.__getValue()) : 0.16,
+            transform: [{ scale: orbScale }],
           },
         ]}
       >
-        <TouchableOpacity activeOpacity={0.95} onPress={() => setExploreOpen(true)} style={styles.orbTouchable}>
+        {/* ripple layer (subtle, animated) */}
+        <Animated.View style={[
+          styles.ripple,
+          {
+            transform: [{ scale: rippleScale }],
+            opacity: rippleOpacity,
+          }
+        ]} pointerEvents="none" />
+
+        <TouchableOpacity activeOpacity={0.92} onPress={onOrbPress} style={styles.orbTouchable}>
           <View style={styles.orbInner}>
-            <Icon name="search" size={18} color="#061015" />
+            {/* VSXplore text inside orb (fits) */}
+            <Text style={styles.orbLabel}>VSXplore</Text>
           </View>
         </TouchableOpacity>
       </Animated.View>
@@ -445,7 +473,7 @@ export default function DashboardScreen({ navigation }) {
 
           {loading ? (
             <ActivityIndicator size="large" color="#00f0a8" style={styles.loader} />
-          ) : posts.length === 0 ? (
+          ) : filteredPosts.length === 0 ? (
             <View style={styles.emptyState}>
               <Icon name="document-text" size={48} color="#666" />
               <Text style={styles.emptyStateText}>No posts yet</Text>
@@ -453,7 +481,7 @@ export default function DashboardScreen({ navigation }) {
             </View>
           ) : (
             <View style={styles.feed}>
-              {posts.map((post, index) => (
+              {filteredPosts.map((post, index) => (
                 <PostCard key={post._id || post.id || `post-${index}`} item={post} />
               ))}
             </View>
@@ -471,21 +499,20 @@ export default function DashboardScreen({ navigation }) {
         </View>
       </TouchableOpacity>
 
-      {/* keep VSXplore orb near header (secondary entry) - placed lower for easier reach */}
+      {/* keep small VSXplore orb near header (secondary entry) */}
       <TouchableOpacity style={styles.exploreOrb} onPress={() => setExploreOpen(true)}>
-        <View style={styles.orbInner}>
-          <Icon name="search" size={20} color="#000" />
+        <View style={[styles.orbInner, styles.orbInnerSmall]}>
+          <Icon name="search" size={18} color="#061015" />
         </View>
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
-// -------------------- Styles (kept your palette; only adjusted requested elements) --------------------
+// -------------------- Styles (kept your palette; adjustments for orb & ripple & pill) --------------------
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000000' },
 
-  // small adjustment to background header & brand sizing
   cosmicHeader: {
     paddingTop: Platform.OS === 'ios' ? 56 : 48,
     paddingHorizontal: 18,
@@ -501,10 +528,9 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
 
-  // Shrunk brand as requested (both A and B smaller)
   brandContainer: { flexDirection: 'row', alignItems: 'center' },
   brandTextSmall: {
-    fontSize: 18, // shrunk
+    fontSize: 18,
     fontWeight: '800',
     color: '#00f0a8',
     textShadowColor: 'rgba(0, 240, 168, 0.45)',
@@ -513,26 +539,23 @@ const styles = StyleSheet.create({
   },
   glowDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#00f0a8', marginLeft: 8 },
 
-  // center VSXplore pill (top center like TikTok)
-  vsxplorePill: {
+  // small header pill
+  smallHeaderPill: {
     position: 'absolute',
-    left: (width / 2) - 56, // pill width approx 112 -> center horizontally
+    left: (width / 2) - 22,
     top: Platform.OS === 'ios' ? -6 : -4,
-    height: 36,
-    minWidth: 112,
-    paddingHorizontal: 12,
+    width: 44,
+    height: 32,
     borderRadius: 999,
     backgroundColor: '#00f0a8',
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
     zIndex: 90,
-    elevation: 10,
+    elevation: 6,
     shadowColor: '#00f0a8',
-    shadowOpacity: 0.14,
-    shadowRadius: 12,
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
   },
-  vsxplorePillText: { color: '#061015', fontWeight: '800', marginLeft: 8 },
 
   headerActions: { flexDirection: 'row' },
   iconButton: { padding: 8 },
@@ -553,7 +576,6 @@ const styles = StyleSheet.create({
   userName: { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 2 },
   userRole: { color: '#00f0a8', fontSize: 13, fontWeight: '600' },
 
-  // stats card + quick actions (unchanged except spacing)
   statsCard: { margin: 18, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(0, 240, 168, 0.16)' },
   statsTitle: { color: '#fff', fontSize: 16, fontWeight: '700', marginBottom: 10, textAlign: 'center', paddingTop: 16 },
   statsGrid: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 12 },
@@ -615,6 +637,16 @@ const styles = StyleSheet.create({
     zIndex: 1000,
     elevation: 12,
   },
+  // ripple layer
+  ripple: {
+    position: 'absolute',
+    width: 140,
+    height: 140,
+    borderRadius: 140 / 2,
+    backgroundColor: '#00f0a8',
+    opacity: 0.12,
+    zIndex: 0,
+  },
   orbTouchable: {
     alignItems: 'center',
     justifyContent: 'center',
@@ -631,6 +663,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 20,
     elevation: 16,
+  },
+  // VSXplore label inside orb
+  orbLabel: {
+    color: '#061015',
+    fontWeight: '800',
+    fontSize: 11,
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
   },
 
   // Secondary orb (kept near header for accessibility)
