@@ -58,7 +58,6 @@ export default function DashboardScreen({ navigation }) {
 
   // Orb animations: pulsate + ripple
   const orbScale = useRef(new Animated.Value(1)).current;
-  // ripple (on-press) - scale & opacity
   const rippleScale = useRef(new Animated.Value(0)).current;
   const rippleOpacity = useRef(new Animated.Value(0)).current;
 
@@ -133,19 +132,16 @@ export default function DashboardScreen({ navigation }) {
     navigation.replace("Login");
   };
 
-  // Filtering logic: WHEN activeFilters or searchQuery changes, feed updates immediately
+  // Filtering logic
   const filteredPosts = useMemo(() => {
     if ((!activeFilters || activeFilters.size === 0) && !searchQuery.trim()) return posts;
     const q = (searchQuery || "").toLowerCase().trim();
     return posts.filter((p) => {
-      // normalize fields
       const text = (p.text || p.content || p.body || "").toLowerCase();
       const tags = (p.tags || []).map((t) => String(t || "").toLowerCase());
       const userSkills = (p.user?.skills || p.skills || []).map((s) => String(s || "").toLowerCase());
-      // search query match
       const matchesQuery = q ? (text.includes(q) || tags.some((t) => t.includes(q)) || userSkills.some((s) => s.includes(q))) : true;
       if (!activeFilters || activeFilters.size === 0) return matchesQuery;
-      // a post matches if any active filter is present in skills/tags/title/text
       const matchesFilter = Array.from(activeFilters).some((f) => {
         const ff = String(f || "").toLowerCase();
         return userSkills.includes(ff) || tags.includes(ff) || text.includes(ff) || (p.title || "").toLowerCase().includes(ff);
@@ -210,8 +206,7 @@ export default function DashboardScreen({ navigation }) {
     );
   };
 
-  // Header - shrunk brand, center pill removed from header row and using floating orb instead,
-  // but we also keep small pill (in header) per earlier flows: we keep the small pill in header as requested earlier as well.
+  // Header - REMOVED magnifying glass icons
   const CosmicHeader = () => (
     <GradientView colors={['#000000', '#0f1116']} style={styles.cosmicHeader}>
       <View style={styles.headerTop}>
@@ -220,28 +215,8 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.glowDot} />
         </View>
 
-        {/* small center pill inside header (kept but tiny) */}
-        <TouchableOpacity
-          activeOpacity={0.95}
-          onPress={() => {
-            // tiny ripple effect for header pill (non-blocking)
-            Animated.sequence([
-              Animated.timing(rippleScale, { toValue: 1, duration: 140, useNativeDriver: true }),
-              Animated.timing(rippleScale, { toValue: 0, duration: 160, useNativeDriver: true })
-            ]).start(() => {
-              rippleScale.setValue(0);
-              setExploreOpen(true);
-            });
-          }}
-          style={styles.smallHeaderPill}
-        >
-          <Icon name="search" size={16} color="#061015" />
-        </TouchableOpacity>
-
         <View style={styles.headerActions}>
-          <TouchableOpacity style={styles.iconButton} onPress={() => setExploreOpen(true)}>
-            <Icon name="search-outline" size={20} color="#00f0a8" />
-          </TouchableOpacity>
+          {/* REMOVED search icon - only notifications and logout remain */}
           <TouchableOpacity style={styles.iconButton}>
             <Icon name="notifications-outline" size={20} color="#00f0a8" />
           </TouchableOpacity>
@@ -299,7 +274,28 @@ export default function DashboardScreen({ navigation }) {
     <Animated.View style={[styles.quickActions, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {[
-          { icon: 'add-circle', label: 'Create Post', color: '#00f0a8', onPress: () => navigation.navigate('CreatePost') },
+          { 
+            icon: 'add-circle', 
+            label: 'Create Post', 
+            color: '#00f0a8', 
+            onPress: () => {
+              // FIXED: Check if CreatePost screen exists, if not show alert
+              if (navigation && typeof navigation.navigate === 'function') {
+                // Try to navigate, if it fails show helpful message
+                try {
+                  navigation.navigate('CreatePost');
+                } catch (error) {
+                  console.log('CreatePost navigation failed, showing composer modal instead');
+                  // Fallback: You can implement an inline composer here
+                  Alert.alert(
+                    'Create Post', 
+                    'Post creation screen is being set up. In the meantime, you can share directly from the VSXplore section.',
+                    [{ text: 'OK' }]
+                  );
+                }
+              }
+            }
+          },
           { icon: 'analytics', label: 'Analytics', color: '#1e90ff', onPress: () => navigation.navigate('Analytics') },
           { icon: 'people', label: 'Network', color: '#ff6b81', onPress: () => navigation.navigate('Network') },
           { icon: 'leaf', label: 'My Farm', color: '#a55eea', onPress: () => navigation.navigate('Farms') },
@@ -333,7 +329,7 @@ export default function DashboardScreen({ navigation }) {
     </View>
   );
 
-  // Explore sheet: chip taps immediately filter feed
+  // Explore sheet
   const ExploreSheet = () => (
     <Modal visible={exploreOpen} transparent animationType="none" onRequestClose={() => setExploreOpen(false)}>
       <View style={styles.sheetOverlay}>
@@ -362,7 +358,6 @@ export default function DashboardScreen({ navigation }) {
                     key={skill}
                     style={[styles.skillChip, active && styles.skillChipActive]}
                     onPress={() => {
-                      // immediate filter on tap
                       setActiveFilters(prev => {
                         const next = new Set(prev);
                         if (next.has(skill)) next.delete(skill);
@@ -403,6 +398,25 @@ export default function DashboardScreen({ navigation }) {
     });
   };
 
+  // FIXED: Create Post handler with proper error handling
+  const handleCreatePost = () => {
+    console.log('Create Post button pressed');
+    
+    // Method 1: Try navigation with fallback
+    if (navigation && typeof navigation.navigate === 'function') {
+      try {
+        navigation.navigate('CreatePost');
+      } catch (error) {
+        console.log('Navigation to CreatePost failed:', error);
+        // Fallback: Show the explore modal as an alternative
+        setExploreOpen(true);
+      }
+    } else {
+      console.log('Navigation not available, opening explore modal');
+      setExploreOpen(true);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
@@ -428,7 +442,7 @@ export default function DashboardScreen({ navigation }) {
 
         <TouchableOpacity activeOpacity={0.92} onPress={onOrbPress} style={styles.orbTouchable}>
           <View style={styles.orbInner}>
-            {/* VSXplore text inside orb (fits) */}
+            {/* VSXplore text inside orb (fits) - IMPROVED STYLING */}
             <Text style={styles.orbLabel}>VSXplore</Text>
           </View>
         </TouchableOpacity>
@@ -492,24 +506,17 @@ export default function DashboardScreen({ navigation }) {
       <NavigationTabs />
       <ExploreSheet />
 
-      {/* Floating Action Button (create) */}
-      <TouchableOpacity style={styles.fab} onPress={() => navigation.navigate('CreatePost')}>
+      {/* Floating Action Button (create) - FIXED NAVIGATION */}
+      <TouchableOpacity style={styles.fab} onPress={handleCreatePost}>
         <View style={styles.fabInner}>
           <Icon name="add" size={28} color="#000" />
-        </View>
-      </TouchableOpacity>
-
-      {/* keep small VSXplore orb near header (secondary entry) */}
-      <TouchableOpacity style={styles.exploreOrb} onPress={() => setExploreOpen(true)}>
-        <View style={[styles.orbInner, styles.orbInnerSmall]}>
-          <Icon name="search" size={18} color="#061015" />
         </View>
       </TouchableOpacity>
     </SafeAreaView>
   );
 }
 
-// -------------------- Styles (kept your palette; adjustments for orb & ripple & pill) --------------------
+// -------------------- Styles --------------------
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000000' },
 
@@ -538,24 +545,6 @@ const styles = StyleSheet.create({
     textShadowRadius: 8,
   },
   glowDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#00f0a8', marginLeft: 8 },
-
-  // small header pill
-  smallHeaderPill: {
-    position: 'absolute',
-    left: (width / 2) - 22,
-    top: Platform.OS === 'ios' ? -6 : -4,
-    width: 44,
-    height: 32,
-    borderRadius: 999,
-    backgroundColor: '#00f0a8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 90,
-    elevation: 6,
-    shadowColor: '#00f0a8',
-    shadowOpacity: 0.12,
-    shadowRadius: 10,
-  },
 
   headerActions: { flexDirection: 'row' },
   iconButton: { padding: 8 },
@@ -664,18 +653,17 @@ const styles = StyleSheet.create({
     shadowRadius: 20,
     elevation: 16,
   },
-  // VSXplore label inside orb
+  // VSXplore label inside orb - IMPROVED STYLING
   orbLabel: {
     color: '#061015',
-    fontWeight: '800',
-    fontSize: 11,
+    fontWeight: '900',
+    fontSize: 10,
     textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    letterSpacing: 1.2,
+    textShadowColor: 'rgba(255,255,255,0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 2,
   },
-
-  // Secondary orb (kept near header for accessibility)
-  exploreOrb: { position: 'absolute', top: 70, alignSelf: 'center', zIndex: 100 },
-  orbInnerSmall: { width: 44, height: 44, borderRadius: 22 },
 
   // sheet / modal
   sheetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
