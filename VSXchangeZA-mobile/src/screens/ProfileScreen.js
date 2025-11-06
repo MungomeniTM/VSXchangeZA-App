@@ -18,7 +18,8 @@ import {
   Modal,
   FlatList,
   Vibration,
-  Switch
+  Switch,
+  Keyboard
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -28,9 +29,45 @@ import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
 
+// 🌀 QUANTUM STATE ENTANGLEMENT SYSTEM
+const useQuantumState = (initialState, persistenceKey = null) => {
+  const [state, setState] = useState(initialState);
+  const quantumField = useRef(new Map());
+  
+  const setQuantumState = useCallback((updater) => {
+    setState(prevState => {
+      const newState = typeof updater === 'function' ? updater(prevState) : updater;
+      
+      // Quantum persistence across dimensions
+      if (persistenceKey) {
+        AsyncStorage.setItem(persistenceKey, JSON.stringify(newState));
+      }
+      
+      // Entanglement propagation
+      if (quantumField.current.has(persistenceKey)) {
+        quantumField.current.get(persistenceKey).forEach(callback => {
+          callback(newState);
+        });
+      }
+      
+      return newState;
+    });
+  }, [persistenceKey]);
+
+  const entangle = useCallback((callback, dimension = 'alpha') => {
+    if (!quantumField.current.has(persistenceKey)) {
+      quantumField.current.set(persistenceKey, new Map());
+    }
+    quantumField.current.get(persistenceKey).set(dimension, callback);
+  }, [persistenceKey]);
+
+  return [state, setQuantumState, { entangle, quantumField }];
+};
+
 export default function ProfileScreen({ navigation }) {
-  const [user, setUser] = useState(null);
-  const [profile, setProfile] = useState({
+  // 🌟 QUANTUM STATE ENTANGLEMENT
+  const [user, setUser] = useQuantumState(null, 'userConsciousness');
+  const [profile, setProfile, profileQuantum] = useQuantumState({
     firstName: '',
     lastName: '',
     bio: '',
@@ -41,22 +78,70 @@ export default function ProfileScreen({ navigation }) {
     portfolio: [],
     location: null,
     userType: 'skilled',
-    farmDetails: null,
-    isAvailable: true
-  });
+    farmDetails: { images: [], location: null },
+    clientDetails: { location: null, serviceNeeds: [] },
+    isAvailable: true,
+    quantumSignature: Math.random().toString(36).substr(2, 9)
+  }, 'quantumProfile');
   
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [imageUploading, setImageUploading] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationPermission, setLocationPermission] = useState(false);
+  const [keyboardVisible, setKeyboardVisible] = useState(false);
 
+  // ✨ QUANTUM ANIMATIONS
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
-  const scaleAnim = useRef(new Animated.Value(0.9)).current;
+  const quantumGlow = useRef(new Animated.Value(0)).current;
+
+  // 🎪 REAL-TIME SYNC SYSTEM
+  useEffect(() => {
+    const keyboardDidShow = Keyboard.addListener('keyboardDidShow', () => {
+      setKeyboardVisible(true);
+    });
+    const keyboardDidHide = Keyboard.addListener('keyboardDidHide', () => {
+      setKeyboardVisible(false);
+    });
+
+    return () => {
+      keyboardDidShow.remove();
+      keyboardDidHide.remove();
+    };
+  }, []);
+
+  // Entangle profile updates with user data
+  useEffect(() => {
+    profileQuantum.entangle((newProfile) => {
+      // Real-time sync with global user state
+      if (newProfile.firstName || newProfile.lastName) {
+        updateGlobalUserState(newProfile);
+      }
+    }, 'globalSync');
+  }, []);
+
+  const updateGlobalUserState = async (profileData) => {
+    try {
+      const userData = await AsyncStorage.getItem('user');
+      if (userData) {
+        const userObj = JSON.parse(userData);
+        const updatedUser = {
+          ...userObj,
+          firstName: profileData.firstName || userObj.firstName,
+          lastName: profileData.lastName || userObj.lastName,
+          profileImage: profileData.profileImage || userObj.profileImage
+        };
+        await AsyncStorage.setItem('user', JSON.stringify(updatedUser));
+        setUser(updatedUser);
+      }
+    } catch (error) {
+      console.warn('Quantum sync failed:', error);
+    }
+  };
 
   const NavigationTabs = () => (
-    <View style={styles.navTabs}>
+    <View style={[styles.navTabs, keyboardVisible && styles.navTabsHidden]}>
       {[
         { id: 'feed', icon: 'home', label: 'Home' },
         { id: 'explore', icon: 'search', label: 'Discover' },
@@ -106,10 +191,10 @@ export default function ProfileScreen({ navigation }) {
         duration: 600, 
         useNativeDriver: true 
       }),
-      Animated.timing(scaleAnim, { 
-        toValue: 1, 
-        duration: 700, 
-        useNativeDriver: true 
+      Animated.timing(quantumGlow, {
+        toValue: 1,
+        duration: 1200,
+        useNativeDriver: true,
       })
     ]).start();
   };
@@ -125,47 +210,46 @@ export default function ProfileScreen({ navigation }) {
 
   const loadUserData = async () => {
     try {
-      const userData = await AsyncStorage.getItem('user');
-      const profileData = await AsyncStorage.getItem('userProfile');
+      const [userData, profileData] = await Promise.all([
+        AsyncStorage.getItem('user'),
+        AsyncStorage.getItem('quantumProfile')
+      ]);
       
       if (userData) {
         const userObj = JSON.parse(userData);
         setUser(userObj);
-        
-        setProfile(prev => ({
-          ...prev,
-          firstName: userObj.firstName || '',
-          lastName: userObj.lastName || '',
-          userType: userObj.role?.toLowerCase() || 'skilled'
-        }));
       }
       
       if (profileData) {
         setProfile(prev => ({ ...prev, ...JSON.parse(profileData) }));
       }
     } catch (error) {
-      console.warn('Profile data loading failed:', error);
+      console.warn('Quantum data loading failed:', error);
     }
   };
 
-  const saveProfile = async () => {
-    try {
-      await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
+  // 💾 QUANTUM AUTO-SAVE SYSTEM
+  const quantumAutoSave = useCallback((field, value) => {
+    setProfile(prev => {
+      const newProfile = {
+        ...prev,
+        [field]: value,
+        lastUpdated: new Date().toISOString()
+      };
       
-      trackProfileUpdate(profile);
+      // Real-time persistence
+      AsyncStorage.setItem('quantumProfile', JSON.stringify(newProfile));
       
-      Alert.alert('Success', 'Profile updated across all systems');
-      setEditing(false);
-    } catch (error) {
-      Alert.alert('Error', 'Failed to save profile');
-    }
-  };
+      return newProfile;
+    });
+  }, []);
 
   const trackProfileUpdate = (profileData) => {
     const analyticsData = {
       userId: user?.id,
-      updateType: 'profile',
+      updateType: 'quantum_profile',
       timestamp: new Date().toISOString(),
+      quantumSignature: profileData.quantumSignature,
       fieldsUpdated: Object.keys(profileData).filter(key => 
         profileData[key] !== null && profileData[key] !== ''
       ),
@@ -175,38 +259,66 @@ export default function ProfileScreen({ navigation }) {
       skillsCount: profileData.skills?.length || 0
     };
     
-    console.log('Analytics:', analyticsData);
+    console.log('Quantum Analytics:', analyticsData);
   };
 
-  const uploadProfileImage = async () => {
+  // 📸 ADVANCED MULTI-TYPE IMAGE UPLOAD
+  const uploadImages = async (type = 'profile') => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (!permission.granted) {
-        Alert.alert('Permission required', 'Need camera roll access');
+        Alert.alert('Quantum Access Required', 'Need camera roll permissions');
         return;
       }
 
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: true,
-        aspect: [1, 1],
+        allowsEditing: type === 'profile',
+        allowsMultipleSelection: type !== 'profile',
+        aspect: type === 'profile' ? [1, 1] : [4, 3],
         quality: 0.8,
       });
 
-      if (!result.canceled && result.assets[0]) {
+      if (!result.canceled && result.assets) {
         setImageUploading(true);
         
-        const imageUrl = await simulateQuantumUpload(result.assets[0].uri);
+        const uploadedUrls = await Promise.all(
+          result.assets.map(asset => simulateQuantumUpload(asset.uri))
+        );
+
+        if (type === 'profile') {
+          quantumAutoSave('profileImage', uploadedUrls[0]);
+        } else if (type === 'farm' && profile.userType === 'farmer') {
+          setProfile(prev => ({
+            ...prev,
+            farmDetails: {
+              ...prev.farmDetails,
+              images: [...prev.farmDetails.images, ...uploadedUrls.map(url => ({
+                uri: url,
+                id: Date.now().toString() + Math.random(),
+                timestamp: new Date().toISOString()
+              }))]
+            }
+          }));
+        } else if (type === 'portfolio') {
+          setProfile(prev => ({
+            ...prev,
+            portfolio: [...prev.portfolio, ...uploadedUrls.map(url => ({
+              uri: url,
+              id: Date.now().toString() + Math.random(),
+              description: '',
+              timestamp: new Date().toISOString()
+            }))]
+          }));
+        }
         
-        setProfile(prev => ({ ...prev, profileImage: imageUrl }));
         setImageUploading(false);
-        
         Vibration.vibrate(50);
       }
     } catch (error) {
       setImageUploading(false);
-      Alert.alert('Upload Failed', 'Please try another image');
+      Alert.alert('Quantum Upload Failed', 'Dimensional interference detected');
     }
   };
 
@@ -214,75 +326,94 @@ export default function ProfileScreen({ navigation }) {
     return new Promise((resolve) => {
       setTimeout(() => {
         resolve(uri);
-      }, 1000);
+      }, 500);
     });
   };
 
+  // 🗺️ QUANTUM LOCATION ENTANGLEMENT
   const getCurrentLocation = async () => {
     try {
       if (!locationPermission) {
-        Alert.alert('Location Access', 'Please enable location permissions in settings');
+        Alert.alert('Quantum Location', 'Enable location permissions for precise entanglement');
         return;
       }
 
       const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
+        accuracy: Location.Accuracy.High,
       });
 
       const { latitude, longitude } = location.coords;
       
-      const address = await getAddressFromCoords(latitude, longitude);
-      
-      const newLocation = {
+      const address = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude
+      });
+
+      const readableAddress = address[0] 
+        ? `${address[0].name || ''} ${address[0].city || ''} ${address[0].region || ''}`.trim()
+        : `Quantum Coordinates (${latitude.toFixed(6)}, ${longitude.toFixed(6)})`;
+
+      const quantumLocation = {
         latitude,
         longitude,
-        address: address || `Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`
+        address: readableAddress,
+        accuracy: 'Quantum GPS Precision',
+        timestamp: new Date().toISOString()
       };
       
-      setProfile(prev => ({ ...prev, location: newLocation }));
-      trackLocationUpdate(newLocation);
-      
-      Alert.alert('Location Set', 'Your service location has been updated');
-    } catch (error) {
-      console.warn('Location fetch failed:', error);
-      Alert.alert('Location Error', 'Could not get your current location');
-    }
-  };
-
-  const getAddressFromCoords = async (lat, lng) => {
-    try {
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-      );
-      const data = await response.json();
-      
-      if (data.address) {
-        const { road, suburb, city, state, country } = data.address;
-        return [road, suburb, city, state, country].filter(Boolean).join(', ');
+      // Set location based on user type
+      if (profile.userType === 'farmer') {
+        setProfile(prev => ({
+          ...prev,
+          farmDetails: { ...prev.farmDetails, location: quantumLocation }
+        }));
+      } else if (profile.userType === 'client') {
+        setProfile(prev => ({
+          ...prev,
+          clientDetails: { ...prev.clientDetails, location: quantumLocation }
+        }));
+      } else {
+        quantumAutoSave('location', quantumLocation);
       }
+      
+      trackLocationUpdate(quantumLocation);
+      Alert.alert('Quantum Location Set', 'Spatial coordinates entangled successfully');
     } catch (error) {
-      console.warn('Geocoding failed:', error);
+      console.warn('Quantum location acquisition failed:', error);
+      Alert.alert('Spatial Anomaly', 'Quantum field disruption detected');
     }
-    return null;
   };
 
-  const handleManualLocation = () => {
+  const handleManualLocation = (userType = 'general') => {
     Alert.prompt(
-      'Set Location Manually',
-      'Enter your service location:',
+      'Quantum Location Input',
+      'Enter your spatial coordinates (address):',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Set Location', 
+          text: 'Entangle Location', 
           onPress: (address) => {
             if (address && address.trim()) {
               const manualLocation = {
-                latitude: -23.0833 + (Math.random() - 0.5) * 0.1,
-                longitude: 30.3833 + (Math.random() - 0.5) * 0.1,
-                address: address.trim()
+                latitude: -23.0833 + (Math.random() - 0.5) * 0.01,
+                longitude: 30.3833 + (Math.random() - 0.5) * 0.01,
+                address: address.trim(),
+                accuracy: 'Manual Quantum Input'
               };
-              setProfile(prev => ({ ...prev, location: manualLocation }));
-              trackLocationUpdate(manualLocation);
+
+              if (userType === 'farmer') {
+                setProfile(prev => ({
+                  ...prev,
+                  farmDetails: { ...prev.farmDetails, location: manualLocation }
+                }));
+              } else if (userType === 'client') {
+                setProfile(prev => ({
+                  ...prev,
+                  clientDetails: { ...prev.clientDetails, location: manualLocation }
+                }));
+              } else {
+                quantumAutoSave('location', manualLocation);
+              }
             }
           }
         }
@@ -292,17 +423,18 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const trackLocationUpdate = (location) => {
-    console.log('Location updated for service discovery:', location);
+    console.log('Quantum location entanglement:', location);
   };
 
+  // 🛠️ QUANTUM SKILL MATRIX
   const addSkill = () => {
     Alert.prompt(
-      'Add Skill',
-      'Enter your skill or expertise:',
+      'Acquire Quantum Skill',
+      'Enter your expertise:',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Add', 
+          text: 'Quantum Upload', 
           onPress: (skill) => {
             if (skill && skill.trim()) {
               setProfile(prev => ({
@@ -310,7 +442,9 @@ export default function ProfileScreen({ navigation }) {
                 skills: [...prev.skills, { 
                   id: Date.now().toString(), 
                   name: skill.trim(),
-                  category: 'general'
+                  category: 'quantum',
+                  proficiency: 0.85,
+                  acquired: new Date().toISOString()
                 }]
               }));
             }
@@ -327,35 +461,10 @@ export default function ProfileScreen({ navigation }) {
     }));
   };
 
-  const addPortfolioItem = async () => {
-    try {
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsMultipleSelection: true,
-        quality: 0.7,
-      });
-
-      if (!result.canceled && result.assets) {
-        const newItems = result.assets.map(asset => ({
-          id: Date.now().toString() + Math.random(),
-          uri: asset.uri,
-          description: '',
-          timestamp: new Date().toISOString()
-        }));
-
-        setProfile(prev => ({
-          ...prev,
-          portfolio: [...prev.portfolio, ...newItems]
-        }));
-      }
-    } catch (error) {
-      Alert.alert('Error', 'Failed to add portfolio items');
-    }
-  };
-
+  // 🌾 QUANTUM FARMER PROFILE
   const renderFarmerFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-      <Text style={styles.sectionTitle}>Farm Details</Text>
+      <Text style={styles.sectionTitle}>Quantum Farm Matrix</Text>
       
       <TextInput
         style={styles.input}
@@ -405,6 +514,117 @@ export default function ProfileScreen({ navigation }) {
           placeholderTextColor="#666"
         />
       </View>
+
+      {/* Farm Images */}
+      <View style={styles.imagesSection}>
+        <Text style={styles.imagesTitle}>Farm Images</Text>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <View style={styles.imagesGrid}>
+            {profile.farmDetails?.images?.map((image) => (
+              <View key={image.id} style={styles.imageItem}>
+                <Image source={{ uri: image.uri }} style={styles.farmImage} />
+                {editing && (
+                  <TouchableOpacity 
+                    style={styles.removeImage}
+                    onPress={() => setProfile(prev => ({
+                      ...prev,
+                      farmDetails: {
+                        ...prev.farmDetails,
+                        images: prev.farmDetails.images.filter(img => img.id !== image.id)
+                      }
+                    }))}
+                  >
+                    <Icon name="close-circle" size={20} color="#ff6b6b" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+            
+            {editing && (
+              <TouchableOpacity 
+                style={styles.addImageButton}
+                onPress={() => uploadImages('farm')}
+              >
+                <Icon name="add" size={30} color="#00f0a8" />
+                <Text style={styles.addImageText}>Add Farm Photos</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </ScrollView>
+      </View>
+
+      {/* Farm Location */}
+      <View style={styles.locationSubsection}>
+        <Text style={styles.subsectionTitle}>Farm Location</Text>
+        {profile.farmDetails?.location ? (
+          <View style={styles.locationCard}>
+            <Icon name="location" size={16} color="#00f0a8" />
+            <Text style={styles.locationText}>{profile.farmDetails.location.address}</Text>
+          </View>
+        ) : (
+          <TouchableOpacity 
+            style={styles.addLocationSmall}
+            onPress={() => handleManualLocation('farmer')}
+          >
+            <Icon name="add" size={16} color="#00f0a8" />
+            <Text style={styles.addLocationSmallText}>Set Farm Location</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </Animated.View>
+  );
+
+  // 👥 QUANTUM CLIENT PROFILE
+  const renderClientFields = () => (
+    <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
+      <Text style={styles.sectionTitle}>Client Service Matrix</Text>
+      
+      <TextInput
+        style={[styles.input, styles.textArea]}
+        placeholder="Service Needs & Requirements"
+        value={profile.clientDetails?.serviceNeeds?.join(', ') || ''}
+        onChangeText={(text) => setProfile(prev => ({
+          ...prev,
+          clientDetails: {
+            ...prev.clientDetails,
+            serviceNeeds: text.split(',').map(s => s.trim()).filter(Boolean)
+          }
+        }))}
+        multiline
+        numberOfLines={3}
+        placeholderTextColor="#666"
+      />
+      
+      <View style={styles.locationSubsection}>
+        <Text style={styles.subsectionTitle}>Service Location</Text>
+        {profile.clientDetails?.location ? (
+          <View style={styles.locationCard}>
+            <Icon name="location" size={16} color="#00f0a8" />
+            <Text style={styles.locationText}>{profile.clientDetails.location.address}</Text>
+          </View>
+        ) : (
+          <TouchableOpacity 
+            style={styles.addLocationSmall}
+            onPress={() => handleManualLocation('client')}
+          >
+            <Icon name="add" size={16} color="#00f0a8" />
+            <Text style={styles.addLocationSmallText}>Set Service Location</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={styles.availability}>
+        <View style={styles.availabilityInfo}>
+          <Icon name="notifications" size={18} color="#fff" />
+          <Text style={styles.availabilityText}>Receive Service Offers</Text>
+        </View>
+        <Switch
+          value={profile.isAvailable}
+          onValueChange={(value) => quantumAutoSave('isAvailable', value)}
+          trackColor={{ false: '#767577', true: '#00f0a8' }}
+          thumbColor={profile.isAvailable ? '#f4f3f4' : '#f4f3f4'}
+        />
+      </View>
     </Animated.View>
   );
 
@@ -441,14 +661,16 @@ export default function ProfileScreen({ navigation }) {
       </View>
 
       <View style={styles.profileMain}>
-        <TouchableOpacity onPress={uploadProfileImage}>
-          <View style={styles.avatarContainer}>
+        <TouchableOpacity onPress={() => uploadImages('profile')}>
+          <Animated.View style={[styles.avatarContainer, {
+            opacity: quantumGlow
+          }]}>
             {profile.profileImage ? (
               <Image source={{ uri: profile.profileImage }} style={styles.avatar} />
             ) : (
               <View style={styles.avatarPlaceholder}>
                 <Text style={styles.avatarText}>
-                  {user?.firstName?.[0]?.toUpperCase() || 'U'}
+                  {user?.firstName?.[0]?.toUpperCase() || 'Ψ'}
                 </Text>
               </View>
             )}
@@ -457,7 +679,7 @@ export default function ProfileScreen({ navigation }) {
                 <ActivityIndicator color="#00f0a8" />
               </View>
             )}
-          </View>
+          </Animated.View>
         </TouchableOpacity>
 
         <View style={styles.profileInfo}>
@@ -466,16 +688,18 @@ export default function ProfileScreen({ navigation }) {
               <TextInput
                 style={styles.nameInput}
                 value={profile.firstName}
-                onChangeText={(text) => setProfile(prev => ({ ...prev, firstName: text }))}
+                onChangeText={(text) => quantumAutoSave('firstName', text)}
                 placeholder="First Name"
                 placeholderTextColor="#666"
+                onSubmitEditing={Keyboard.dismiss}
               />
               <TextInput
                 style={styles.nameInput}
                 value={profile.lastName}
-                onChangeText={(text) => setProfile(prev => ({ ...prev, lastName: text }))}
+                onChangeText={(text) => quantumAutoSave('lastName', text)}
                 placeholder="Last Name"
                 placeholderTextColor="#666"
+                onSubmitEditing={Keyboard.dismiss}
               />
             </>
           ) : (
@@ -486,11 +710,11 @@ export default function ProfileScreen({ navigation }) {
               <Text style={styles.userType}>
                 {profile.userType?.toUpperCase()} 
                 <Icon name="location" size={12} color="#00f0a8" /> 
-                {profile.location ? ' Located' : ' Remote'}
+                {profile.location ? ' Quantum Located' : ' Remote Entity'}
               </Text>
               <Text style={styles.userStats}>
-                <Icon name="hammer" size={12} color="#666" /> {profile.skills.length} skills 
-                <Icon name="images" size={12} color="#666" /> {profile.portfolio.length} portfolio items
+                <Icon name="construct" size={12} color="#666" /> {profile.skills.length} skills 
+                <Icon name="images" size={12} color="#666" /> {profile.portfolio.length} quantum assets
               </Text>
             </>
           )}
@@ -502,10 +726,12 @@ export default function ProfileScreen({ navigation }) {
   const LocationSection = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Service Location</Text>
+        <Text style={styles.sectionTitle}>Quantum Service Field</Text>
         {editing && (
           <TouchableOpacity onPress={() => setShowLocationPicker(true)}>
-            <Text style={styles.seeAllText}>{profile.location ? 'Change' : 'Set Location'}</Text>
+            <Text style={styles.seeAllText}>
+              {profile.location ? 'Re-Entangle' : 'Set Coordinates'}
+            </Text>
           </TouchableOpacity>
         )}
       </View>
@@ -514,14 +740,14 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.locationCard}>
           <View style={styles.locationHeader}>
             <Icon name="location" size={20} color="#00f0a8" />
-            <Text style={styles.locationStatus}>Location Set</Text>
+            <Text style={styles.locationStatus}>Quantum Entangled</Text>
             <Icon name="checkmark-circle" size={16} color="#00f0a8" />
           </View>
           <Text style={styles.locationText}>
             {profile.location.address}
           </Text>
           <Text style={styles.coordinates}>
-            {profile.location.latitude.toFixed(4)}, {profile.location.longitude.toFixed(4)}
+            {profile.location.latitude.toFixed(6)}, {profile.location.longitude.toFixed(6)}
           </Text>
         </View>
       ) : (
@@ -529,19 +755,19 @@ export default function ProfileScreen({ navigation }) {
           style={styles.addLocationButton}
           onPress={() => setShowLocationPicker(true)}
         >
-          <Icon name="add-circle" size={24} color="#00f0a8" />
-          <Text style={styles.addLocationText}>Add Your Service Location</Text>
+          <Icon name="navigate-circle" size={24} color="#00f0a8" />
+          <Text style={styles.addLocationText}>Entangle Service Coordinates</Text>
         </TouchableOpacity>
       )}
 
       <View style={styles.availability}>
         <View style={styles.availabilityInfo}>
           <Icon name="business" size={18} color="#fff" />
-          <Text style={styles.availabilityText}>Available for Work</Text>
+          <Text style={styles.availabilityText}>Quantum Available</Text>
         </View>
         <Switch
           value={profile.isAvailable}
-          onValueChange={(value) => setProfile(prev => ({ ...prev, isAvailable: value }))}
+          onValueChange={(value) => quantumAutoSave('isAvailable', value)}
           trackColor={{ false: '#767577', true: '#00f0a8' }}
           thumbColor={profile.isAvailable ? '#f4f3f4' : '#f4f3f4'}
         />
@@ -552,10 +778,10 @@ export default function ProfileScreen({ navigation }) {
   const SkillsSection = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Skills & Expertise</Text>
+        <Text style={styles.sectionTitle}>Quantum Skills Matrix</Text>
         {editing && (
           <TouchableOpacity onPress={addSkill}>
-            <Text style={styles.seeAllText}>Add Skill</Text>
+            <Text style={styles.seeAllText}>Acquire Skill</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -579,7 +805,7 @@ export default function ProfileScreen({ navigation }) {
         {profile.skills.length === 0 && (
           <View style={styles.emptyState}>
             <Icon name="construct-outline" size={32} color="#666" />
-            <Text style={styles.emptyText}>No skills added yet. Add your expertise!</Text>
+            <Text style={styles.emptyText}>No quantum skills acquired</Text>
           </View>
         )}
       </View>
@@ -589,10 +815,10 @@ export default function ProfileScreen({ navigation }) {
   const PortfolioSection = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Work Portfolio</Text>
+        <Text style={styles.sectionTitle}>Quantum Portfolio</Text>
         {editing && (
-          <TouchableOpacity onPress={addPortfolioItem}>
-            <Text style={styles.seeAllText}>Add Items</Text>
+          <TouchableOpacity onPress={() => uploadImages('portfolio')}>
+            <Text style={styles.seeAllText}>Add Quantum Assets</Text>
           </TouchableOpacity>
         )}
       </View>
@@ -619,10 +845,10 @@ export default function ProfileScreen({ navigation }) {
           {editing && (
             <TouchableOpacity 
               style={styles.addPortfolioButton}
-              onPress={addPortfolioItem}
+              onPress={() => uploadImages('portfolio')}
             >
               <Icon name="add" size={40} color="#00f0a8" />
-              <Text style={styles.addPortfolioText}>Add Photos</Text>
+              <Text style={styles.addPortfolioText}>Add Quantum Assets</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -632,40 +858,43 @@ export default function ProfileScreen({ navigation }) {
 
   const BusinessSection = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-      <Text style={styles.sectionTitle}>Business Information</Text>
+      <Text style={styles.sectionTitle}>Quantum Identity Matrix</Text>
       
       <TextInput
         style={styles.input}
-        placeholder="Company Name (Optional)"
+        placeholder="Quantum Entity Name (Optional)"
         value={profile.company}
-        onChangeText={(text) => setProfile(prev => ({ ...prev, company: text }))}
+        onChangeText={(text) => quantumAutoSave('company', text)}
         editable={editing}
         placeholderTextColor="#666"
+        onSubmitEditing={Keyboard.dismiss}
       />
       
       <TextInput
         style={styles.input}
-        placeholder="Website URL (Optional)"
+        placeholder="Quantum Web Portal (Optional)"
         value={profile.website}
-        onChangeText={(text) => setProfile(prev => ({ ...prev, website: text }))}
+        onChangeText={(text) => quantumAutoSave('website', text)}
         editable={editing}
         placeholderTextColor="#666"
         keyboardType="url"
+        onSubmitEditing={Keyboard.dismiss}
       />
       
       <TextInput
         style={[styles.input, styles.textArea]}
-        placeholder="Bio & Service Description"
+        placeholder="Quantum Bio & Service Description"
         value={profile.bio}
-        onChangeText={(text) => setProfile(prev => ({ ...prev, bio: text }))}
+        onChangeText={(text) => quantumAutoSave('bio', text)}
         editable={editing}
         multiline
         numberOfLines={4}
         placeholderTextColor="#666"
+        onSubmitEditing={Keyboard.dismiss}
       />
 
       <View style={styles.userTypeSection}>
-        <Text style={styles.userTypeLabel}>I am a:</Text>
+        <Text style={styles.userTypeLabel}>Quantum Entity Type:</Text>
         <View style={styles.userTypeOptions}>
           {['skilled', 'farmer', 'client'].map((type) => (
             <TouchableOpacity
@@ -674,7 +903,7 @@ export default function ProfileScreen({ navigation }) {
                 styles.userTypeOption,
                 profile.userType === type && styles.userTypeOptionActive
               ]}
-              onPress={() => setProfile(prev => ({ ...prev, userType: type }))}
+              onPress={() => quantumAutoSave('userType', type)}
             >
               <Icon 
                 name={
@@ -705,7 +934,7 @@ export default function ProfileScreen({ navigation }) {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalHeader}>
-          <Text style={styles.modalTitle}>Set Service Location</Text>
+          <Text style={styles.modalTitle}>Quantum Location Entanglement</Text>
           <TouchableOpacity onPress={() => setShowLocationPicker(false)}>
             <Icon name="close" size={24} color="#00f0a8" />
           </TouchableOpacity>
@@ -717,20 +946,20 @@ export default function ProfileScreen({ navigation }) {
             onPress={getCurrentLocation}
           >
             <Icon name="navigate" size={32} color="#00f0a8" />
-            <Text style={styles.locationOptionTitle}>Use Current Location</Text>
+            <Text style={styles.locationOptionTitle}>Quantum GPS Detection</Text>
             <Text style={styles.locationOptionDesc}>
-              Automatically detect your location
+              Precise spatial coordinate acquisition
             </Text>
           </TouchableOpacity>
 
           <TouchableOpacity 
             style={styles.locationOption}
-            onPress={handleManualLocation}
+            onPress={() => handleManualLocation('general')}
           >
             <Icon name="pencil" size={32} color="#00f0a8" />
-            <Text style={styles.locationOptionTitle}>Enter Address</Text>
+            <Text style={styles.locationOptionTitle}>Manual Coordinate Input</Text>
             <Text style={styles.locationOptionDesc}>
-              Type your service location
+              Enter spatial coordinates manually
             </Text>
           </TouchableOpacity>
 
@@ -738,23 +967,23 @@ export default function ProfileScreen({ navigation }) {
             <TouchableOpacity 
               style={[styles.locationOption, styles.removeLocationOption]}
               onPress={() => {
-                setProfile(prev => ({ ...prev, location: null }));
+                quantumAutoSave('location', null);
                 setShowLocationPicker(false);
               }}
             >
               <Icon name="trash" size={32} color="#ff6b6b" />
               <Text style={[styles.locationOptionTitle, styles.removeLocationText]}>
-                Remove Location
+                Clear Quantum Coordinates
               </Text>
               <Text style={styles.locationOptionDesc}>
-                Clear your service location
+                Remove spatial entanglement
               </Text>
             </TouchableOpacity>
           )}
         </View>
         
         <Text style={styles.locationHint}>
-          Setting your location helps clients find your services in their area
+          Quantum location entanglement enables precise service matching across dimensions
         </Text>
       </View>
     </Modal>
@@ -769,22 +998,25 @@ export default function ProfileScreen({ navigation }) {
       <ScrollView 
         style={styles.scrollView}
         showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
       >
         <BusinessSection />
         <LocationSection />
         <SkillsSection />
         <PortfolioSection />
         
+        {/* Conditional Quantum Fields */}
         {profile.userType === 'farmer' && renderFarmerFields()}
+        {profile.userType === 'client' && renderClientFields()}
 
+        {/* Quantum Save Indicator */}
         {editing && (
-          <TouchableOpacity 
-            style={styles.saveButton}
-            onPress={saveProfile}
-          >
-            <Icon name="save" size={24} color="#000" />
-            <Text style={styles.saveButtonText}>Save Quantum Profile</Text>
-          </TouchableOpacity>
+          <View style={styles.quantumSaveSection}>
+            <Icon name="infinite" size={20} color="#00f0a8" />
+            <Text style={styles.quantumSaveText}>
+              Quantum Auto-Save Active • All changes persist across dimensions
+            </Text>
+          </View>
         )}
       </ScrollView>
 
@@ -1117,26 +1349,24 @@ const styles = StyleSheet.create({
   userTypeTextActive: {
     color: '#000',
   },
-  saveButton: {
+  quantumSaveSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00f0a8',
+    padding: 15,
     marginHorizontal: 20,
     marginBottom: 30,
-    padding: 18,
-    borderRadius: 14,
-    shadowColor: '#00f0a8',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
   },
-  saveButtonText: {
-    color: '#000',
-    fontSize: 18,
-    fontWeight: '800',
+  quantumSaveText: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
     marginLeft: 8,
+    textAlign: 'center',
   },
   navTabs: {
     flexDirection: 'row',
@@ -1145,6 +1375,9 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.08)',
     paddingHorizontal: 10,
     paddingVertical: 10,
+  },
+  navTabsHidden: {
+    display: 'none',
   },
   navTab: {
     flex: 1,
@@ -1218,5 +1451,79 @@ const styles = StyleSheet.create({
     padding: 20,
     fontSize: 14,
     fontStyle: 'italic',
+  },
+  // Farm-specific styles
+  imagesSection: {
+    marginTop: 15,
+  },
+  imagesTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  imagesGrid: {
+    flexDirection: 'row',
+  },
+  imageItem: {
+    position: 'relative',
+    width: 100,
+    height: 100,
+    marginRight: 10,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  farmImage: {
+    width: '100%',
+    height: '100%',
+  },
+  removeImage: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 10,
+  },
+  addImageButton: {
+    width: 100,
+    height: 100,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(0,240,168,0.3)',
+    borderStyle: 'dashed',
+  },
+  addImageText: {
+    color: '#00f0a8',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 5,
+    textAlign: 'center',
+  },
+  locationSubsection: {
+    marginTop: 15,
+  },
+  subsectionTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  addLocationSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    padding: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  addLocationSmallText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 6,
   },
 });
