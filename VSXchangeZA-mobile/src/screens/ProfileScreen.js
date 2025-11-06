@@ -24,13 +24,11 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAPI } from "../api";
 import * as ImagePicker from 'expo-image-picker';
-import MapView, { Marker } from 'react-native-maps';
+import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
 
-// 🎯 EARTH-CONNECTED QUANTUM PROFILE SYSTEM
 export default function ProfileScreen({ navigation }) {
-  // 🌟 CORE USER STATE
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState({
     firstName: '',
@@ -42,23 +40,21 @@ export default function ProfileScreen({ navigation }) {
     services: [],
     portfolio: [],
     location: null,
-    userType: 'skilled', // skilled, farmer, client
+    userType: 'skilled',
     farmDetails: null,
     isAvailable: true
   });
   
-  // 🎨 UI STATE
   const [editing, setEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [imageUploading, setImageUploading] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
+  const [locationPermission, setLocationPermission] = useState(false);
 
-  // ✨ ANIMATIONS
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
 
-  // 🎪 BOTTOM NAVIGATION MATCHING DASHBOARD
   const NavigationTabs = () => (
     <View style={styles.navTabs}>
       {[
@@ -75,7 +71,6 @@ export default function ProfileScreen({ navigation }) {
             if (tab.id === 'profile') {
               setActiveTab('profile');
             } else {
-              // Use same navigation as dashboard
               navigation.navigate(tab.id === 'feed' ? 'Dashboard' : tab.id);
             }
           }}
@@ -93,10 +88,10 @@ export default function ProfileScreen({ navigation }) {
     </View>
   );
 
-  // 🚀 INITIALIZATION
   useEffect(() => {
     loadUserData();
     startEntranceAnimations();
+    requestLocationPermission();
   }, []);
 
   const startEntranceAnimations = () => {
@@ -119,6 +114,15 @@ export default function ProfileScreen({ navigation }) {
     ]).start();
   };
 
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status === 'granted');
+    } catch (error) {
+      console.warn('Location permission request failed:', error);
+    }
+  };
+
   const loadUserData = async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
@@ -128,7 +132,6 @@ export default function ProfileScreen({ navigation }) {
         const userObj = JSON.parse(userData);
         setUser(userObj);
         
-        // Initialize profile with user data
         setProfile(prev => ({
           ...prev,
           firstName: userObj.firstName || '',
@@ -145,12 +148,10 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 💾 SAVE PROFILE WITH QUANTUM EFFICIENCY
   const saveProfile = async () => {
     try {
       await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
       
-      // Real-time analytics tracking
       trackProfileUpdate(profile);
       
       Alert.alert('Success', 'Profile updated across all systems');
@@ -161,7 +162,6 @@ export default function ProfileScreen({ navigation }) {
   };
 
   const trackProfileUpdate = (profileData) => {
-    // Real-time analytics integration
     const analyticsData = {
       userId: user?.id,
       updateType: 'profile',
@@ -175,11 +175,9 @@ export default function ProfileScreen({ navigation }) {
       skillsCount: profileData.skills?.length || 0
     };
     
-    // Send to analytics service
-    console.log('📊 Analytics:', analyticsData);
+    console.log('Analytics:', analyticsData);
   };
 
-  // 📸 ADVANCED IMAGE UPLOAD SYSTEM
   const uploadProfileImage = async () => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -199,7 +197,6 @@ export default function ProfileScreen({ navigation }) {
       if (!result.canceled && result.assets[0]) {
         setImageUploading(true);
         
-        // Simulate upload with quantum compression
         const imageUrl = await simulateQuantumUpload(result.assets[0].uri);
         
         setProfile(prev => ({ ...prev, profileImage: imageUrl }));
@@ -216,33 +213,88 @@ export default function ProfileScreen({ navigation }) {
   const simulateQuantumUpload = async (uri) => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(uri); // In production, upload to cloud storage
+        resolve(uri);
       }, 1000);
     });
   };
 
-  // 🗺️ LOCATION SERVICES
-  const handleLocationSelect = (region) => {
-    const newLocation = {
-      latitude: region.latitude,
-      longitude: region.longitude,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-      address: `Custom Location (${region.latitude.toFixed(4)}, ${region.longitude.toFixed(4)})`
-    };
-    
-    setProfile(prev => ({ ...prev, location: newLocation }));
-    setShowLocationPicker(false);
-    
-    // Track location update for service discovery
-    trackLocationUpdate(newLocation);
+  const getCurrentLocation = async () => {
+    try {
+      if (!locationPermission) {
+        Alert.alert('Location Access', 'Please enable location permissions in settings');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+      });
+
+      const { latitude, longitude } = location.coords;
+      
+      const address = await getAddressFromCoords(latitude, longitude);
+      
+      const newLocation = {
+        latitude,
+        longitude,
+        address: address || `Location (${latitude.toFixed(4)}, ${longitude.toFixed(4)})`
+      };
+      
+      setProfile(prev => ({ ...prev, location: newLocation }));
+      trackLocationUpdate(newLocation);
+      
+      Alert.alert('Location Set', 'Your service location has been updated');
+    } catch (error) {
+      console.warn('Location fetch failed:', error);
+      Alert.alert('Location Error', 'Could not get your current location');
+    }
+  };
+
+  const getAddressFromCoords = async (lat, lng) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+      );
+      const data = await response.json();
+      
+      if (data.address) {
+        const { road, suburb, city, state, country } = data.address;
+        return [road, suburb, city, state, country].filter(Boolean).join(', ');
+      }
+    } catch (error) {
+      console.warn('Geocoding failed:', error);
+    }
+    return null;
+  };
+
+  const handleManualLocation = () => {
+    Alert.prompt(
+      'Set Location Manually',
+      'Enter your service location:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Set Location', 
+          onPress: (address) => {
+            if (address && address.trim()) {
+              const manualLocation = {
+                latitude: -23.0833 + (Math.random() - 0.5) * 0.1,
+                longitude: 30.3833 + (Math.random() - 0.5) * 0.1,
+                address: address.trim()
+              };
+              setProfile(prev => ({ ...prev, location: manualLocation }));
+              trackLocationUpdate(manualLocation);
+            }
+          }
+        }
+      ],
+      'plain-text'
+    );
   };
 
   const trackLocationUpdate = (location) => {
-    console.log('📍 Location updated for service discovery:', location);
+    console.log('Location updated for service discovery:', location);
   };
 
-  // 🛠️ SKILLS & SERVICES MANAGEMENT
   const addSkill = () => {
     Alert.prompt(
       'Add Skill',
@@ -255,7 +307,11 @@ export default function ProfileScreen({ navigation }) {
             if (skill && skill.trim()) {
               setProfile(prev => ({
                 ...prev,
-                skills: [...prev.skills, { id: Date.now().toString(), name: skill.trim() }]
+                skills: [...prev.skills, { 
+                  id: Date.now().toString(), 
+                  name: skill.trim(),
+                  category: 'general'
+                }]
               }));
             }
           }
@@ -271,7 +327,6 @@ export default function ProfileScreen({ navigation }) {
     }));
   };
 
-  // 🎨 PORTFOLIO MANAGEMENT
   const addPortfolioItem = async () => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -298,7 +353,6 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 🌾 FARMER-SPECIFIC PROFILE
   const renderFarmerFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <Text style={styles.sectionTitle}>Farm Details</Text>
@@ -327,21 +381,33 @@ export default function ProfileScreen({ navigation }) {
         placeholderTextColor="#666"
       />
       
-      <TextInput
-        style={styles.input}
-        placeholder="Farm Size (acres)"
-        value={profile.farmDetails?.size || ''}
-        onChangeText={(text) => setProfile(prev => ({
-          ...prev,
-          farmDetails: { ...prev.farmDetails, size: text }
-        }))}
-        keyboardType="numeric"
-        placeholderTextColor="#666"
-      />
+      <View style={styles.row}>
+        <TextInput
+          style={[styles.input, styles.halfInput]}
+          placeholder="Farm Size (acres)"
+          value={profile.farmDetails?.size || ''}
+          onChangeText={(text) => setProfile(prev => ({
+            ...prev,
+            farmDetails: { ...prev.farmDetails, size: text }
+          }))}
+          keyboardType="numeric"
+          placeholderTextColor="#666"
+        />
+        
+        <TextInput
+          style={[styles.input, styles.halfInput]}
+          placeholder="Main Crop"
+          value={profile.farmDetails?.mainCrop || ''}
+          onChangeText={(text) => setProfile(prev => ({
+            ...prev,
+            farmDetails: { ...prev.farmDetails, mainCrop: text }
+          }))}
+          placeholderTextColor="#666"
+        />
+      </View>
     </Animated.View>
   );
 
-  // 🎯 PROFILE HEADER COMPONENT
   const ProfileHeader = () => (
     <Animated.View 
       style={[
@@ -418,7 +484,13 @@ export default function ProfileScreen({ navigation }) {
                 {profile.firstName} {profile.lastName}
               </Text>
               <Text style={styles.userType}>
-                {profile.userType?.toUpperCase()} • {profile.location ? '📍 Located' : '🌐 Remote'}
+                {profile.userType?.toUpperCase()} 
+                <Icon name="location" size={12} color="#00f0a8" /> 
+                {profile.location ? ' Located' : ' Remote'}
+              </Text>
+              <Text style={styles.userStats}>
+                <Icon name="hammer" size={12} color="#666" /> {profile.skills.length} skills 
+                <Icon name="images" size={12} color="#666" /> {profile.portfolio.length} portfolio items
               </Text>
             </>
           )}
@@ -427,19 +499,24 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 📍 LOCATION COMPONENT
   const LocationSection = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Service Location</Text>
-        <TouchableOpacity onPress={() => setShowLocationPicker(true)}>
-          <Text style={styles.seeAllText}>{profile.location ? 'Change' : 'Set Location'}</Text>
-        </TouchableOpacity>
+        {editing && (
+          <TouchableOpacity onPress={() => setShowLocationPicker(true)}>
+            <Text style={styles.seeAllText}>{profile.location ? 'Change' : 'Set Location'}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {profile.location ? (
         <View style={styles.locationCard}>
-          <Icon name="location" size={20} color="#00f0a8" />
+          <View style={styles.locationHeader}>
+            <Icon name="location" size={20} color="#00f0a8" />
+            <Text style={styles.locationStatus}>Location Set</Text>
+            <Icon name="checkmark-circle" size={16} color="#00f0a8" />
+          </View>
           <Text style={styles.locationText}>
             {profile.location.address}
           </Text>
@@ -458,7 +535,10 @@ export default function ProfileScreen({ navigation }) {
       )}
 
       <View style={styles.availability}>
-        <Text style={styles.availabilityText}>Available for Work</Text>
+        <View style={styles.availabilityInfo}>
+          <Icon name="business" size={18} color="#fff" />
+          <Text style={styles.availabilityText}>Available for Work</Text>
+        </View>
         <Switch
           value={profile.isAvailable}
           onValueChange={(value) => setProfile(prev => ({ ...prev, isAvailable: value }))}
@@ -469,7 +549,6 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 🛠️ SKILLS COMPONENT
   const SkillsSection = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <View style={styles.sectionHeader}>
@@ -484,6 +563,7 @@ export default function ProfileScreen({ navigation }) {
       <View style={styles.skillsGrid}>
         {profile.skills.map((skill) => (
           <View key={skill.id} style={styles.skillChip}>
+            <Icon name="construct" size={14} color="#00f0a8" />
             <Text style={styles.skillText}>{skill.name}</Text>
             {editing && (
               <TouchableOpacity 
@@ -497,13 +577,15 @@ export default function ProfileScreen({ navigation }) {
         ))}
         
         {profile.skills.length === 0 && (
-          <Text style={styles.emptyText}>No skills added yet</Text>
+          <View style={styles.emptyState}>
+            <Icon name="construct-outline" size={32} color="#666" />
+            <Text style={styles.emptyText}>No skills added yet. Add your expertise!</Text>
+          </View>
         )}
       </View>
     </Animated.View>
   );
 
-  // 💼 PORTFOLIO COMPONENT
   const PortfolioSection = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <View style={styles.sectionHeader}>
@@ -548,7 +630,6 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 🏢 BUSINESS COMPONENT
   const BusinessSection = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <Text style={styles.sectionTitle}>Business Information</Text>
@@ -582,7 +663,101 @@ export default function ProfileScreen({ navigation }) {
         numberOfLines={4}
         placeholderTextColor="#666"
       />
+
+      <View style={styles.userTypeSection}>
+        <Text style={styles.userTypeLabel}>I am a:</Text>
+        <View style={styles.userTypeOptions}>
+          {['skilled', 'farmer', 'client'].map((type) => (
+            <TouchableOpacity
+              key={type}
+              style={[
+                styles.userTypeOption,
+                profile.userType === type && styles.userTypeOptionActive
+              ]}
+              onPress={() => setProfile(prev => ({ ...prev, userType: type }))}
+            >
+              <Icon 
+                name={
+                  type === 'skilled' ? 'construct' : 
+                  type === 'farmer' ? 'leaf' : 'person'
+                } 
+                size={16} 
+                color={profile.userType === type ? '#000' : '#fff'} 
+              />
+              <Text style={[
+                styles.userTypeText,
+                profile.userType === type && styles.userTypeTextActive
+              ]}>
+                {type.charAt(0).toUpperCase() + type.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+      </View>
     </Animated.View>
+  );
+
+  const LocationPickerModal = () => (
+    <Modal
+      visible={showLocationPicker}
+      animationType="slide"
+      transparent
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>Set Service Location</Text>
+          <TouchableOpacity onPress={() => setShowLocationPicker(false)}>
+            <Icon name="close" size={24} color="#00f0a8" />
+          </TouchableOpacity>
+        </View>
+        
+        <View style={styles.locationOptions}>
+          <TouchableOpacity 
+            style={styles.locationOption}
+            onPress={getCurrentLocation}
+          >
+            <Icon name="navigate" size={32} color="#00f0a8" />
+            <Text style={styles.locationOptionTitle}>Use Current Location</Text>
+            <Text style={styles.locationOptionDesc}>
+              Automatically detect your location
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.locationOption}
+            onPress={handleManualLocation}
+          >
+            <Icon name="pencil" size={32} color="#00f0a8" />
+            <Text style={styles.locationOptionTitle}>Enter Address</Text>
+            <Text style={styles.locationOptionDesc}>
+              Type your service location
+            </Text>
+          </TouchableOpacity>
+
+          {profile.location && (
+            <TouchableOpacity 
+              style={[styles.locationOption, styles.removeLocationOption]}
+              onPress={() => {
+                setProfile(prev => ({ ...prev, location: null }));
+                setShowLocationPicker(false);
+              }}
+            >
+              <Icon name="trash" size={32} color="#ff6b6b" />
+              <Text style={[styles.locationOptionTitle, styles.removeLocationText]}>
+                Remove Location
+              </Text>
+              <Text style={styles.locationOptionDesc}>
+                Clear your service location
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
+        
+        <Text style={styles.locationHint}>
+          Setting your location helps clients find your services in their area
+        </Text>
+      </View>
+    </Modal>
   );
 
   return (
@@ -600,61 +775,25 @@ export default function ProfileScreen({ navigation }) {
         <SkillsSection />
         <PortfolioSection />
         
-        {/* Conditional Farmer Fields */}
         {profile.userType === 'farmer' && renderFarmerFields()}
 
-        {/* Save Button */}
         {editing && (
           <TouchableOpacity 
             style={styles.saveButton}
             onPress={saveProfile}
           >
+            <Icon name="save" size={24} color="#000" />
             <Text style={styles.saveButtonText}>Save Quantum Profile</Text>
           </TouchableOpacity>
         )}
       </ScrollView>
 
       <NavigationTabs />
-
-      {/* Location Picker Modal */}
-      <Modal
-        visible={showLocationPicker}
-        animationType="slide"
-        transparent
-      >
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Set Your Location</Text>
-            <TouchableOpacity onPress={() => setShowLocationPicker(false)}>
-              <Icon name="close" size={24} color="#00f0a8" />
-            </TouchableOpacity>
-          </View>
-          
-          <MapView
-            style={styles.map}
-            initialRegion={{
-              latitude: -23.0833,
-              longitude: 30.3833,
-              latitudeDelta: 0.1,
-              longitudeDelta: 0.1,
-            }}
-            onPress={(e) => handleLocationSelect(e.nativeEvent.coordinate)}
-          >
-            {profile.location && (
-              <Marker coordinate={profile.location} />
-            )}
-          </MapView>
-          
-          <Text style={styles.mapHint}>
-            Tap on map to set your service location
-          </Text>
-        </View>
-      </Modal>
+      <LocationPickerModal />
     </SafeAreaView>
   );
 }
 
-// 🎨 EARTH-CONNECTED QUANTUM STYLES
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -735,6 +874,11 @@ const styles = StyleSheet.create({
     color: '#00f0a8',
     fontSize: 14,
     fontWeight: '600',
+    marginBottom: 2,
+  },
+  userStats: {
+    color: '#666',
+    fontSize: 12,
   },
   nameInput: {
     color: '#fff',
@@ -787,6 +931,13 @@ const styles = StyleSheet.create({
     height: 100,
     textAlignVertical: 'top',
   },
+  row: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  halfInput: {
+    width: '48%',
+  },
   locationCard: {
     backgroundColor: 'rgba(0,240,168,0.1)',
     padding: 15,
@@ -795,16 +946,28 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,240,168,0.3)',
   },
+  locationHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  locationStatus: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+    marginRight: 4,
+    flex: 1,
+  },
   locationText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    marginTop: 8,
+    marginBottom: 4,
   },
   coordinates: {
     color: '#666',
     fontSize: 12,
-    marginTop: 4,
   },
   addLocationButton: {
     flexDirection: 'row',
@@ -829,10 +992,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 15,
   },
+  availabilityInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
   availabilityText: {
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    marginLeft: 8,
   },
   skillsGrid: {
     flexDirection: 'row',
@@ -854,15 +1022,22 @@ const styles = StyleSheet.create({
     color: '#00f0a8',
     fontSize: 14,
     fontWeight: '600',
+    marginLeft: 6,
     marginRight: 8,
   },
   removeSkill: {
     padding: 2,
   },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 20,
+  },
   emptyText: {
     color: '#666',
     fontSize: 14,
     fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 8,
   },
   portfolioGrid: {
     flexDirection: 'row',
@@ -904,13 +1079,53 @@ const styles = StyleSheet.create({
     marginTop: 8,
     textAlign: 'center',
   },
+  userTypeSection: {
+    marginTop: 15,
+  },
+  userTypeLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  userTypeOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  userTypeOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    marginHorizontal: 4,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  userTypeOptionActive: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  userTypeText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 6,
+  },
+  userTypeTextActive: {
+    color: '#000',
+  },
   saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: '#00f0a8',
     marginHorizontal: 20,
     marginBottom: 30,
     padding: 18,
     borderRadius: 14,
-    alignItems: 'center',
     shadowColor: '#00f0a8',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -921,6 +1136,7 @@ const styles = StyleSheet.create({
     color: '#000',
     fontSize: 18,
     fontWeight: '800',
+    marginLeft: 8,
   },
   navTabs: {
     flexDirection: 'row',
@@ -951,26 +1167,56 @@ const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
     backgroundColor: '#000',
+    paddingTop: Platform.OS === 'ios' ? 60 : 40,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 20,
-    paddingTop: Platform.OS === 'ios' ? 60 : 40,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
   modalTitle: {
     color: '#fff',
     fontSize: 20,
     fontWeight: '700',
   },
-  map: {
-    flex: 1,
+  locationOptions: {
+    padding: 20,
   },
-  mapHint: {
+  locationOption: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    padding: 20,
+    borderRadius: 12,
+    marginBottom: 15,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.2)',
+  },
+  removeLocationOption: {
+    borderColor: 'rgba(255,107,107,0.3)',
+  },
+  locationOptionTitle: {
+    color: '#00f0a8',
+    fontSize: 18,
+    fontWeight: '700',
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  removeLocationText: {
+    color: '#ff6b6b',
+  },
+  locationOptionDesc: {
+    color: '#666',
+    fontSize: 14,
+    textAlign: 'center',
+  },
+  locationHint: {
     color: '#666',
     textAlign: 'center',
     padding: 20,
     fontSize: 14,
+    fontStyle: 'italic',
   },
 });
