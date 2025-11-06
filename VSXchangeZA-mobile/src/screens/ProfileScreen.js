@@ -27,7 +27,7 @@ import * as ImagePicker from 'expo-image-picker';
 const { width, height } = Dimensions.get('window');
 
 // 🌟 QUANTUM STATE ENTANGLEMENT SYSTEM
-const createQuantumState = (initialState, entanglementKey = null) => {
+const useQuantumState = (initialState, entanglementKey = null) => {
   const [state, setState] = useState(initialState);
   const quantumField = useRef(new Map());
   const temporalEcho = useRef([]);
@@ -110,7 +110,7 @@ const useTemporalCoordinates = () => {
 // 🔮 QUANTUM PREDICTION ENGINE
 const useQuantumPrediction = (userPatterns, temporalContext) => {
   const predictionMatrix = useRef(new Map());
-  const certaintyField = useRef(0.42); // Starting with meaning of life certainty
+  const certaintyField = useRef(0.42);
 
   const predictNextAction = (currentContext) => {
     const contextHash = JSON.stringify(currentContext);
@@ -130,10 +130,9 @@ const useQuantumPrediction = (userPatterns, temporalContext) => {
       }
     }
     
-    // Quantum fluctuation - random but meaningful action
     const actions = ['editProfile', 'addSkill', 'uploadPortfolio', 'setLocation', 'verifyIdentity'];
     const randomAction = actions[Math.floor(Math.random() * actions.length)];
-    certaintyField.current = 0.13; // Low certainty for quantum fluctuations
+    certaintyField.current = 0.13;
     
     return randomAction;
   };
@@ -231,9 +230,9 @@ const QuantumInterface = ({ children, dimension = 'prime', intensity = 1 }) => {
 // 🎯 MAIN QUANTUM PROFILE SCREEN
 export default function QuantumProfileScreen({ navigation }) {
   // 🌌 QUANTUM STATE ENTANGLEMENT
-  const [user, setUser, userQuantum] = createQuantumState(null, 'userConsciousness');
-  const [profileData, setProfileData, profileQuantum] = createQuantumState({}, 'profileMatrix');
-  const [quantumMode, setQuantumMode, modeQuantum] = createQuantumState('collapsed', 'realityInterface');
+  const [user, setUser, userQuantum] = useQuantumState(null, 'userConsciousness');
+  const [profileData, setProfileData, profileQuantum] = useQuantumState({}, 'profileMatrix');
+  const [quantumMode, setQuantumMode, modeQuantum] = useQuantumState('collapsed', 'realityInterface');
   
   // 🕰️ TEMPORAL AWARENESS
   const temporal = useTemporalCoordinates();
@@ -242,10 +241,10 @@ export default function QuantumProfileScreen({ navigation }) {
   const quantumPredictor = useQuantumPrediction(profileData, temporal);
   
   // 🌟 INTERFACE STATES
-  const [editing, setEditing] = createQuantumState(false);
-  const [skills, setSkills] = createQuantumState([]);
-  const [portfolio, setPortfolio] = createQuantumState([]);
-  const [activeDimension, setActiveDimension] = createQuantumState('prime');
+  const [editing, setEditing] = useQuantumState(false);
+  const [skills, setSkills] = useQuantumState([]);
+  const [portfolio, setPortfolio] = useQuantumState([]);
+  const [activeDimension, setActiveDimension] = useQuantumState('prime');
   
   // 🎨 QUANTUM VISUALS
   const realityDistortion = useRef(new Animated.Value(0)).current;
@@ -267,18 +266,15 @@ export default function QuantumProfileScreen({ navigation }) {
 
   const initializeQuantumReality = async () => {
     try {
-      // Access multi-dimensional storage
-      const [userData, profileData, quantumMemories] = await Promise.all([
+      const [userData, profileData] = await Promise.all([
         AsyncStorage.getItem('user'),
-        AsyncStorage.getItem('quantumProfile'),
-        AsyncStorage.getItem('temporalEchoes')
+        AsyncStorage.getItem('quantumProfile')
       ]);
 
       if (userData) {
         const userConsciousness = JSON.parse(userData);
         setUser(userConsciousness);
         
-        // Quantum state prediction
         const predictedAction = quantumPredictor.predictNextAction({
           user: userConsciousness,
           time: temporal.present,
@@ -313,18 +309,15 @@ export default function QuantumProfileScreen({ navigation }) {
 
     } catch (quantumError) {
       console.warn('🌌 Quantum initialization failed:', quantumError);
-      // Collapse to classical reality
       setQuantumMode('classical');
     }
   };
 
   const commenceTemporalSynchronization = () => {
-    // Sync with African temporal rhythms
     const africanTimeCycles = setInterval(() => {
       const now = temporal.present;
       const hour = now.getHours();
       
-      // Adjust quantum intensity based on temporal patterns
       const intensity = hour >= 6 && hour <= 18 ? 0.8 : 1.2;
       setActiveDimension(intensity > 1 ? 'nocturnal' : 'solar');
     }, 60000);
@@ -345,7 +338,6 @@ export default function QuantumProfileScreen({ navigation }) {
         proficiency: method === 'neuralUpload' ? 0.95 : 0.75
       }];
       
-      // Learn from this acquisition
       quantumPredictor.learnFromOutcome(
         { skills: prev.length, time: temporal.present },
         'acquireSkill',
@@ -356,7 +348,7 @@ export default function QuantumProfileScreen({ navigation }) {
     });
   };
 
-  // 📸 MULTI-DIMENSIONAL PORTFOLIO CAPTURE
+  // 📸 MULTI-DIMENSIONAL PORTFOLIO CAPTURE - FIXED VERSION
   const captureQuantumPortfolio = async (dimension = 'prime') => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -364,33 +356,42 @@ export default function QuantumProfileScreen({ navigation }) {
         allowsEditing: true,
         aspect: [4, 3],
         quality: 0.9,
-        allowsMultipleSelection: true,
+        allowsMultipleSelection: false, // Single selection for stability
       });
 
-      if (!result.canceled) {
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        // QUANTUM FIX: Process assets without async/await in map
         const quantumAssets = result.assets.map(asset => ({
           id: `${asset.uri}-${temporal.present.getTime()}-${Math.random()}`,
           uri: asset.uri,
-          type: asset.type,
+          type: asset.type || 'image',
           dimension,
           temporalCoordinates: temporal.present,
           quantumState: 'superposition',
-          thumbnail: await generateQuantumThumbnail(asset.uri)
+          // Removed async thumbnail generation - using URI directly
+          thumbnail: asset.uri 
         }));
 
         setPortfolio(prev => [...prev, ...quantumAssets]);
         
         // Quantum feedback
         Vibration.vibrate([0, 50, 100, 50]);
+        
+        // Learn from successful capture
+        quantumPredictor.learnFromOutcome(
+          { portfolioSize: portfolio.length, dimension },
+          'capturePortfolio',
+          true
+        );
       }
     } catch (dimensionalError) {
       console.warn('🚫 Dimensional capture failed:', dimensionalError);
+      quantumPredictor.learnFromOutcome(
+        { portfolioSize: portfolio.length, dimension },
+        'capturePortfolio',
+        false
+      );
     }
-  };
-
-  const generateQuantumThumbnail = async (uri) => {
-    // Placeholder for quantum image processing
-    return uri;
   };
 
   // 🗺️ QUANTUM LOCATION ENTANGLEMENT
@@ -400,10 +401,10 @@ export default function QuantumProfileScreen({ navigation }) {
       coordinates: {
         latitude: locationData.latitude,
         longitude: locationData.longitude,
-        quantumVariance: 0.0001, // Quantum uncertainty principle
+        quantumVariance: 0.0001,
         temporalDrift: 0.000001
       },
-      serviceRadius: 5, // km with quantum fluctuations
+      serviceRadius: 5,
       availability: calculateQuantumAvailability(),
       dimensionalAnchor: activeDimension
     };
@@ -418,12 +419,11 @@ export default function QuantumProfileScreen({ navigation }) {
     const now = temporal.present;
     const hour = now.getHours();
     
-    // Quantum professionals are available across time zones
     return {
       prime: hour >= 6 && hour <= 22,
       nocturnal: hour >= 18 || hour <= 6,
-      emergency: true, // Always available for critical needs
-      quantum: Math.random() > 0.3 // Quantum superposition of availability
+      emergency: true,
+      quantum: Math.random() > 0.3
     };
   };
 
@@ -520,7 +520,7 @@ export default function QuantumProfileScreen({ navigation }) {
         
         <TouchableOpacity 
           style={styles.quantumAcquisitionButton}
-          onPress={() => /* Open skill acquisition interface */ null}
+          onPress={() => acquireQuantumSkill('Quantum Computing', 'neuralUpload')}
         >
           <Icon name="add-circle" size={24} color="#00f0a8" />
           <Text style={styles.quantumButtonText}>Acquire Quantum Skill</Text>
@@ -655,7 +655,12 @@ export default function QuantumProfileScreen({ navigation }) {
           onPress={() => {
             const nextAction = quantumPredictor.predictNextAction(profileData);
             console.log(`🎯 Executing quantum-predicted action: ${nextAction}`);
-            // Execute predicted action
+            // Execute predicted action based on prediction
+            if (nextAction === 'addSkill') {
+              acquireQuantumSkill('Predicted Skill', 'quantumIntuition');
+            } else if (nextAction === 'uploadPortfolio') {
+              captureQuantumPortfolio(activeDimension);
+            }
           }}
         >
           <Animated.View style={[styles.fabGlow, {
