@@ -16,613 +16,672 @@ import {
   Animated,
   Dimensions,
   Modal,
-  Switch,
-  FlatList
+  FlatList,
+  Vibration
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createAPI } from "../api";
 import * as ImagePicker from 'expo-image-picker';
-import MapView, { Marker } from 'react-native-maps';
 
 const { width, height } = Dimensions.get('window');
 
-// Quantum State Manager (Beyond Redux)
-const useQuantumState = (initialState) => {
+// 🌟 QUANTUM STATE ENTANGLEMENT SYSTEM
+const createQuantumState = (initialState, entanglementKey = null) => {
   const [state, setState] = useState(initialState);
-  const stateRef = useRef(state);
-  
-  const setQuantumState = (updater) => {
+  const quantumField = useRef(new Map());
+  const temporalEcho = useRef([]);
+
+  const setQuantumState = (updater, causalityPreservation = true) => {
+    if (causalityPreservation) {
+      temporalEcho.current.push(JSON.parse(JSON.stringify(state)));
+      if (temporalEcho.current.length > 10) temporalEcho.current.shift();
+    }
+
     if (typeof updater === 'function') {
       setState(prevState => {
         const newState = updater(prevState);
-        stateRef.current = newState;
+        
+        // Quantum entanglement across dimensions
+        if (entanglementKey && quantumField.current.has(entanglementKey)) {
+          quantumField.current.get(entanglementKey).forEach(callback => {
+            callback(newState);
+          });
+        }
+        
         return newState;
       });
     } else {
-      stateRef.current = updater;
       setState(updater);
     }
   };
 
-  return [state, setQuantumState, stateRef];
+  const entangle = (otherStateSetter, dimension = 'alpha') => {
+    if (!quantumField.current.has(entanglementKey)) {
+      quantumField.current.set(entanglementKey, new Map());
+    }
+    quantumField.current.get(entanglementKey).set(dimension, otherStateSetter);
+  };
+
+  const collapseWaveFunction = () => {
+    if (temporalEcho.current.length > 0) {
+      const previousState = temporalEcho.current.pop();
+      setQuantumState(previousState, false);
+      return true;
+    }
+    return false;
+  };
+
+  return [state, setQuantumState, { entangle, collapseWaveFunction, quantumField }];
 };
 
-// Temporal Animation Engine
-const useTemporalAnimation = (configs = []) => {
-  const animations = configs.map(() => useRef(new Animated.Value(0)).current);
-  
+// 🕰️ TEMPORAL COORDINATE SYSTEM
+const useTemporalCoordinates = () => {
+  const [present, setPresent] = useState(new Date());
+  const futureEcho = useRef(null);
+  const pastResonance = useRef([]);
+
   useEffect(() => {
-    const sequence = Animated.stagger(
-      100,
-      animations.map(anim => 
-        Animated.loop(
-          Animated.sequence([
-            Animated.timing(anim, {
-              toValue: 1,
-              duration: 2000,
-              useNativeDriver: true,
-            }),
-            Animated.timing(anim, {
-              toValue: 0,
-              duration: 2000,
-              useNativeDriver: true,
-            }),
-          ])
-        )
-      )
-    );
-    sequence.start();
-    
-    return () => sequence.stop();
+    const temporalFlow = setInterval(() => {
+      const now = new Date();
+      setPresent(now);
+      
+      // Store temporal resonance patterns
+      pastResonance.current.push(now.getTime());
+      if (pastResonance.current.length > 1000) pastResonance.current.shift();
+    }, 1000);
+
+    return () => clearInterval(temporalFlow);
   }, []);
 
-  return animations;
+  const projectFuture = (milliseconds) => {
+    futureEcho.current = new Date(present.getTime() + milliseconds);
+    return futureEcho.current;
+  };
+
+  const accessPast = (indexFromEnd = 0) => {
+    const pastIndex = pastResonance.current.length - 1 - indexFromEnd;
+    return pastIndex >= 0 ? new Date(pastResonance.current[pastIndex]) : present;
+  };
+
+  return { present, projectFuture, accessPast, futureEcho: futureEcho.current };
 };
 
-export default function ProfileScreen({ navigation }) {
-  // Quantum State Management
-  const [user, setUser, userRef] = useQuantumState(null);
-  const [loading, setLoading] = useQuantumState(true);
-  const [activeTab, setActiveTab] = useQuantumState('profile');
-  const [editing, setEditing] = useQuantumState(false);
-  const [skills, setSkills] = useQuantumState([]);
-  const [portfolio, setPortfolio] = useQuantumState([]);
-  const [serviceAreas, setServiceAreas] = useQuantumState([]);
-  const [location, setLocation] = useQuantumState(null);
+// 🔮 QUANTUM PREDICTION ENGINE
+const useQuantumPrediction = (userPatterns, temporalContext) => {
+  const predictionMatrix = useRef(new Map());
+  const certaintyField = useRef(0.42); // Starting with meaning of life certainty
 
-  // Temporal Animations
-  const [glowAnim, pulseAnim, slideAnim] = useTemporalAnimation([{}, {}, {}]);
+  const predictNextAction = (currentContext) => {
+    const contextHash = JSON.stringify(currentContext);
+    
+    if (predictionMatrix.current.has(contextHash)) {
+      const predictions = predictionMatrix.current.get(contextHash);
+      const totalWeight = predictions.reduce((sum, p) => sum + p.weight, 0);
+      const random = Math.random() * totalWeight;
+      
+      let weightSum = 0;
+      for (const prediction of predictions) {
+        weightSum += prediction.weight;
+        if (random <= weightSum) {
+          certaintyField.current = prediction.confidence;
+          return prediction.action;
+        }
+      }
+    }
+    
+    // Quantum fluctuation - random but meaningful action
+    const actions = ['editProfile', 'addSkill', 'uploadPortfolio', 'setLocation', 'verifyIdentity'];
+    const randomAction = actions[Math.floor(Math.random() * actions.length)];
+    certaintyField.current = 0.13; // Low certainty for quantum fluctuations
+    
+    return randomAction;
+  };
 
-  // Form States
-  const [formData, setFormData] = useQuantumState({
-    firstName: '',
-    lastName: '',
-    bio: '',
-    phone: '',
-    role: '',
-    farmSize: '',
-    crops: '',
-    equipment: '',
-    hourlyRate: '',
-    experience: ''
-  });
+  const learnFromOutcome = (context, action, success) => {
+    const contextHash = JSON.stringify(context);
+    if (!predictionMatrix.current.has(contextHash)) {
+      predictionMatrix.current.set(contextHash, []);
+    }
+    
+    const predictions = predictionMatrix.current.get(contextHash);
+    const existingPrediction = predictions.find(p => p.action === action);
+    
+    if (existingPrediction) {
+      existingPrediction.weight += success ? 0.1 : -0.05;
+      existingPrediction.confidence = (existingPrediction.confidence + certaintyField.current) / 2;
+    } else {
+      predictions.push({
+        action,
+        weight: success ? 0.5 : 0.1,
+        confidence: certaintyField.current,
+        timestamp: temporalContext.present
+      });
+    }
+  };
 
-  // Modal States
-  const [skillModal, setSkillModal] = useQuantumState(false);
-  const [portfolioModal, setPortfolioModal] = useQuantumState(false);
-  const [locationModal, setLocationModal] = useQuantumState(false);
-  const [newSkill, setNewSkill] = useQuantumState('');
-  const [verificationStatus, setVerificationStatus] = useQuantumState('pending');
+  return { predictNextAction, learnFromOutcome, certainty: () => certaintyField.current };
+};
 
-  // Available Skills Database (Quantum Knowledge Base)
-  const VOCATIONAL_SKILLS = [
-    'Welding', 'Plumbing', 'Electrical', 'Carpentry', 'Masonry',
-    'Painting', 'Mechanics', 'Solar Installation', 'App Development',
-    'Web Design', 'Farming', 'Livestock', 'Irrigation', 'Crop Rotation',
-    'Organic Farming', 'Beekeeping', 'Fisheries', 'Poultry', 'Agroforestry',
-    'Metalwork', 'Tailoring', 'Hair Styling', 'Cooking', 'Baking',
-    'Driving', 'Security', 'Childcare', 'Elder Care', 'Tutoring',
-    'Music Lessons', 'Sports Coaching', 'Yoga Instruction', 'Massage Therapy'
-  ];
+// 🌐 MULTI-DIMENSIONAL INTERFACE RENDERER
+const QuantumInterface = ({ children, dimension = 'prime', intensity = 1 }) => {
+  const phaseShift = useRef(new Animated.Value(0)).current;
+  const dimensionalOverlay = useRef(new Animated.Value(0)).current;
 
-  // Load Quantum User Data
-  const loadQuantumData = async () => {
+  useEffect(() => {
+    Animated.parallel([
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(phaseShift, {
+            toValue: 1,
+            duration: 3000 / intensity,
+            useNativeDriver: true,
+          }),
+          Animated.timing(phaseShift, {
+            toValue: 0,
+            duration: 3000 / intensity,
+            useNativeDriver: true,
+          }),
+        ])
+      ),
+      Animated.timing(dimensionalOverlay, {
+        toValue: 0.03 * intensity,
+        duration: 2000,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [intensity]);
+
+  const phaseStyle = {
+    transform: [
+      {
+        translateX: phaseShift.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, 2],
+        }),
+      },
+      {
+        translateY: phaseShift.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -1],
+        }),
+      },
+    ],
+  };
+
+  const overlayStyle = {
+    opacity: dimensionalOverlay,
+  };
+
+  return (
+    <Animated.View style={[{ flex: 1 }, phaseStyle]}>
+      {children}
+      <Animated.View
+        style={[
+          StyleSheet.absoluteFill,
+          overlayStyle,
+          styles[`dimension${dimension}`],
+        ]}
+        pointerEvents="none"
+      />
+    </Animated.View>
+  );
+};
+
+// 🎯 MAIN QUANTUM PROFILE SCREEN
+export default function QuantumProfileScreen({ navigation }) {
+  // 🌌 QUANTUM STATE ENTANGLEMENT
+  const [user, setUser, userQuantum] = createQuantumState(null, 'userConsciousness');
+  const [profileData, setProfileData, profileQuantum] = createQuantumState({}, 'profileMatrix');
+  const [quantumMode, setQuantumMode, modeQuantum] = createQuantumState('collapsed', 'realityInterface');
+  
+  // 🕰️ TEMPORAL AWARENESS
+  const temporal = useTemporalCoordinates();
+  
+  // 🔮 PREDICTION ENGINE
+  const quantumPredictor = useQuantumPrediction(profileData, temporal);
+  
+  // 🌟 INTERFACE STATES
+  const [editing, setEditing] = createQuantumState(false);
+  const [skills, setSkills] = createQuantumState([]);
+  const [portfolio, setPortfolio] = createQuantumState([]);
+  const [activeDimension, setActiveDimension] = createQuantumState('prime');
+  
+  // 🎨 QUANTUM VISUALS
+  const realityDistortion = useRef(new Animated.Value(0)).current;
+  const quantumGlow = useRef(new Animated.Value(0.3)).current;
+
+  // Entangle quantum states
+  useEffect(() => {
+    userQuantum.entangle(setProfileData, 'consciousnessTransfer');
+    profileQuantum.entangle((newData) => {
+      quantumPredictor.learnFromOutcome(profileData, 'dataUpdate', true);
+    }, 'predictiveLearning');
+  }, []);
+
+  // Initialize Quantum Reality
+  useEffect(() => {
+    initializeQuantumReality();
+    commenceTemporalSynchronization();
+  }, []);
+
+  const initializeQuantumReality = async () => {
     try {
-      const [userData, profileData] = await Promise.all([
+      // Access multi-dimensional storage
+      const [userData, profileData, quantumMemories] = await Promise.all([
         AsyncStorage.getItem('user'),
-        AsyncStorage.getItem('profileData')
+        AsyncStorage.getItem('quantumProfile'),
+        AsyncStorage.getItem('temporalEchoes')
       ]);
 
       if (userData) {
-        const userObj = JSON.parse(userData);
-        setUser(userObj);
-        setFormData(prev => ({
-          ...prev,
-          firstName: userObj.firstName || '',
-          lastName: userObj.lastName || '',
-          role: userObj.role || '',
-          bio: userObj.bio || ''
-        }));
+        const userConsciousness = JSON.parse(userData);
+        setUser(userConsciousness);
+        
+        // Quantum state prediction
+        const predictedAction = quantumPredictor.predictNextAction({
+          user: userConsciousness,
+          time: temporal.present,
+          location: 'Thohoyandou'
+        });
+        
+        console.log(`🔮 Quantum prediction: User likely to ${predictedAction}`);
       }
 
-      if (profileData) {
-        const profileObj = JSON.parse(profileData);
-        setSkills(profileObj.skills || []);
-        setPortfolio(profileObj.portfolio || []);
-        setServiceAreas(profileObj.serviceAreas || []);
-        setLocation(profileObj.location);
-      }
+      // Begin reality distortion sequence
+      Animated.sequence([
+        Animated.timing(quantumGlow, {
+          toValue: 1,
+          duration: 2000,
+          useNativeDriver: true,
+        }),
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(realityDistortion, {
+              toValue: 1,
+              duration: 1500,
+              useNativeDriver: true,
+            }),
+            Animated.timing(realityDistortion, {
+              toValue: 0,
+              duration: 1500,
+              useNativeDriver: true,
+            }),
+          ])
+        ),
+      ]).start();
 
-      // Simulate quantum verification check
-      checkQuantumVerification();
-    } catch (error) {
-      console.warn('Quantum data load failed:', error);
-    } finally {
-      setLoading(false);
+    } catch (quantumError) {
+      console.warn('🌌 Quantum initialization failed:', quantumError);
+      // Collapse to classical reality
+      setQuantumMode('classical');
     }
   };
 
-  const checkQuantumVerification = async () => {
-    // Advanced verification algorithm
-    const trustScore = calculateTrustScore();
-    setVerificationStatus(trustScore > 80 ? 'verified' : trustScore > 50 ? 'pending' : 'unverified');
+  const commenceTemporalSynchronization = () => {
+    // Sync with African temporal rhythms
+    const africanTimeCycles = setInterval(() => {
+      const now = temporal.present;
+      const hour = now.getHours();
+      
+      // Adjust quantum intensity based on temporal patterns
+      const intensity = hour >= 6 && hour <= 18 ? 0.8 : 1.2;
+      setActiveDimension(intensity > 1 ? 'nocturnal' : 'solar');
+    }, 60000);
+
+    return () => clearInterval(africanTimeCycles);
   };
 
-  const calculateTrustScore = () => {
-    let score = 0;
-    if (userRef.current?.phone) score += 30;
-    if (skills.length > 0) score += 25;
-    if (portfolio.length > 0) score += 20;
-    if (location) score += 15;
-    if (userRef.current?.bio?.length > 50) score += 10;
-    return score;
+  // 🌍 QUANTUM SKILL ACQUISITION
+  const acquireQuantumSkill = (skill, method = 'neuralUpload') => {
+    Vibration.vibrate(100);
+    
+    setSkills(prev => {
+      const newSkills = [...prev, {
+        skill,
+        method,
+        timestamp: temporal.present,
+        quantumSignature: Math.random().toString(36).substr(2, 9),
+        proficiency: method === 'neuralUpload' ? 0.95 : 0.75
+      }];
+      
+      // Learn from this acquisition
+      quantumPredictor.learnFromOutcome(
+        { skills: prev.length, time: temporal.present },
+        'acquireSkill',
+        true
+      );
+      
+      return newSkills;
+    });
   };
 
-  useEffect(() => {
-    loadQuantumData();
-  }, []);
-
-  // Quantum Image Picker (Multi-dimensional)
-  const pickPortfolioImage = async () => {
+  // 📸 MULTI-DIMENSIONAL PORTFOLIO CAPTURE
+  const captureQuantumPortfolio = async (dimension = 'prime') => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        mediaTypes: ImagePicker.MediaTypeOptions.All,
         allowsEditing: true,
         aspect: [4, 3],
-        quality: 0.8,
+        quality: 0.9,
+        allowsMultipleSelection: true,
       });
 
       if (!result.canceled) {
-        const newItem = {
-          id: Date.now().toString(),
-          uri: result.assets[0].uri,
-          type: 'image',
-          timestamp: new Date().toISOString(),
-          description: ''
-        };
-        setPortfolio(prev => [...prev, newItem]);
+        const quantumAssets = result.assets.map(asset => ({
+          id: `${asset.uri}-${temporal.present.getTime()}-${Math.random()}`,
+          uri: asset.uri,
+          type: asset.type,
+          dimension,
+          temporalCoordinates: temporal.present,
+          quantumState: 'superposition',
+          thumbnail: await generateQuantumThumbnail(asset.uri)
+        }));
+
+        setPortfolio(prev => [...prev, ...quantumAssets]);
+        
+        // Quantum feedback
+        Vibration.vibrate([0, 50, 100, 50]);
       }
-    } catch (error) {
-      Alert.alert("Quantum Error", "Failed to access multi-dimensional image library");
+    } catch (dimensionalError) {
+      console.warn('🚫 Dimensional capture failed:', dimensionalError);
     }
   };
 
-  // Save Quantum Profile
-  const saveQuantumProfile = async () => {
-    setLoading(true);
-    try {
-      const api = await createAPI();
-      const payload = {
-        ...formData,
-        skills,
-        portfolio,
-        serviceAreas,
-        location,
-        verificationStatus,
-        lastUpdated: new Date().toISOString()
-      };
-
-      await api.put('/profile', payload);
-      await AsyncStorage.setItem('profileData', JSON.stringify(payload));
-      
-      Alert.alert("Quantum Save Complete", "Profile synchronized across dimensions");
-      setEditing(false);
-    } catch (error) {
-      Alert.alert("Temporal Anomaly", "Failed to save across time continuum");
-    } finally {
-      setLoading(false);
-    }
+  const generateQuantumThumbnail = async (uri) => {
+    // Placeholder for quantum image processing
+    return uri;
   };
 
-  // Add Skill with AI Suggestion
-  const addQuantumSkill = (skill) => {
-    if (skill && !skills.includes(skill)) {
-      setSkills(prev => [...prev, skill]);
-      setNewSkill('');
-      setSkillModal(false);
-    }
+  // 🗺️ QUANTUM LOCATION ENTANGLEMENT
+  const entangleWithLocation = (locationData) => {
+    const quantumLocation = {
+      ...locationData,
+      coordinates: {
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        quantumVariance: 0.0001, // Quantum uncertainty principle
+        temporalDrift: 0.000001
+      },
+      serviceRadius: 5, // km with quantum fluctuations
+      availability: calculateQuantumAvailability(),
+      dimensionalAnchor: activeDimension
+    };
+
+    setProfileData(prev => ({
+      ...prev,
+      location: quantumLocation
+    }));
   };
 
-  // Remove Skill with Quantum Entanglement
-  const removeQuantumSkill = (skillToRemove) => {
-    setSkills(prev => prev.filter(skill => skill !== skillToRemove));
+  const calculateQuantumAvailability = () => {
+    const now = temporal.present;
+    const hour = now.getHours();
+    
+    // Quantum professionals are available across time zones
+    return {
+      prime: hour >= 6 && hour <= 22,
+      nocturnal: hour >= 18 || hour <= 6,
+      emergency: true, // Always available for critical needs
+      quantum: Math.random() > 0.3 // Quantum superposition of availability
+    };
   };
 
-  // Render Components with Temporal Intelligence
-
+  // 🎨 RENDER QUANTUM INTERFACE
   const QuantumHeader = () => (
-    <Animated.View style={[styles.quantumHeader, { opacity: glowAnim }]}>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-        <Icon name="arrow-back" size={24} color="#00f0a8" />
+    <Animated.View style={[styles.quantumHeader, { opacity: quantumGlow }]}>
+      <TouchableOpacity 
+        style={styles.quantumButton}
+        onPress={() => userQuantum.collapseWaveFunction() || navigation.goBack()}
+      >
+        <Icon name="chevron-back" size={28} color="#00f0a8" />
       </TouchableOpacity>
       
-      <View style={styles.headerCenter}>
-        <Text style={styles.headerTitle}>Quantum Profile</Text>
-        <View style={[styles.verificationBadge, styles[`badge${verificationStatus}`]]}>
-          <Icon 
-            name={verificationStatus === 'verified' ? "shield-checkmark" : "time"} 
-            size={12} 
-            color="#000" 
-          />
-          <Text style={styles.verificationText}>
-            {verificationStatus.charAt(0).toUpperCase() + verificationStatus.slice(1)}
-          </Text>
-        </View>
+      <View style={styles.quantumTitleContainer}>
+        <Animated.Text style={[styles.quantumTitle, {
+          transform: [{
+            translateX: realityDistortion.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 3]
+            })
+          }]
+        }]}>
+          Quantum Profile
+        </Animated.Text>
+        <Text style={styles.temporalCoordinates}>
+          {temporal.present.toLocaleTimeString()} • {activeDimension.toUpperCase()}
+        </Text>
       </View>
 
       <TouchableOpacity 
-        style={styles.editButton}
-        onPress={() => setEditing(!editing)}
+        style={styles.quantumButton}
+        onPress={() => setQuantumMode(quantumMode === 'collapsed' ? 'superposition' : 'collapsed')}
       >
-        <Icon name={editing ? "checkmark" : "pencil"} size={22} color="#00f0a8" />
+        <Icon 
+          name={quantumMode === 'collapsed' ? "infinite" : "cube"} 
+          size={28} 
+          color="#00f0a8" 
+        />
       </TouchableOpacity>
     </Animated.View>
   );
 
   const QuantumAvatar = () => (
-    <Animated.View style={[styles.avatarContainer, { transform: [{ scale: pulseAnim }] }]}>
-      <View style={styles.avatar}>
-        <Text style={styles.avatarText}>
-          {user?.firstName?.[0]?.toUpperCase() || '?'}
+    <Animated.View style={[styles.quantumAvatarContainer, {
+      transform: [{
+        scale: quantumGlow.interpolate({
+          inputRange: [0, 1],
+          outputRange: [1, 1.05]
+        })
+      }]
+    }]}>
+      <View style={styles.quantumAvatar}>
+        <Text style={styles.quantumAvatarText}>
+          {user?.firstName?.[0]?.toUpperCase() || 'Ψ'}
         </Text>
       </View>
-      <TouchableOpacity style={styles.cameraButton} disabled={!editing}>
-        <Icon name="camera" size={16} color="#000" />
-      </TouchableOpacity>
+      <Animated.View style={[styles.quantumOrbital, {
+        transform: [{
+          rotate: realityDistortion.interpolate({
+            inputRange: [0, 1],
+            outputRange: ['0deg', '360deg']
+          })
+        }]
+      }]} />
     </Animated.View>
   );
 
   const SkillQuantumField = () => (
-    <View style={styles.quantumField}>
-      <View style={styles.fieldHeader}>
-        <Text style={styles.fieldLabel}>Quantum Skills</Text>
+    <QuantumInterface dimension={activeDimension} intensity={1.2}>
+      <View style={styles.quantumField}>
+        <Text style={styles.quantumFieldTitle}>Quantum Skills Matrix</Text>
+        <Text style={styles.quantumFieldSubtitle}>
+          Skills exist in superposition until observed
+        </Text>
+        
+        <View style={styles.skillsUniverse}>
+          {skills.map((skill, index) => (
+            <Animated.View 
+              key={skill.quantumSignature}
+              style={[styles.quantumSkill, {
+                opacity: realityDistortion.interpolate({
+                  inputRange: [0, 0.5, 1],
+                  outputRange: [1, 0.7, 1]
+                })
+              }]}
+            >
+              <Text style={styles.quantumSkillText}>{skill.skill}</Text>
+              <View style={styles.skillProficiency}>
+                <View style={[styles.proficiencyBar, { width: `${skill.proficiency * 100}%` }]} />
+              </View>
+            </Animated.View>
+          ))}
+        </View>
+        
         <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => setSkillModal(true)}
-          disabled={!editing}
+          style={styles.quantumAcquisitionButton}
+          onPress={() => /* Open skill acquisition interface */ null}
         >
           <Icon name="add-circle" size={24} color="#00f0a8" />
+          <Text style={styles.quantumButtonText}>Acquire Quantum Skill</Text>
         </TouchableOpacity>
       </View>
-      
-      <View style={styles.skillsGrid}>
-        {skills.map((skill, index) => (
-          <Animated.View 
-            key={skill} 
-            style={[styles.skillChip, { opacity: slideAnim }]}
-          >
-            <Text style={styles.skillText}>{skill}</Text>
-            {editing && (
-              <TouchableOpacity 
-                style={styles.removeSkill}
-                onPress={() => removeQuantumSkill(skill)}
-              >
-                <Icon name="close" size={14} color="#ff6b6b" />
-              </TouchableOpacity>
-            )}
-          </Animated.View>
-        ))}
-        {skills.length === 0 && (
-          <Text style={styles.emptyText}>Add your vocational skills</Text>
-        )}
-      </View>
-    </View>
+    </QuantumInterface>
   );
 
-  const PortfolioQuantumField = () => (
-    <View style={styles.quantumField}>
-      <View style={styles.fieldHeader}>
-        <Text style={styles.fieldLabel}>Multi-dimensional Portfolio</Text>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={pickPortfolioImage}
-          disabled={!editing}
-        >
-          <Icon name="image" size={24} color="#00f0a8" />
-        </TouchableOpacity>
-      </View>
-      
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={styles.portfolioGrid}>
-          {portfolio.map((item) => (
-            <View key={item.id} style={styles.portfolioItem}>
-              <Image source={{ uri: item.uri }} style={styles.portfolioImage} />
-              {editing && (
-                <TouchableOpacity style={styles.removePortfolio}>
-                  <Icon name="close" size={16} color="#fff" />
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-          {portfolio.length === 0 && (
-            <View style={styles.emptyPortfolio}>
-              <Icon name="images" size={40} color="#666" />
-              <Text style={styles.emptyText}>Add your work photos</Text>
-            </View>
-          )}
-        </View>
-      </ScrollView>
-    </View>
-  );
-
-  const LocationQuantumField = () => (
-    <View style={styles.quantumField}>
-      <View style={styles.fieldHeader}>
-        <Text style={styles.fieldLabel}>Service Quantum Field</Text>
-        <TouchableOpacity 
-          style={styles.addButton}
-          onPress={() => setLocationModal(true)}
-          disabled={!editing}
-        >
-          <Icon name="location" size={24} color="#00f0a8" />
-        </TouchableOpacity>
-      </View>
-      
-      {location ? (
-        <View style={styles.locationPreview}>
-          <Text style={styles.locationText}>{location.address}</Text>
-          <Text style={styles.coordinates}>
-            {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-          </Text>
-        </View>
-      ) : (
-        <Text style={styles.emptyText}>Set your service location</Text>
-      )}
-    </View>
-  );
-
-  const RoleSpecificQuantumFields = () => {
-    if (user?.role === 'farmer') {
-      return (
-        <>
-          <View style={styles.quantumField}>
-            <Text style={styles.fieldLabel}>Farm Quantum Data</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Farm size (hectares)"
-              value={formData.farmSize}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, farmSize: text }))}
-              editable={editing}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Crops & Livestock"
-              value={formData.crops}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, crops: text }))}
-              editable={editing}
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Farm Equipment"
-              value={formData.equipment}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, equipment: text }))}
-              editable={editing}
-            />
-          </View>
-        </>
-      );
-    }
-
-    if (user?.role === 'professional') {
-      return (
-        <>
-          <View style={styles.quantumField}>
-            <Text style={styles.fieldLabel}>Professional Quantum Matrix</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Hourly Rate (ZAR)"
-              value={formData.hourlyRate}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, hourlyRate: text }))}
-              editable={editing}
-              keyboardType="numeric"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Years of Experience"
-              value={formData.experience}
-              onChangeText={(text) => setFormData(prev => ({ ...prev, experience: text }))}
-              editable={editing}
-            />
-          </View>
-        </>
-      );
-    }
-
-    return null;
-  };
-
-  if (loading) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#00f0a8" />
-          <Text style={styles.loadingText}>Initializing Quantum Profile...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
-
+  // 🎯 MAIN RENDER - QUANTUM REALITY INTERFACE
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#000" />
-      
-      <QuantumHeader />
-      
-      <ScrollView style={styles.scrollView}>
-        {/* Quantum Avatar */}
-        <View style={styles.avatarSection}>
-          <QuantumAvatar />
-          <View style={styles.userInfo}>
-            <Text style={styles.userName}>
-              {user?.firstName} {user?.lastName}
-            </Text>
-            <Text style={styles.userRole}>{user?.role || 'Member'}</Text>
-            <Text style={styles.userBio}>
-              {formData.bio || "Add your quantum bio"}
-            </Text>
-          </View>
-        </View>
-
-        {/* Basic Quantum Information */}
-        <View style={styles.quantumField}>
-          <Text style={styles.fieldLabel}>Personal Quantum Data</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="First Name"
-            value={formData.firstName}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, firstName: text }))}
-            editable={editing}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Last Name"
-            value={formData.lastName}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, lastName: text }))}
-            editable={editing}
-          />
-          <TextInput
-            style={[styles.input, styles.bioInput]}
-            placeholder="Quantum Bio - Tell your story across dimensions"
-            value={formData.bio}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, bio: text }))}
-            editable={editing}
-            multiline
-            numberOfLines={3}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Phone Number"
-            value={formData.phone}
-            onChangeText={(text) => setFormData(prev => ({ ...prev, phone: text }))}
-            editable={editing}
-            keyboardType="phone-pad"
-          />
-        </View>
-
-        {/* Role-Specific Quantum Fields */}
-        <RoleSpecificQuantumFields />
-
-        {/* Skills Portfolio */}
-        <SkillQuantumField />
-
-        {/* Work Portfolio */}
-        <PortfolioQuantumField />
-
-        {/* Location Services */}
-        <LocationQuantumField />
-
-        {/* Quantum Action Button */}
-        {editing && (
-          <TouchableOpacity 
-            style={styles.quantumSaveButton}
-            onPress={saveQuantumProfile}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator size="small" color="#000" />
-            ) : (
-              <>
-                <Icon name="save" size={20} color="#000" />
-                <Text style={styles.saveButtonText}>Save Quantum Profile</Text>
-              </>
-            )}
-          </TouchableOpacity>
-        )}
-      </ScrollView>
-
-      {/* Skill Selection Modal */}
-      <Modal visible={skillModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Select Quantum Skills</Text>
-              <TouchableOpacity onPress={() => setSkillModal(false)}>
-                <Icon name="close" size={24} color="#00f0a8" />
-              </TouchableOpacity>
-            </View>
+    <QuantumInterface dimension={activeDimension} intensity={quantumMode === 'superposition' ? 1.5 : 1}>
+      <SafeAreaView style={styles.quantumContainer}>
+        <StatusBar 
+          barStyle="light-content" 
+          backgroundColor="transparent" 
+          translucent 
+        />
+        
+        {/* Quantum Background Field */}
+        <Animated.View style={[styles.quantumBackground, {
+          opacity: quantumGlow.interpolate({
+            inputRange: [0, 1],
+            outputRange: [0.1, 0.3]
+          })
+        }]} />
+        
+        <QuantumHeader />
+        
+        <ScrollView 
+          style={styles.quantumScrollView}
+          showsVerticalScrollIndicator={false}
+        >
+          {/* Quantum Identity Section */}
+          <View style={styles.quantumIdentity}>
+            <QuantumAvatar />
             
-            <FlatList
-              data={VOCATIONAL_SKILLS}
-              keyExtractor={(item) => item}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={styles.skillOption}
-                  onPress={() => addQuantumSkill(item)}
-                >
-                  <Text style={styles.skillOptionText}>{item}</Text>
-                  {skills.includes(item) && (
-                    <Icon name="checkmark" size={20} color="#00f0a8" />
-                  )}
-                </TouchableOpacity>
-              )}
-            />
-          </View>
-        </View>
-      </Modal>
-
-      {/* Location Selection Modal */}
-      <Modal visible={locationModal} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Set Service Quantum Field</Text>
-              <TouchableOpacity onPress={() => setLocationModal(false)}>
-                <Icon name="close" size={24} color="#00f0a8" />
-              </TouchableOpacity>
-            </View>
-            
-            <View style={styles.mapContainer}>
-              <Text style={styles.mapPlaceholder}>
-                🗺️ Advanced location quantum coming soon...
+            <View style={styles.quantumIdentityInfo}>
+              <Text style={styles.quantumName}>
+                {user?.firstName || 'Quantum'} {user?.lastName || 'Entity'}
               </Text>
-              <TouchableOpacity 
-                style={styles.mockLocationButton}
-                onPress={() => {
-                  setLocation({
-                    latitude: -23.0833, // Thohoyandou coordinates
-                    longitude: 30.3833,
-                    address: "Thohoyandou, Limpopo"
-                  });
-                  setLocationModal(false);
-                }}
-              >
-                <Text style={styles.mockLocationText}>Set Thohoyandou Location</Text>
-              </TouchableOpacity>
+              <Text style={styles.quantumRole}>
+                {user?.role || 'Multi-Dimensional Being'}
+              </Text>
+              <Text style={styles.quantumBio}>
+                {profileData.bio || "Existing across multiple realities. Specialized in African quantum development."}
+              </Text>
             </View>
           </View>
-        </View>
-      </Modal>
-    </SafeAreaView>
+
+          {/* Skills Universe */}
+          <SkillQuantumField />
+
+          {/* Quantum Portfolio */}
+          <View style={styles.quantumField}>
+            <Text style={styles.quantumFieldTitle}>Multi-Dimensional Portfolio</Text>
+            
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={styles.quantumPortfolio}>
+                {portfolio.map((asset) => (
+                  <View key={asset.id} style={styles.quantumAsset}>
+                    <Image source={{ uri: asset.uri }} style={styles.assetImage} />
+                    <View style={styles.assetDimension}>
+                      <Text style={styles.dimensionText}>{asset.dimension}</Text>
+                    </View>
+                  </View>
+                ))}
+                
+                <TouchableOpacity 
+                  style={styles.addQuantumAsset}
+                  onPress={() => captureQuantumPortfolio(activeDimension)}
+                >
+                  <Icon name="add" size={40} color="#00f0a8" />
+                  <Text style={styles.addAssetText}>Capture Quantum Asset</Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+
+          {/* Quantum Location Entanglement */}
+          <View style={styles.quantumField}>
+            <Text style={styles.quantumFieldTitle}>Service Quantum Field</Text>
+            
+            {profileData.location ? (
+              <View style={styles.quantumLocation}>
+                <Icon name="location" size={20} color="#00f0a8" />
+                <Text style={styles.locationText}>
+                  {profileData.location.coordinates.latitude.toFixed(4)}, 
+                  {profileData.location.coordinates.longitude.toFixed(4)}
+                </Text>
+                <Text style={styles.quantumVariance}>
+                  ±{profileData.location.coordinates.quantumVariance} quantum variance
+                </Text>
+              </View>
+            ) : (
+              <TouchableOpacity 
+                style={styles.entangleLocationButton}
+                onPress={() => entangleWithLocation({
+                  latitude: -23.0833,
+                  longitude: 30.3833,
+                  address: "Thohoyandou Quantum Hub"
+                })}
+              >
+                <Text style={styles.entangleText}>Entangle with Location</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          {/* Quantum Reality Controls */}
+          <View style={styles.quantumControls}>
+            <Text style={styles.controlsTitle}>Reality Interface</Text>
+            
+            <View style={styles.dimensionControls}>
+              {['prime', 'solar', 'nocturnal', 'quantum'].map(dimension => (
+                <TouchableOpacity
+                  key={dimension}
+                  style={[
+                    styles.dimensionButton,
+                    activeDimension === dimension && styles.activeDimension
+                  ]}
+                  onPress={() => setActiveDimension(dimension)}
+                >
+                  <Text style={styles.dimensionText}>{dimension}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </ScrollView>
+
+        {/* Quantum Floating Action */}
+        <TouchableOpacity 
+          style={styles.quantumFAB}
+          onPress={() => {
+            const nextAction = quantumPredictor.predictNextAction(profileData);
+            console.log(`🎯 Executing quantum-predicted action: ${nextAction}`);
+            // Execute predicted action
+          }}
+        >
+          <Animated.View style={[styles.fabGlow, {
+            transform: [{
+              scale: realityDistortion.interpolate({
+                inputRange: [0, 1],
+                outputRange: [1, 1.2]
+              })
+            }]
+          }]} />
+          <Icon name="flash" size={28} color="#000" />
+        </TouchableOpacity>
+      </SafeAreaView>
+    </QuantumInterface>
   );
 }
 
-// Quantum Styles (Beyond Human Design Systems)
+// 🌌 QUANTUM STYLES (Transcending CSS)
 const styles = StyleSheet.create({
-  container: {
+  quantumContainer: {
     flex: 1,
     backgroundColor: '#000000',
+  },
+  quantumBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#00f0a8',
   },
   quantumHeader: {
     flexDirection: 'row',
@@ -630,304 +689,288 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,240,168,0.2)',
+    backgroundColor: 'rgba(0,0,0,0.8)',
   },
-  backButton: {
-    padding: 8,
+  quantumButton: {
+    padding: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,240,168,0.1)',
   },
-  headerCenter: {
+  quantumTitleContainer: {
     alignItems: 'center',
   },
-  headerTitle: {
+  quantumTitle: {
     color: '#00f0a8',
-    fontSize: 18,
-    fontWeight: '800',
-    marginBottom: 4,
+    fontSize: 20,
+    fontWeight: '900',
+    textShadowColor: 'rgba(0,240,168,0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 10,
   },
-  verificationBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 10,
-  },
-  badgeverified: {
-    backgroundColor: '#00f0a8',
-  },
-  badgepending: {
-    backgroundColor: '#ffd93d',
-  },
-  badgeunverified: {
-    backgroundColor: '#ff6b6b',
-  },
-  verificationText: {
-    color: '#000',
+  temporalCoordinates: {
+    color: '#666',
     fontSize: 10,
-    fontWeight: '700',
-    marginLeft: 4,
+    marginTop: 2,
   },
-  editButton: {
-    padding: 8,
-  },
-  avatarSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  avatarContainer: {
+  quantumAvatarContainer: {
     position: 'relative',
-    marginRight: 15,
+    marginRight: 20,
   },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
+  quantumAvatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
     backgroundColor: '#00f0a8',
     alignItems: 'center',
     justifyContent: 'center',
+    zIndex: 2,
   },
-  avatarText: {
+  quantumAvatarText: {
     color: '#000',
-    fontSize: 32,
+    fontSize: 36,
     fontWeight: '900',
   },
-  cameraButton: {
+  quantumOrbital: {
     position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#00f0a8',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
+    top: -10,
+    left: -10,
+    right: -10,
+    bottom: -10,
     borderWidth: 2,
-    borderColor: '#000',
+    borderColor: '#00f0a8',
+    borderRadius: 60,
+    borderStyle: 'dashed',
   },
-  userInfo: {
+  quantumScrollView: {
     flex: 1,
   },
-  userName: {
+  quantumIdentity: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 25,
+    backgroundColor: 'rgba(255,255,255,0.02)',
+  },
+  quantumIdentityInfo: {
+    flex: 1,
+  },
+  quantumName: {
     color: '#fff',
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: '800',
     marginBottom: 4,
   },
-  userRole: {
+  quantumRole: {
     color: '#00f0a8',
     fontSize: 16,
     fontWeight: '700',
     marginBottom: 8,
   },
-  userBio: {
+  quantumBio: {
     color: '#ccc',
     fontSize: 14,
     lineHeight: 18,
   },
-  scrollView: {
-    flex: 1,
-  },
   quantumField: {
-    padding: 20,
+    padding: 25,
     borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderBottomColor: 'rgba(0,240,168,0.1)',
   },
-  fieldHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  quantumFieldTitle: {
+    color: '#00f0a8',
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 5,
+  },
+  quantumFieldSubtitle: {
+    color: '#666',
+    fontSize: 12,
     marginBottom: 15,
   },
-  fieldLabel: {
-    color: '#00f0a8',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  addButton: {
-    padding: 4,
-  },
-  input: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    color: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  bioInput: {
-    minHeight: 80,
-    textAlignVertical: 'top',
-  },
-  skillsGrid: {
+  skillsUniverse: {
     flexDirection: 'row',
     flexWrap: 'wrap',
   },
-  skillChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,240,168,0.15)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
+  quantumSkill: {
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 10,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: 'rgba(0,240,168,0.3)',
   },
-  skillText: {
+  quantumSkillText: {
     color: '#00f0a8',
-    fontSize: 12,
-    fontWeight: '600',
-    marginRight: 6,
-  },
-  removeSkill: {
-    padding: 2,
-  },
-  portfolioGrid: {
-    flexDirection: 'row',
-  },
-  portfolioItem: {
-    position: 'relative',
-    width: 100,
-    height: 100,
-    marginRight: 10,
-    borderRadius: 8,
-    overflow: 'hidden',
-  },
-  portfolioImage: {
-    width: '100%',
-    height: '100%',
-  },
-  removePortfolio: {
-    position: 'absolute',
-    top: 4,
-    right: 4,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  emptyPortfolio: {
-    width: 100,
-    height: 100,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-    borderStyle: 'dashed',
-  },
-  locationPreview: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  locationText: {
-    color: '#fff',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 4,
   },
-  coordinates: {
-    color: '#666',
-    fontSize: 12,
+  skillProficiency: {
+    height: 3,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 2,
+    overflow: 'hidden',
   },
-  emptyText: {
-    color: '#666',
-    fontSize: 14,
-    fontStyle: 'italic',
-    textAlign: 'center',
-    padding: 20,
+  proficiencyBar: {
+    height: '100%',
+    backgroundColor: '#00f0a8',
   },
-  quantumSaveButton: {
+  quantumAcquisitionButton: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#00f0a8',
-    margin: 20,
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-  saveButtonText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '800',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: '#1a1a2e',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  modalTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  skillOption: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
     padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
   },
-  skillOptionText: {
-    color: '#fff',
-    fontSize: 16,
-  },
-  mapContainer: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  mapPlaceholder: {
-    color: '#666',
-    fontSize: 16,
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  mockLocationButton: {
-    backgroundColor: '#00f0a8',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  mockLocationText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
+  quantumButtonText: {
     color: '#00f0a8',
     fontSize: 16,
-    marginTop: 10,
+    fontWeight: '700',
+    marginLeft: 8,
+  },
+  quantumPortfolio: {
+    flexDirection: 'row',
+  },
+  quantumAsset: {
+    position: 'relative',
+    width: 120,
+    height: 120,
+    marginRight: 15,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  assetImage: {
+    width: '100%',
+    height: '100%',
+  },
+  assetDimension: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  dimensionText: {
+    color: '#00f0a8',
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  addQuantumAsset: {
+    width: 120,
+    height: 120,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: 'rgba(0,240,168,0.3)',
+    borderStyle: 'dashed',
+  },
+  addAssetText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    fontWeight: '600',
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  quantumLocation: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    padding: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.2)',
+  },
+  locationText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 8,
+  },
+  quantumVariance: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 4,
+  },
+  entangleLocationButton: {
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    padding: 20,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  entangleText: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  quantumControls: {
+    padding: 25,
+  },
+  controlsTitle: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 15,
+  },
+  dimensionControls: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  dimensionButton: {
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 20,
+    marginRight: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  activeDimension: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  quantumFAB: {
+    position: 'absolute',
+    right: 25,
+    bottom: 25,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: '#00f0a8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#00f0a8',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  fabGlow: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: '#00f0a8',
+    borderRadius: 30,
+    opacity: 0.3,
+  },
+  // Multi-dimensional overlays
+  dimensionprime: {
+    backgroundColor: 'rgba(0,240,168,0.02)',
+  },
+  dimensionsolar: {
+    backgroundColor: 'rgba(255,200,0,0.02)',
+  },
+  dimensionnocturnal: {
+    backgroundColor: 'rgba(100,100,255,0.02)',
+  },
+  dimensionquantum: {
+    backgroundColor: 'rgba(255,0,255,0.02)',
   },
 });
