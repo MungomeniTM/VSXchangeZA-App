@@ -1,4 +1,4 @@
-// src/screens/ProfileScreen.js - ENTERPRISE VERSION (FIXED & ENHANCED)
+   // src/screens/ProfileScreen.js - ENTERPRISE VERSION (FIXED & ENHANCED)
 import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import {
   View,
@@ -2306,7 +2306,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   
-     flex: 1,
+  flex: 1,
     backgroundColor: '#000000',
   },
   header: {
@@ -3309,5 +3309,3 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
-
-export default ProfileScreen;
