@@ -1,4 +1,4 @@
-// src/screens/ProfileScreen.js - ADVANCED ENTERPRISE VERSION
+// src/screens/ProfileScreen.js - ENTERPRISE VERSION (FIXED)
 import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import {
   View,
@@ -314,10 +314,10 @@ const useIntelligentBackendSync = () => {
 };
 
 // PROFILE REPAIR SYSTEM
-const useProfileRepair = (profile, updateField, updateGlobalUser) => {
+const useProfileRepair = (updateField, updateGlobalUser) => {
   const [repairHistory, setRepairHistory] = useState([]);
 
-  const forceProfileSync = async () => {
+  const forceProfileSync = async (profile, navigation) => {
     try {
       console.log('Starting Profile Repair...');
       
@@ -749,6 +749,38 @@ const EnhancedImageGallery = ({ images, onAddImage, onRemoveImage, editable, tit
   );
 };
 
+// Helper functions
+const calculateProfileCompleteness = (profileData) => {
+  let score = 0;
+  const maxScore = 100;
+  
+  if (profileData.firstName) score += 10;
+  if (profileData.lastName) score += 10;
+  if (profileData.bio) score += 10;
+  if (profileData.profileImage) score += 10;
+  if (profileData.skills.length > 0) score += 15;
+  if (profileData.location) score += 10;
+  if (profileData.userType !== 'skilled') score += 5;
+  if (profileData.portfolio.length > 0) score += 10;
+  if (profileData.company) score += 5;
+  if (profileData.website) score += 5;
+  if (profileData.userType === 'farmer' && profileData.farmDetails?.images?.length > 0) score += 10;
+  if (profileData.userType === 'skilled' && profileData.portfolio.length > 0) score += 10;
+  
+  return Math.min(score, maxScore);
+};
+
+const calculateTrustScore = (profileData) => {
+  let score = 0;
+  if (profileData.firstName && profileData.lastName) score += 30;
+  if (profileData.profileImage) score += 20;
+  if (profileData.location) score += 15;
+  if (profileData.skills.length > 0) score += 15;
+  if (profileData.bio && profileData.bio.length > 50) score += 10;
+  if (profileData.portfolio.length > 0) score += 10;
+  return Math.min(score, 100);
+};
+
 export default function ProfileScreen({ navigation }) {
   const { globalUser, updateGlobalUser } = useContext(AppContext);
   
@@ -803,7 +835,7 @@ export default function ProfileScreen({ navigation }) {
   
   const { saving, lastSave, saveToBackend, syncQueue, connectionStatus, syncMetrics } = useIntelligentBackendSync();
   const { recommendations, learningRate } = useIntelligentSkillRecommendations(profile.skills, profile.userType, profile.profileCompleteness);
-  const { forceProfileSync, validateProfileForDisplay, repairHistory } = useProfileRepair(profile, updateField, updateGlobalUser);
+  const { forceProfileSync, validateProfileForDisplay, repairHistory } = useProfileRepair(updateField, updateGlobalUser);
   
   const scrollViewRef = useRef(null);
 
@@ -813,37 +845,6 @@ export default function ProfileScreen({ navigation }) {
   const savePulse = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const successGlow = useRef(new Animated.Value(0)).current;
-
-  const calculateProfileCompleteness = useCallback((profileData) => {
-    let score = 0;
-    const maxScore = 100;
-    
-    if (profileData.firstName) score += 10;
-    if (profileData.lastName) score += 10;
-    if (profileData.bio) score += 10;
-    if (profileData.profileImage) score += 10;
-    if (profileData.skills.length > 0) score += 15;
-    if (profileData.location) score += 10;
-    if (profileData.userType !== 'skilled') score += 5;
-    if (profileData.portfolio.length > 0) score += 10;
-    if (profileData.company) score += 5;
-    if (profileData.website) score += 5;
-    if (profileData.userType === 'farmer' && profileData.farmDetails?.images?.length > 0) score += 10;
-    if (profileData.userType === 'skilled' && profileData.portfolio.length > 0) score += 10;
-    
-    return Math.min(score, maxScore);
-  }, []);
-
-  const calculateTrustScore = useCallback((profileData) => {
-    let score = 0;
-    if (profileData.firstName && profileData.lastName) score += 30;
-    if (profileData.profileImage) score += 20;
-    if (profileData.location) score += 15;
-    if (profileData.skills.length > 0) score += 15;
-    if (profileData.bio && profileData.bio.length > 50) score += 10;
-    if (profileData.portfolio.length > 0) score += 10;
-    return Math.min(score, 100);
-  }, []);
 
   useEffect(() => {
     const initializeApp = async () => {
@@ -973,13 +974,6 @@ export default function ProfileScreen({ navigation }) {
           isProfileComplete: finalProfileData.isProfileComplete,
           displayStatus: validation.displayStatus
         });
-
-        console.log('Profile Loaded:', {
-          displayName: validation.displayName,
-          status: validation.displayStatus,
-          trustScore: finalProfileData.trustScore,
-          isValid: validation.isValid
-        });
       }
     } catch (error) {
       console.warn('Data loading failed:', error);
@@ -1029,7 +1023,7 @@ export default function ProfileScreen({ navigation }) {
       
       return newProfile;
     });
-  }, [updateGlobalUser, calculateProfileCompleteness, calculateTrustScore, validateProfileForDisplay]);
+  }, [updateGlobalUser, validateProfileForDisplay]);
 
   const updateFarmField = useCallback((field, value) => {
     setProfile(prev => ({
@@ -1365,12 +1359,6 @@ export default function ProfileScreen({ navigation }) {
 
       const currentProfile = profileManager.getCurrentState();
       const validation = validateProfileForDisplay(currentProfile);
-      
-      console.log('Starting Sync:', {
-        displayName: validation.displayName,
-        isValid: validation.isValid,
-        trustScore: currentProfile.trustScore
-      });
 
       const result = await saveToBackend(currentProfile, token, isPriority);
       
@@ -1651,7 +1639,7 @@ export default function ProfileScreen({ navigation }) {
           <View style={styles.headerActions}>
             <TouchableOpacity 
               style={[styles.repairButton, repairHistory.length > 0 && styles.repairActive]}
-              onPress={forceProfileSync}
+              onPress={() => forceProfileSync(profile, navigation)}
             >
               <Icon name="build" size={20} color="#00f0a8" />
             </TouchableOpacity>
@@ -1808,7 +1796,7 @@ export default function ProfileScreen({ navigation }) {
       
       <TouchableOpacity 
         style={styles.repairFooter}
-        onPress={forceProfileSync}
+        onPress={() => forceProfileSync(profile, navigation)}
       >
         <Text style={styles.repairText}>
           {repairHistory.length > 0 ? 'Re-calibrate Profile' : 'Repair Profile'}
@@ -2183,6 +2171,7 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
+// Styles remain exactly the same as in the previous version
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -3188,3 +3177,4 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
