@@ -1,4 +1,4 @@
-// src/screens/ProfileScreen.js - ENTERPRISE VERSION (FIXED)
+// src/screens/ProfileScreen.js - ENTERPRISE VERSION (FIXED & ENHANCED)
 import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import {
   View,
@@ -124,8 +124,7 @@ const useIntelligentBackendSync = () => {
         isAvailable: profileData.isAvailable,
         skillCategories: profileData.skillCategories || [],
         lastSynced: new Date().toISOString(),
-        profile_score: profileData.profileCompleteness || 0,
-        trust_score: calculateTrustScore(profileData)
+        profile_score: calculateProfileScore(profileData)
       },
       metadata: {
         app_version: '2.0.0',
@@ -138,20 +137,19 @@ const useIntelligentBackendSync = () => {
     console.log('Intelligent Data Prepared:', {
       displayName: intelligentProfile.display_name,
       isComplete: intelligentProfile.is_profile_complete,
-      trustScore: intelligentProfile.extended_profile.trust_score
+      profileScore: intelligentProfile.extended_profile.profile_score
     });
 
     return intelligentProfile;
   };
 
-  const calculateTrustScore = (profileData) => {
+  const calculateProfileScore = (profileData) => {
     let score = 0;
-    if (profileData.firstName && profileData.lastName) score += 30;
+    if (profileData.firstName && profileData.lastName) score += 40;
     if (profileData.profileImage) score += 20;
     if (profileData.location) score += 15;
     if (profileData.skills.length > 0) score += 15;
     if (profileData.bio && profileData.bio.length > 50) score += 10;
-    if (profileData.portfolio.length > 0) score += 10;
     return Math.min(score, 100);
   };
 
@@ -174,8 +172,7 @@ const useIntelligentBackendSync = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
           'X-Sync-Priority': isPriority ? 'high' : 'normal',
-          'X-Profile-Trust-Score': preparedData.extended_profile.trust_score.toString(),
-          'X-Profile-Completeness': preparedData.extended_profile.profile_score.toString(),
+          'X-Profile-Score': preparedData.extended_profile.profile_score.toString(),
           'X-Intelligent-Sync': 'true'
         },
         body: JSON.stringify(preparedData),
@@ -191,8 +188,7 @@ const useIntelligentBackendSync = () => {
           error: errorData,
           profileData: {
             firstName: profileData.firstName,
-            lastName: profileData.lastName,
-            completeness: profileData.profileCompleteness
+            lastName: profileData.lastName
           }
         });
         
@@ -213,7 +209,7 @@ const useIntelligentBackendSync = () => {
 
       console.log('Sync Successful:', {
         syncTime: `${syncTime}ms`,
-        trustScore: preparedData.extended_profile.trust_score,
+        profileScore: preparedData.extended_profile.profile_score,
         displayName: preparedData.display_name
       });
 
@@ -222,7 +218,7 @@ const useIntelligentBackendSync = () => {
         data: result,
         metrics: {
           syncTime,
-          trustScore: preparedData.extended_profile.trust_score
+          profileScore: preparedData.extended_profile.profile_score
         }
       };
       
@@ -348,8 +344,7 @@ const useProfileRepair = (updateField, updateGlobalUser) => {
         const profileObj = JSON.parse(profileData);
         console.log('Profile data loaded:', {
           firstName: profileObj.firstName,
-          lastName: profileObj.lastName,
-          completeness: profileObj.profileCompleteness
+          lastName: profileObj.lastName
         });
         
         // Repair: Ensure all critical fields are properly set
@@ -359,7 +354,6 @@ const useProfileRepair = (updateField, updateGlobalUser) => {
           lastName: profileObj.lastName || '',
           displayName: `${profileObj.firstName || 'User'} ${profileObj.lastName || ''}`.trim(),
           isProfileComplete: !!(profileObj.firstName && profileObj.lastName),
-          profileCompleteness: calculateProfileCompleteness(profileObj),
           lastRepaired: new Date().toISOString()
         };
 
@@ -417,13 +411,13 @@ const useProfileRepair = (updateField, updateGlobalUser) => {
       };
     }
 
-    const trustScore = calculateTrustScore(profileData);
+    const profileScore = calculateProfileScore(profileData);
     
     return {
       isValid: true,
       displayName: `${profileData.firstName} ${profileData.lastName}`.trim(),
-      displayStatus: trustScore > 70 ? 'verified' : 'pending',
-      trustScore,
+      displayStatus: profileScore > 70 ? 'verified' : 'pending',
+      profileScore,
       reason: 'Validation passed'
     };
   };
@@ -604,7 +598,7 @@ const SmartInput = ({
 };
 
 // INTELLIGENT SKILL RECOMMENDATIONS ENGINE
-const useIntelligentSkillRecommendations = (userSkills, userType, profileCompleteness) => {
+const useIntelligentSkillRecommendations = (userSkills, userType) => {
   const [recommendations, setRecommendations] = useState([]);
   const [learningRate, setLearningRate] = useState(0.1);
 
@@ -645,11 +639,9 @@ const useIntelligentSkillRecommendations = (userSkills, userType, profileComplet
       const baseScore = currentSkills.includes(skill.name.toLowerCase()) ? 0 : 
         (skill.weight * 0.6 + skill.demand * 0.4) * 100;
       
-      // Adjust based on profile completeness
-      const completenessBonus = (profileCompleteness / 100) * 20;
       const learningAdjustment = learningRate * 10;
       
-      const finalScore = Math.min(baseScore + completenessBonus + learningAdjustment, 100);
+      const finalScore = Math.min(baseScore + learningAdjustment, 100);
       
       return { 
         ...skill, 
@@ -663,7 +655,7 @@ const useIntelligentSkillRecommendations = (userSkills, userType, profileComplet
       .filter(skill => skill.score > 25)
       .sort((a, b) => b.score - a.score)
       .slice(0, 6);
-  }, [userSkills, userType, profileCompleteness, learningRate]);
+  }, [userSkills, userType, learningRate]);
 
   const getRecommendationReason = (skill, score) => {
     if (score > 85) return "High demand in your area";
@@ -750,35 +742,100 @@ const EnhancedImageGallery = ({ images, onAddImage, onRemoveImage, editable, tit
 };
 
 // Helper functions
-const calculateProfileCompleteness = (profileData) => {
+const calculateProfileScore = (profileData) => {
   let score = 0;
-  const maxScore = 100;
-  
-  if (profileData.firstName) score += 10;
-  if (profileData.lastName) score += 10;
-  if (profileData.bio) score += 10;
-  if (profileData.profileImage) score += 10;
+  if (profileData.firstName) score += 20;
+  if (profileData.lastName) score += 20;
+  if (profileData.bio) score += 15;
+  if (profileData.profileImage) score += 15;
   if (profileData.skills.length > 0) score += 15;
-  if (profileData.location) score += 10;
-  if (profileData.userType !== 'skilled') score += 5;
-  if (profileData.portfolio.length > 0) score += 10;
-  if (profileData.company) score += 5;
-  if (profileData.website) score += 5;
-  if (profileData.userType === 'farmer' && profileData.farmDetails?.images?.length > 0) score += 10;
-  if (profileData.userType === 'skilled' && profileData.portfolio.length > 0) score += 10;
-  
-  return Math.min(score, maxScore);
+  if (profileData.location) score += 15;
+  return Math.min(score, 100);
 };
 
-const calculateTrustScore = (profileData) => {
-  let score = 0;
-  if (profileData.firstName && profileData.lastName) score += 30;
-  if (profileData.profileImage) score += 20;
-  if (profileData.location) score += 15;
-  if (profileData.skills.length > 0) score += 15;
-  if (profileData.bio && profileData.bio.length > 50) score += 10;
-  if (profileData.portfolio.length > 0) score += 10;
-  return Math.min(score, 100);
+// AI-PROFILE OPTIMIZATION ENGINE
+const useProfileOptimization = (profileData) => {
+  const [optimizationTips, setOptimizationTips] = useState([]);
+  const [profileStrength, setProfileStrength] = useState(0);
+
+  const analyzeProfile = useCallback(() => {
+    const tips = [];
+    let strength = 0;
+
+    // Analyze profile completeness
+    if (!profileData.firstName || !profileData.lastName) {
+      tips.push({
+        id: 'name',
+        title: 'Complete Your Name',
+        description: 'Add your full name for better recognition',
+        priority: 'high',
+        icon: 'person'
+      });
+    } else {
+      strength += 25;
+    }
+
+    if (!profileData.profileImage) {
+      tips.push({
+        id: 'avatar',
+        title: 'Add Profile Photo',
+        description: 'Upload a professional photo to build trust',
+        priority: 'high',
+        icon: 'camera'
+      });
+    } else {
+      strength += 20;
+    }
+
+    if (!profileData.bio || profileData.bio.length < 50) {
+      tips.push({
+        id: 'bio',
+        title: 'Enhance Your Bio',
+        description: 'Write a detailed bio to showcase your expertise',
+        priority: 'medium',
+        icon: 'document-text'
+      });
+    } else {
+      strength += 15;
+    }
+
+    if (profileData.skills.length === 0) {
+      tips.push({
+        id: 'skills',
+        title: 'Add Skills',
+        description: 'List your skills to attract better opportunities',
+        priority: 'high',
+        icon: 'construct'
+      });
+    } else {
+      strength += 20;
+    }
+
+    if (!profileData.location) {
+      tips.push({
+        id: 'location',
+        title: 'Set Location',
+        description: 'Add your location for local opportunities',
+        priority: 'medium',
+        icon: 'location'
+      });
+    } else {
+      strength += 20;
+    }
+
+    setOptimizationTips(tips.sort((a, b) => {
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    }));
+    
+    setProfileStrength(strength);
+  }, [profileData]);
+
+  useEffect(() => {
+    analyzeProfile();
+  }, [analyzeProfile]);
+
+  return { optimizationTips, profileStrength };
 };
 
 export default function ProfileScreen({ navigation }) {
@@ -819,8 +876,6 @@ export default function ProfileScreen({ navigation }) {
     },
     isAvailable: true,
     profileImage: null,
-    profileCompleteness: 0,
-    trustScore: 0,
     isProfileComplete: false,
     lastRepaired: null
   }, 'userProfile');
@@ -834,8 +889,9 @@ export default function ProfileScreen({ navigation }) {
   const [showSkillRecommendations, setShowSkillRecommendations] = useState(false);
   
   const { saving, lastSave, saveToBackend, syncQueue, connectionStatus, syncMetrics } = useIntelligentBackendSync();
-  const { recommendations, learningRate } = useIntelligentSkillRecommendations(profile.skills, profile.userType, profile.profileCompleteness);
+  const { recommendations, learningRate } = useIntelligentSkillRecommendations(profile.skills, profile.userType);
   const { forceProfileSync, validateProfileForDisplay, repairHistory } = useProfileRepair(updateField, updateGlobalUser);
+  const { optimizationTips, profileStrength } = useProfileOptimization(profile);
   
   const scrollViewRef = useRef(null);
 
@@ -843,7 +899,6 @@ export default function ProfileScreen({ navigation }) {
   const slideAnim = useRef(new Animated.Value(30)).current;
   const profileScale = useRef(new Animated.Value(0.95)).current;
   const savePulse = useRef(new Animated.Value(1)).current;
-  const progressAnim = useRef(new Animated.Value(0)).current;
   const successGlow = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -909,14 +964,6 @@ export default function ProfileScreen({ navigation }) {
     setTimeout(() => setSaveSuccess(false), 3000);
   };
 
-  const animateProgress = (completeness) => {
-    Animated.timing(progressAnim, {
-      toValue: completeness,
-      duration: 1000,
-      useNativeDriver: false,
-    }).start();
-  };
-
   const loadUserData = async () => {
     try {
       const [userData, profileData, token] = await Promise.all([
@@ -934,15 +981,8 @@ export default function ProfileScreen({ navigation }) {
       if (profileData) {
         finalProfileData = JSON.parse(profileData);
         
-        const completeness = calculateProfileCompleteness(finalProfileData);
-        const trustScore = calculateTrustScore(finalProfileData);
-        
-        finalProfileData.profileCompleteness = completeness;
-        finalProfileData.trustScore = trustScore;
-        finalProfileData.isProfileComplete = completeness >= 70;
+        finalProfileData.isProfileComplete = !!(finalProfileData.firstName && finalProfileData.lastName);
         finalProfileData.displayName = `${finalProfileData.firstName || ''} ${finalProfileData.lastName || ''}`.trim();
-        
-        animateProgress(completeness);
       }
       
       if (finalProfileData) {
@@ -969,8 +1009,6 @@ export default function ProfileScreen({ navigation }) {
           location: finalProfileData.location,
           portfolio: finalProfileData.portfolio,
           farmDetails: finalProfileData.farmDetails,
-          profileCompleteness: finalProfileData.profileCompleteness,
-          trustScore: finalProfileData.trustScore,
           isProfileComplete: finalProfileData.isProfileComplete,
           displayStatus: validation.displayStatus
         });
@@ -986,16 +1024,12 @@ export default function ProfileScreen({ navigation }) {
         ...prev,
         [field]: value,
         lastUpdated: new Date().toISOString(),
-        profileCompleteness: calculateProfileCompleteness({ ...prev, [field]: value }),
-        trustScore: calculateTrustScore({ ...prev, [field]: value }),
         displayName: field === 'firstName' || field === 'lastName' ? 
           `${field === 'firstName' ? value : prev.firstName} ${field === 'lastName' ? value : prev.lastName}`.trim() : 
           prev.displayName
       };
 
-      newProfile.isProfileComplete = newProfile.profileCompleteness >= 70;
-      
-      animateProgress(newProfile.profileCompleteness);
+      newProfile.isProfileComplete = !!(newProfile.firstName && newProfile.lastName);
 
       // Enhanced global user update
       const validation = validateProfileForDisplay(newProfile);
@@ -1014,8 +1048,6 @@ export default function ProfileScreen({ navigation }) {
           location: newProfile.location,
           portfolio: newProfile.portfolio,
           farmDetails: newProfile.farmDetails,
-          profileCompleteness: newProfile.profileCompleteness,
-          trustScore: newProfile.trustScore,
           isProfileComplete: newProfile.isProfileComplete,
           displayStatus: validation.displayStatus
         });
@@ -1371,13 +1403,11 @@ export default function ProfileScreen({ navigation }) {
           userType: currentProfile.userType,
           skills: currentProfile.skills,
           skillCategories: currentProfile.skillCategories,
-          profileCompleteness: currentProfile.profileCompleteness,
           company: currentProfile.company,
           website: currentProfile.website,
           location: currentProfile.location,
           portfolio: currentProfile.portfolio,
           farmDetails: currentProfile.farmDetails,
-          trustScore: currentProfile.trustScore,
           isProfileComplete: currentProfile.isProfileComplete,
           displayStatus: validation.displayStatus
         });
@@ -1386,10 +1416,10 @@ export default function ProfileScreen({ navigation }) {
         triggerSuccessGlow();
         Vibration.vibrate(200);
         
-        if (currentProfile.profileCompleteness >= 80) {
+        if (validation.profileScore >= 80) {
           Alert.alert(
-            'Profile Complete!',
-            `Your ${currentProfile.profileCompleteness}% complete profile will get maximum visibility!`,
+            'Profile Optimized!',
+            `Your profile is now fully optimized for maximum visibility!`,
             [{ text: 'Excellent!', style: 'default' }]
           );
         }
@@ -1421,66 +1451,62 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  const EnhancedProgressBar = () => {
-    const progressWidth = progressAnim.interpolate({
-      inputRange: [0, 100],
-      outputRange: ['0%', '100%'],
-    });
-
-    const glowOpacity = successGlow.interpolate({
-      inputRange: [0, 1],
-      outputRange: [0, 0.6],
-    });
-
+  const ProfileStrengthMeter = () => {
+    const strengthWidth = `${profileStrength}%`;
+    
     return (
-      <View style={styles.progressSection}>
-        <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>Profile Completion</Text>
-          <Animated.Text style={styles.progressPercentage}>
-            {progressAnim.interpolate({
-              inputRange: [0, 100],
-              outputRange: ['0%', '100%'],
-            })}
-          </Animated.Text>
+      <View style={styles.strengthSection}>
+        <View style={styles.strengthHeader}>
+          <Text style={styles.strengthTitle}>Profile Strength</Text>
+          <Text style={styles.strengthPercentage}>{profileStrength}%</Text>
         </View>
-        <View style={styles.progressBar}>
-          <Animated.View 
+        <View style={styles.strengthBar}>
+          <View 
             style={[
-              styles.progressFill,
-              { width: progressWidth }
-            ]} 
-          />
-          <Animated.View 
-            style={[
-              styles.successGlow,
-              { 
-                width: progressWidth,
-                opacity: glowOpacity
-              }
+              styles.strengthFill,
+              { width: strengthWidth }
             ]} 
           />
         </View>
-        <Text style={styles.progressHint}>
-          {profile.profileCompleteness >= 80 ? 'Excellent! Maximum visibility' :
-           profile.profileCompleteness >= 60 ? 'Great! Almost complete' :
+        <Text style={styles.strengthHint}>
+          {profileStrength >= 80 ? 'Excellent! Maximum visibility' :
+           profileStrength >= 60 ? 'Great! Almost optimized' :
            'Add more details to increase visibility'}
         </Text>
+      </View>
+    );
+  };
+
+  const OptimizationTips = () => {
+    if (optimizationTips.length === 0 || profileStrength >= 90) return null;
+
+    return (
+      <View style={styles.optimizationSection}>
+        <Text style={styles.optimizationTitle}>Optimization Tips</Text>
+        <Text style={styles.optimizationSubtitle}>
+          Improve your profile to get better matches
+        </Text>
         
-        {profile.trustScore > 0 && (
-          <View style={styles.trustScoreContainer}>
-            <Text style={styles.trustScoreText}>
-              Trust Score: {profile.trustScore}%
-            </Text>
-            <View style={styles.trustScoreBar}>
-              <View 
-                style={[
-                  styles.trustScoreFill,
-                  { width: `${profile.trustScore}%` }
-                ]} 
-              />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          {optimizationTips.slice(0, 3).map((tip) => (
+            <View key={tip.id} style={styles.optimizationTip}>
+              <View style={styles.tipIconContainer}>
+                <Icon name={tip.icon} size={16} color="#000" />
+              </View>
+              <Text style={styles.tipTitle}>{tip.title}</Text>
+              <Text style={styles.tipDescription}>{tip.description}</Text>
+              <View style={[
+                styles.tipPriority,
+                tip.priority === 'high' && styles.tipPriorityHigh,
+                tip.priority === 'medium' && styles.tipPriorityMedium
+              ]}>
+                <Text style={styles.tipPriorityText}>
+                  {tip.priority.toUpperCase()}
+                </Text>
+              </View>
             </View>
-          </View>
-        )}
+          ))}
+        </ScrollView>
       </View>
     );
   };
@@ -1743,14 +1769,14 @@ export default function ProfileScreen({ navigation }) {
                 <Text style={styles.userStats}>
                   <Icon name="construct" size={12} color="#666" /> {profile.skills.length} skills 
                   <Icon name="images" size={12} color="#666" /> {profile.portfolio.length} images
-                  <Icon name="shield-checkmark" size={12} color="#666" /> {profile.trustScore}% trust
                 </Text>
               </>
             )}
           </View>
         </View>
 
-        <EnhancedProgressBar />
+        <ProfileStrengthMeter />
+        <OptimizationTips />
       </Animated.View>
     );
   };
@@ -2171,10 +2197,116 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-// Styles remain exactly the same as in the previous version
+// Add these new styles for the optimization features
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  // ... (keep all existing styles and add these new ones)
+  
+  strengthSection: {
+    marginTop: 20,
+  },
+  strengthHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  strengthTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  strengthPercentage: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  strengthBar: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  strengthFill: {
+    height: '100%',
+    backgroundColor: '#00f0a8',
+    borderRadius: 3,
+  },
+  strengthHint: {
+    color: '#666',
+    fontSize: 11,
+    marginTop: 6,
+    textAlign: 'center',
+  },
+  
+  optimizationSection: {
+    marginTop: 15,
+    padding: 15,
+    backgroundColor: 'rgba(0,240,168,0.05)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.2)',
+  },
+  optimizationTitle: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  optimizationSubtitle: {
+    color: '#666',
+    fontSize: 12,
+    marginBottom: 12,
+  },
+  optimizationTip: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 15,
+    borderRadius: 12,
+    marginRight: 10,
+    width: 140,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  tipIconContainer: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#00f0a8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  tipTitle: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  tipDescription: {
+    color: '#666',
+    fontSize: 10,
+    lineHeight: 12,
+    marginBottom: 8,
+  },
+  tipPriority: {
+    backgroundColor: 'rgba(255,107,107,0.2)',
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  tipPriorityHigh: {
+    backgroundColor: 'rgba(255,107,107,0.2)',
+  },
+  tipPriorityMedium: {
+    backgroundColor: 'rgba(255,193,7,0.2)',
+  },
+  tipPriorityText: {
+    color: '#fff',
+    fontSize: 8,
+    fontWeight: '700',
+  },
+  
+     flex: 1,
     backgroundColor: '#000000',
   },
   header: {
@@ -3178,3 +3310,4 @@ const styles = StyleSheet.create({
   },
 });
 
+export default ProfileScreen;
