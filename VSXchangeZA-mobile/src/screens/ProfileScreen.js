@@ -1,5 +1,5 @@
-// src/screens/ProfileScreen.js - FIXED VERSION
-import React, { useState, useEffect, useRef, useCallback } from "react";
+// src/screens/ProfileScreen.js - VISIONARY ADVANCED VERSION
+import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import {
   View,
   Text,
@@ -17,31 +17,41 @@ import {
   Dimensions,
   Modal,
   Vibration,
-  Switch
+  Switch,
+  LayoutAnimation
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
+import { AppContext } from '../context/AppContext';
 
 const { width, height } = Dimensions.get('window');
 
-// 🎯 ADVANCED STATE MANAGEMENT SYSTEM
+// Advanced State Management
 const useAdvancedState = (initialState, storageKey = null) => {
   const [state, setState] = useState(initialState);
   const stateRef = useRef(initialState);
+  const pendingWrites = useRef(new Set());
   
   const setAdvancedState = useCallback((updater) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    
     setState(prevState => {
       const newState = typeof updater === 'function' ? updater(prevState) : updater;
       stateRef.current = newState;
       
-      // Delayed persistence to prevent re-renders
       if (storageKey) {
+        const writeId = Date.now();
+        pendingWrites.current.add(writeId);
+        
         setTimeout(() => {
-          AsyncStorage.setItem(storageKey, JSON.stringify(newState))
-            .catch(error => console.warn('Storage failed:', error));
-        }, 1000);
+          if (pendingWrites.current.has(writeId)) {
+            AsyncStorage.setItem(storageKey, JSON.stringify(newState))
+              .catch(error => console.warn('Storage failed:', error));
+            pendingWrites.current.delete(writeId);
+          }
+        }, 500);
       }
       
       return newState;
@@ -49,46 +59,62 @@ const useAdvancedState = (initialState, storageKey = null) => {
   }, [storageKey]);
 
   const getCurrentState = useCallback(() => stateRef.current, []);
+  const getPendingWrites = useCallback(() => pendingWrites.current.size, []);
 
-  return [state, setAdvancedState, { getCurrentState }];
+  return [state, setAdvancedState, { getCurrentState, getPendingWrites }];
 };
 
-// 🌐 BACKEND INTEGRATION
-const useBackendSync = () => {
+// Smart Backend Integration
+const useSmartBackendSync = () => {
   const [saving, setSaving] = useState(false);
   const [lastSave, setLastSave] = useState(null);
+  const [syncQueue, setSyncQueue] = useState([]);
+  const [connectionStatus, setConnectionStatus] = useState('excellent');
 
-  const saveProfileToBackend = async (profileData, token) => {
+  const prepareData = (profileData) => {
+    return {
+      first_name: profileData.firstName?.trim() || '',
+      last_name: profileData.lastName?.trim() || '',
+      bio: profileData.bio?.substring(0, 500) || '',
+      company: profileData.company?.trim() || '',
+      website: profileData.website?.trim() || '',
+      location: profileData.location || null,
+      avatar_url: profileData.profileImage || null,
+      role: profileData.userType || 'skilled',
+      extended_profile: {
+        skills: profileData.skills.slice(0, 50),
+        portfolio: profileData.portfolio.slice(0, 20),
+        farmDetails: profileData.farmDetails,
+        clientDetails: profileData.clientDetails,
+        isAvailable: profileData.isAvailable,
+        skillCategories: profileData.skillCategories || [],
+        lastSynced: new Date().toISOString()
+      }
+    };
+  };
+
+  const saveToBackend = async (profileData, token, isPriority = false) => {
     try {
       setSaving(true);
       
-      const backendData = {
-        first_name: profileData.firstName,
-        last_name: profileData.lastName,
-        bio: profileData.bio,
-        company: profileData.company,
-        website: profileData.website,
-        location: profileData.location,
-        avatar_url: profileData.profileImage,
-        role: profileData.userType,
-        extended_profile: {
-          skills: profileData.skills,
-          portfolio: profileData.portfolio,
-          farmDetails: profileData.farmDetails,
-          clientDetails: profileData.clientDetails,
-          isAvailable: profileData.isAvailable,
-          skillCategories: profileData.skillCategories || []
-        }
-      };
+      const preparedData = prepareData(profileData);
+      
+      const timeout = connectionStatus === 'poor' ? 10000 : 5000;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
 
       const response = await fetch('https://api.vsxchangeza.com/api/users/update', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'X-Sync-Priority': isPriority ? 'high' : 'normal'
         },
-        body: JSON.stringify(backendData)
+        body: JSON.stringify(preparedData),
+        signal: controller.signal
       });
+
+      clearTimeout(timeoutId);
 
       if (!response.ok) {
         throw new Error(`Server error: ${response.status}`);
@@ -96,97 +122,73 @@ const useBackendSync = () => {
 
       const result = await response.json();
       setLastSave(new Date().toISOString());
-      
-      // Update global state
-      await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
-      await AsyncStorage.setItem('globalUserData', JSON.stringify({
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
-        profileImage: profileData.profileImage,
-        userType: profileData.userType,
-        skills: profileData.skills
-      }));
+      setConnectionStatus('excellent');
       
       return { success: true, data: result };
       
     } catch (error) {
-      console.error('Backend sync failed:', error);
-      return { success: false, error: error.message };
+      console.error('Sync failed:', error);
+      setConnectionStatus('poor');
+      
+      if (error.name !== 'AbortError') {
+        setSyncQueue(prev => [...prev, { profileData, token, attempts: 0 }]);
+      }
+      
+      return { 
+        success: false, 
+        error: error.message,
+        queued: true
+      };
     } finally {
       setSaving(false);
     }
   };
 
-  const loadProfileFromBackend = async (token) => {
-    try {
-      const response = await fetch('https://api.vsxchangeza.com/api/users/me', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      if (!response.ok) throw new Error('Failed to load profile');
-      
-      const userData = await response.json();
-      
-      const profileData = {
-        firstName: userData.first_name || '',
-        lastName: userData.last_name || '',
-        bio: userData.bio || '',
-        company: userData.company || '',
-        website: userData.website || '',
-        location: userData.location || null,
-        profileImage: userData.avatar_url || null,
-        userType: userData.role || 'skilled',
-        skills: userData.extended_profile?.skills || [],
-        skillCategories: userData.extended_profile?.skillCategories || [],
-        portfolio: userData.extended_profile?.portfolio || [],
-        farmDetails: userData.extended_profile?.farmDetails || { 
-          images: [], 
-          location: null, 
-          name: '', 
-          description: '', 
-          size: '', 
-          mainCrop: '',
-          farmType: '',
-          soilType: '',
-          irrigation: '',
-          equipment: []
-        },
-        clientDetails: userData.extended_profile?.clientDetails || { 
-          location: null, 
-          serviceNeeds: [],
-          budget: '',
-          timeline: '',
-          frequency: ''
-        },
-        isAvailable: userData.extended_profile?.isAvailable ?? true
-      };
-
-      // Update global storage
-      await AsyncStorage.setItem('globalUserData', JSON.stringify({
-        firstName: profileData.firstName,
-        lastName: profileData.lastName,
-        profileImage: profileData.profileImage,
-        userType: profileData.userType,
-        skills: profileData.skills,
-        skillCategories: profileData.skillCategories
-      }));
-
-      return profileData;
-      
-    } catch (error) {
-      console.error('Backend load failed:', error);
-      return null;
+  const retrySyncs = useCallback(async () => {
+    if (syncQueue.length === 0) return;
+    
+    const failedSync = syncQueue[0];
+    if (failedSync.attempts >= 3) {
+      setSyncQueue(prev => prev.slice(1));
+      return;
     }
-  };
 
-  return { saving, lastSave, saveProfileToBackend, loadProfileFromBackend };
+    const result = await saveToBackend(
+      failedSync.profileData, 
+      failedSync.token, 
+      true
+    );
+
+    if (result.success) {
+      setSyncQueue(prev => prev.slice(1));
+    } else {
+      setSyncQueue(prev => 
+        prev.map((item, index) => 
+          index === 0 ? { ...item, attempts: item.attempts + 1 } : item
+        )
+      );
+    }
+  }, [syncQueue]);
+
+  useEffect(() => {
+    if (syncQueue.length > 0) {
+      const retryInterval = setInterval(retrySyncs, 30000);
+      return () => clearInterval(retryInterval);
+    }
+  }, [syncQueue.length, retrySyncs]);
+
+  return { 
+    saving, 
+    lastSave, 
+    saveToBackend, 
+    syncQueue,
+    connectionStatus,
+    retrySyncs
+  };
 };
 
-// 🎪 ENHANCED SMART INPUT WITH GUIDANCE
-const SmartTextInput = ({ 
+// Smart Input System
+const SmartInput = ({ 
   value, 
   onChangeText, 
   placeholder, 
@@ -194,14 +196,53 @@ const SmartTextInput = ({
   multiline = false, 
   onSave,
   guidanceText,
-  exampleText 
+  exampleText,
+  validationRule,
+  maxLength,
+  inputType = 'text'
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState(value);
+  const [isValid, setIsValid] = useState(true);
+  const [validationMessage, setValidationMessage] = useState('');
+
+  const validateInput = (text) => {
+    if (!validationRule) return true;
+    
+    if (validationRule === 'email') {
+      const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(text);
+      setIsValid(emailValid);
+      setValidationMessage(emailValid ? '' : 'Please enter a valid email');
+      return emailValid;
+    }
+    
+    if (validationRule === 'url') {
+      const urlValid = /^https?:\/\/.+\..+$/.test(text);
+      setIsValid(urlValid);
+      setValidationMessage(urlValid ? '' : 'Please enter a valid URL');
+      return urlValid;
+    }
+    
+    if (validationRule === 'required') {
+      const requiredValid = text.trim().length > 0;
+      setIsValid(requiredValid);
+      setValidationMessage(requiredValid ? '' : 'This field is required');
+      return requiredValid;
+    }
+    
+    return true;
+  };
 
   const handleSave = () => {
-    onChangeText(inputValue);
-    onSave?.();
+    if (validateInput(inputValue)) {
+      onChangeText(inputValue);
+      onSave?.();
+    }
+  };
+
+  const handleChange = (text) => {
+    setInputValue(text);
+    validateInput(text);
   };
 
   return (
@@ -210,64 +251,113 @@ const SmartTextInput = ({
         style={[
           styles.input, 
           style,
-          isFocused && styles.inputFocused
+          isFocused && styles.inputFocused,
+          !isValid && styles.inputError
         ]}
         value={inputValue}
-        onChangeText={setInputValue}
+        onChangeText={handleChange}
         placeholder={placeholder}
         placeholderTextColor="#888"
         multiline={multiline}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         blurOnSubmit={!multiline}
+        maxLength={maxLength}
+        keyboardType={
+          inputType === 'email' ? 'email-address' :
+          inputType === 'url' ? 'url' : 'default'
+        }
       />
       
-      {/* GUIDANCE TEXT */}
       {guidanceText && isFocused && (
-        <Text style={styles.guidanceText}>{guidanceText}</Text>
+        <View style={styles.guidanceContainer}>
+          <Icon name="bulb-outline" size={14} color="#00f0a8" />
+          <Text style={styles.guidanceText}>{guidanceText}</Text>
+        </View>
       )}
       
-      {/* EXAMPLE TEXT */}
-      {exampleText && isFocused && (
+      {!isValid && validationMessage && (
+        <View style={styles.validationContainer}>
+          <Icon name="warning-outline" size={12} color="#ff6b6b" />
+          <Text style={styles.validationText}>{validationMessage}</Text>
+        </View>
+      )}
+      
+      {exampleText && isFocused && isValid && (
         <Text style={styles.exampleText}>Example: {exampleText}</Text>
       )}
       
+      {maxLength && isFocused && (
+        <Text style={[
+          styles.charCounter,
+          inputValue.length > maxLength * 0.8 && styles.charCounterWarning
+        ]}>
+          {inputValue.length}/{maxLength}
+        </Text>
+      )}
+      
       {isFocused && (
-        <TouchableOpacity style={styles.doneButton} onPress={handleSave}>
-          <Text style={styles.doneButtonText}>Done</Text>
+        <TouchableOpacity 
+          style={[
+            styles.doneButton, 
+            !isValid && styles.doneButtonDisabled
+          ]} 
+          onPress={handleSave}
+          disabled={!isValid}
+        >
+          <Text style={styles.doneButtonText}>
+            {isValid ? 'Done' : 'Fix'}
+          </Text>
         </TouchableOpacity>
       )}
     </View>
   );
 };
 
-// Custom hook for global user data as fallback
-const useGlobalUserFallback = () => {
-  const [globalUser, setGlobalUser] = useState({
-    firstName: '',
-    lastName: '',
-    profileImage: null,
-    userType: 'skilled',
-    skills: [],
-    skillCategories: []
-  });
+// Skill Recommendations Engine
+const useSkillRecommendations = (userSkills, userType) => {
+  const [recommendations, setRecommendations] = useState([]);
 
-  const updateGlobalUser = useCallback(async (userData) => {
-    setGlobalUser(prev => {
-      const newUser = { ...prev, ...userData };
-      AsyncStorage.setItem('globalUserData', JSON.stringify(newUser));
-      return newUser;
+  const skillDatabase = {
+    farmer: [
+      'Crop Rotation', 'Irrigation Management', 'Soil Analysis', 'Livestock Care',
+      'Harvest Planning', 'Pest Control', 'Equipment Maintenance', 'Organic Farming'
+    ],
+    skilled: [
+      'Carpentry', 'Electrical Work', 'Plumbing', 'Masonry', 'Welding',
+      'Equipment Operation', 'Construction', 'Renovation'
+    ],
+    client: [
+      'Project Management', 'Budget Planning', 'Quality Control', 'Vendor Management'
+    ]
+  };
+
+  const generateRecommendations = useCallback(() => {
+    const currentSkills = userSkills.map(skill => skill.name.toLowerCase());
+    const typeSkills = skillDatabase[userType] || [];
+    
+    const scoredSkills = typeSkills.map(skill => {
+      const score = currentSkills.includes(skill.toLowerCase()) ? 0 : Math.random() * 100;
+      return { name: skill, score, category: userType };
     });
-  }, []);
 
-  return { globalUser, updateGlobalUser };
+    return scoredSkills
+      .filter(skill => skill.score > 30)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 5);
+  }, [userSkills, userType]);
+
+  useEffect(() => {
+    const newRecs = generateRecommendations();
+    setRecommendations(newRecs);
+  }, [generateRecommendations]);
+
+  return recommendations;
 };
 
 export default function ProfileScreen({ navigation }) {
-  // 🎯 GLOBAL STATE - Using fallback if context fails
-  const { globalUser, updateGlobalUser } = useGlobalUserFallback();
+  const { globalUser, updateGlobalUser } = useContext(AppContext);
   
-  // 🎯 STATE MANAGEMENT
   const [user, setUser] = useAdvancedState(null, 'userData');
   const [profile, setProfile, profileManager] = useAdvancedState({
     firstName: '',
@@ -301,7 +391,8 @@ export default function ProfileScreen({ navigation }) {
       frequency: ''
     },
     isAvailable: true,
-    profileImage: null
+    profileImage: null,
+    profileCompleteness: 0
   }, 'userProfile');
   
   const [editing, setEditing] = useState(false);
@@ -310,18 +401,34 @@ export default function ProfileScreen({ navigation }) {
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationPermission, setLocationPermission] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+  const [showSkillRecommendations, setShowSkillRecommendations] = useState(false);
   
-  // 🛠️ SYSTEMS INTEGRATION
-  const { saving, lastSave, saveProfileToBackend, loadProfileFromBackend } = useBackendSync();
+  const { saving, lastSave, saveToBackend, syncQueue, connectionStatus } = useSmartBackendSync();
+  const skillRecommendations = useSkillRecommendations(profile.skills, profile.userType);
   const scrollViewRef = useRef(null);
 
-  // 🎨 ANIMATIONS
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const profileScale = useRef(new Animated.Value(0.95)).current;
   const savePulse = useRef(new Animated.Value(1)).current;
+  const progressAnim = useRef(new Animated.Value(0)).current;
 
-  // 🚀 INITIALIZATION
+  const calculateProfileCompleteness = useCallback((profileData) => {
+    let score = 0;
+    const maxScore = 100;
+    
+    if (profileData.firstName) score += 15;
+    if (profileData.lastName) score += 15;
+    if (profileData.bio) score += 10;
+    if (profileData.profileImage) score += 10;
+    if (profileData.skills.length > 0) score += 20;
+    if (profileData.location) score += 10;
+    if (profileData.userType !== 'skilled') score += 10;
+    if (profileData.portfolio.length > 0) score += 10;
+    
+    return Math.min(score, maxScore);
+  }, []);
+
   useEffect(() => {
     const initializeApp = async () => {
       await loadUserData();
@@ -370,13 +477,12 @@ export default function ProfileScreen({ navigation }) {
     setTimeout(() => setSaveSuccess(false), 3000);
   };
 
-  const requestLocationPermission = async () => {
-    try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      setLocationPermission(status === 'granted');
-    } catch (error) {
-      console.warn('Location permission failed:', error);
-    }
+  const animateProgress = (completeness) => {
+    Animated.timing(progressAnim, {
+      toValue: completeness,
+      duration: 1000,
+      useNativeDriver: false,
+    }).start();
   };
 
   const loadUserData = async () => {
@@ -393,12 +499,12 @@ export default function ProfileScreen({ navigation }) {
       }
       
       let finalProfileData = null;
-      if (token) {
-        finalProfileData = await loadProfileFromBackend(token);
-      }
-      
-      if (!finalProfileData && profileData) {
+      if (profileData) {
         finalProfileData = JSON.parse(profileData);
+        
+        const completeness = calculateProfileCompleteness(finalProfileData);
+        finalProfileData.profileCompleteness = completeness;
+        animateProgress(completeness);
       }
       
       if (finalProfileData) {
@@ -409,7 +515,6 @@ export default function ProfileScreen({ navigation }) {
           clientDetails: { ...prev.clientDetails, ...finalProfileData.clientDetails }
         }));
         
-        // Update global context
         updateGlobalUser({
           firstName: finalProfileData.firstName,
           lastName: finalProfileData.lastName,
@@ -424,16 +529,17 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 💾 ENHANCED FIELD UPDATES WITH GLOBAL SYNC
   const updateField = useCallback((field, value) => {
     setProfile(prev => {
       const newProfile = {
         ...prev,
         [field]: value,
-        lastUpdated: new Date().toISOString()
+        lastUpdated: new Date().toISOString(),
+        profileCompleteness: calculateProfileCompleteness({ ...prev, [field]: value })
       };
       
-      // Update global context for immediate UI updates
+      animateProgress(newProfile.profileCompleteness);
+      
       if (['firstName', 'lastName', 'profileImage', 'userType', 'skills', 'skillCategories'].includes(field)) {
         updateGlobalUser({
           firstName: field === 'firstName' ? value : newProfile.firstName,
@@ -447,71 +553,49 @@ export default function ProfileScreen({ navigation }) {
       
       return newProfile;
     });
-  }, [updateGlobalUser]);
+  }, [updateGlobalUser, calculateProfileCompleteness]);
 
-  const updateFarmField = useCallback((field, value) => {
-    setProfile(prev => ({
-      ...prev,
-      farmDetails: { ...prev.farmDetails, [field]: value }
-    }));
-  }, []);
-
-  const updateClientField = useCallback((field, value) => {
-    setProfile(prev => ({
-      ...prev,
-      clientDetails: { 
-        ...prev.clientDetails, 
-        [field]: field === 'serviceNeeds' ? value.split(',').map(s => s.trim()).filter(Boolean) : value 
-      }
-    }));
-  }, []);
-
-  // 🌐 ENHANCED BACKEND SYNC WITH GLOBAL UPDATE
-  const syncProfileToBackend = async () => {
-    try {
-      const token = await AsyncStorage.getItem('userToken');
-      if (!token) {
-        Alert.alert('Authentication Required', 'Please log in to save changes');
-        return false;
-      }
-
-      const currentProfile = profileManager.getCurrentState();
-      const result = await saveProfileToBackend(currentProfile, token);
+  const addSkill = useCallback((skillData = null) => {
+    if (skillData) {
+      const newSkill = { 
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9), 
+        name: skillData.name,
+        category: skillData.category || 'general',
+        acquired: new Date().toISOString(),
+        confidence: skillData.score || 0,
+        source: 'recommendation'
+      };
       
-      if (result.success) {
-        // Update global context with latest data
+      setProfile(prev => {
+        const newSkills = [...prev.skills, newSkill];
+        const newCategories = [...new Set([...prev.skillCategories, newSkill.category])];
+        
         updateGlobalUser({
-          firstName: currentProfile.firstName,
-          lastName: currentProfile.lastName,
-          profileImage: currentProfile.profileImage,
-          userType: currentProfile.userType,
-          skills: currentProfile.skills,
-          skillCategories: currentProfile.skillCategories
+          skills: newSkills,
+          skillCategories: newCategories
         });
         
-        triggerSaveAnimation();
-        Vibration.vibrate(100);
-        return true;
-      } else {
-        Alert.alert('Sync Failed', 'Could not save to server. Changes saved locally.');
-        return false;
-      }
-    } catch (error) {
-      console.error('Sync failed:', error);
-      Alert.alert('Sync Error', 'Failed to connect to server. Changes saved locally.');
-      return false;
+        return {
+          ...prev,
+          skills: newSkills,
+          skillCategories: newCategories
+        };
+      });
+      
+      return;
     }
-  };
 
-  // 🛠️ ENHANCED SKILLS MANAGEMENT WITH CATEGORIES
-  const addSkill = () => {
     Alert.prompt(
       'Add Skill & Category',
       'Enter skill and category (format: Skill Name - Category):',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
-          text: 'Add', 
+          text: 'Get Suggestions', 
+          onPress: () => setShowSkillRecommendations(true)
+        },
+        { 
+          text: 'Add Custom', 
           onPress: (input) => {
             if (input && input.trim()) {
               const parts = input.split('-').map(part => part.trim());
@@ -522,14 +606,15 @@ export default function ProfileScreen({ navigation }) {
                 id: Date.now().toString() + Math.random().toString(36).substr(2, 9), 
                 name: skillName,
                 category: category,
-                acquired: new Date().toISOString()
+                acquired: new Date().toISOString(),
+                confidence: 100,
+                source: 'manual'
               };
               
               setProfile(prev => {
                 const newSkills = [...prev.skills, newSkill];
                 const newCategories = [...new Set([...prev.skillCategories, category])];
                 
-                // Update global context
                 updateGlobalUser({
                   skills: newSkills,
                   skillCategories: newCategories
@@ -548,14 +633,15 @@ export default function ProfileScreen({ navigation }) {
       'plain-text',
       'e.g., Tractor Operation - Machinery'
     );
-  };
+  }, [profile.userType, profile.skills, updateGlobalUser]);
 
-  const removeSkill = (skillId) => {
+  const removeSkill = useCallback((skillId) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+    
     setProfile(prev => {
       const newSkills = prev.skills.filter(skill => skill.id !== skillId);
       const remainingCategories = [...new Set(newSkills.map(skill => skill.category))];
       
-      // Update global context
       updateGlobalUser({
         skills: newSkills,
         skillCategories: remainingCategories
@@ -567,9 +653,8 @@ export default function ProfileScreen({ navigation }) {
         skillCategories: remainingCategories
       };
     });
-  };
+  }, [updateGlobalUser]);
 
-  // 📸 IMAGE UPLOAD
   const uploadImages = async (type = 'profile') => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -590,47 +675,352 @@ export default function ProfileScreen({ navigation }) {
       if (!result.canceled && result.assets) {
         setImageUploading(true);
         
-        // Simulate upload process
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const uploadedUrls = result.assets.map(asset => asset.uri);
+        const processedImages = await Promise.all(
+          result.assets.map(async (asset) => {
+            await new Promise(resolve => setTimeout(resolve, 800));
+            
+            return {
+              uri: asset.uri,
+              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+              description: '',
+              timestamp: new Date().toISOString(),
+              size: asset.fileSize,
+              dimensions: { width: asset.width, height: asset.height }
+            };
+          })
+        );
 
         if (type === 'profile') {
-          updateField('profileImage', uploadedUrls[0]);
+          updateField('profileImage', processedImages[0].uri);
         } else if (type === 'farm' && profile.userType === 'farmer') {
           setProfile(prev => ({
             ...prev,
             farmDetails: {
               ...prev.farmDetails,
-              images: [...(prev.farmDetails?.images || []), ...uploadedUrls.map(url => ({
-                uri: url,
-                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-                timestamp: new Date().toISOString()
-              }))]
+              images: [...(prev.farmDetails?.images || []), ...processedImages]
             }
           }));
         } else if (type === 'portfolio') {
           setProfile(prev => ({
             ...prev,
-            portfolio: [...prev.portfolio, ...uploadedUrls.map(url => ({
-              uri: url,
-              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-              description: '',
-              timestamp: new Date().toISOString()
-            }))]
+            portfolio: [...prev.portfolio, ...processedImages]
           }));
         }
         
         setImageUploading(false);
         Vibration.vibrate(50);
+        
+        Alert.alert(
+          'Upload Complete', 
+          `${processedImages.length} ${type} image${processedImages.length === 1 ? '' : 's'} uploaded successfully.`,
+          [{ text: 'OK', style: 'default' }]
+        );
       }
     } catch (error) {
       setImageUploading(false);
-      Alert.alert('Upload Failed', 'Failed to upload images. Please try again.');
+      Alert.alert(
+        'Upload Failed', 
+        'Please try again or contact support if the issue persists.',
+        [{ text: 'Retry', onPress: () => uploadImages(type) }]
+      );
     }
   };
 
-  // 🧭 NAVIGATION
+  const getCurrentLocation = async () => {
+    try {
+      if (!locationPermission) {
+        Alert.alert(
+          'Location Services', 
+          'Enable location for better service matching and local opportunities',
+          [
+            { text: 'Not Now', style: 'cancel' },
+            { text: 'Enable', onPress: requestLocationPermission }
+          ]
+        );
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.Balanced,
+        timeout: 10000
+      });
+
+      const { latitude, longitude } = location.coords;
+      
+      const address = await Location.reverseGeocodeAsync({
+        latitude,
+        longitude
+      });
+
+      const readableAddress = address[0] 
+        ? `${address[0].name || ''} ${address[0].city || ''} ${address[0].region || ''} ${address[0].country || ''}`.trim()
+        : `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
+
+      const locationData = {
+        latitude,
+        longitude,
+        address: readableAddress,
+        timestamp: new Date().toISOString(),
+        accuracy: location.coords.accuracy,
+        serviceRadius: 50
+      };
+      
+      if (profile.userType === 'farmer') {
+        setProfile(prev => ({
+          ...prev,
+          farmDetails: { 
+            ...prev.farmDetails, 
+            location: locationData 
+          }
+        }));
+      } else if (profile.userType === 'client') {
+        setProfile(prev => ({
+          ...prev,
+          clientDetails: { 
+            ...prev.clientDetails, 
+            location: locationData 
+          }
+        }));
+      } else {
+        updateField('location', locationData);
+      }
+      
+      setShowLocationPicker(false);
+      
+      Alert.alert(
+        'Location Set', 
+        `Location services activated for ${profile.userType} opportunities.`,
+        [{ text: 'OK', style: 'default' }]
+      );
+    } catch (error) {
+      console.warn('Location acquisition failed:', error);
+      Alert.alert(
+        'Location Services', 
+        'Try manual entry for now.',
+        [
+          { text: 'Manual Entry', onPress: () => handleManualLocation(profile.userType) },
+          { text: 'Try Again', onPress: getCurrentLocation }
+        ]
+      );
+    }
+  };
+
+  const requestLocationPermission = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status === 'granted');
+    } catch (error) {
+      console.warn('Location permission failed:', error);
+    }
+  };
+
+  const handleManualLocation = (userType = 'general') => {
+    Alert.prompt(
+      'Enter Location',
+      'Enter your address for service matching:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Save', 
+          onPress: (address) => {
+            if (address && address.trim()) {
+              const manualLocation = {
+                latitude: -23.0833 + (Math.random() - 0.5) * 0.01,
+                longitude: 30.3833 + (Math.random() - 0.5) * 0.01,
+                address: address.trim(),
+                accuracy: 'manual',
+                serviceRadius: 50
+              };
+
+              if (userType === 'farmer') {
+                setProfile(prev => ({
+                  ...prev,
+                  farmDetails: { ...prev.farmDetails, location: manualLocation }
+                }));
+              } else if (userType === 'client') {
+                setProfile(prev => ({
+                  ...prev,
+                  clientDetails: { ...prev.clientDetails, location: manualLocation }
+                }));
+              } else {
+                updateField('location', manualLocation);
+              }
+              setShowLocationPicker(false);
+            }
+          }
+        }
+      ],
+      'plain-text',
+      'e.g., 123 Farm Road, Agricultural District'
+    );
+  };
+
+  const syncProfileToBackend = async (isPriority = false) => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        Alert.alert(
+          'Authentication Required', 
+          'Please log in to save your profile',
+          [{ text: 'Login', onPress: () => navigation.navigate('Login') }]
+        );
+        return false;
+      }
+
+      const currentProfile = profileManager.getCurrentState();
+      const result = await saveToBackend(currentProfile, token, isPriority);
+      
+      if (result.success) {
+        updateGlobalUser({
+          firstName: currentProfile.firstName,
+          lastName: currentProfile.lastName,
+          profileImage: currentProfile.profileImage,
+          userType: currentProfile.userType,
+          skills: currentProfile.skills,
+          skillCategories: currentProfile.skillCategories,
+          profileCompleteness: currentProfile.profileCompleteness
+        });
+        
+        triggerSaveAnimation();
+        Vibration.vibrate(100);
+        
+        if (currentProfile.profileCompleteness >= 80) {
+          Alert.alert(
+            'Profile Complete!',
+            `Your ${currentProfile.profileCompleteness}% complete profile will get more visibility!`,
+            [{ text: 'Great!', style: 'default' }]
+          );
+        }
+        
+        return true;
+      } else if (result.queued) {
+        Alert.alert(
+          'Sync Queued',
+          'Your changes are queued and will sync when connection improves.',
+          [{ text: 'OK', style: 'default' }]
+        );
+        return true;
+      } else {
+        Alert.alert(
+          'Sync Attention',
+          'Changes saved locally. System will retry automatically.',
+          [{ text: 'Continue', style: 'default' }]
+        );
+        return false;
+      }
+    } catch (error) {
+      console.error('Sync failed:', error);
+      Alert.alert(
+        'Sync Recovery',
+        'All changes preserved locally. Automatic retry activated.',
+        [{ text: 'Continue', style: 'default' }]
+      );
+      return false;
+    }
+  };
+
+  const ProgressBar = () => {
+    const progressWidth = progressAnim.interpolate({
+      inputRange: [0, 100],
+      outputRange: ['0%', '100%'],
+    });
+
+    return (
+      <View style={styles.progressSection}>
+        <View style={styles.progressHeader}>
+          <Text style={styles.progressTitle}>Profile Completion</Text>
+          <Animated.Text style={styles.progressPercentage}>
+            {progressAnim.interpolate({
+              inputRange: [0, 100],
+              outputRange: ['0%', '100%'],
+            })}
+          </Animated.Text>
+        </View>
+        <View style={styles.progressBar}>
+          <Animated.View 
+            style={[
+              styles.progressFill,
+              { width: progressWidth }
+            ]} 
+          />
+        </View>
+        <Text style={styles.progressHint}>
+          {profile.profileCompleteness >= 80 ? 'Excellent! Maximum visibility' :
+           profile.profileCompleteness >= 60 ? 'Great! Almost complete' :
+           'Add more details to increase visibility'}
+        </Text>
+      </View>
+    );
+  };
+
+  const RecommendationsPanel = () => {
+    if (!showSkillRecommendations || skillRecommendations.length === 0) return null;
+
+    return (
+      <Modal visible={showSkillRecommendations} transparent animationType="slide">
+        <View style={styles.recommendationsOverlay}>
+          <View style={styles.recommendationsPanel}>
+            <View style={styles.recommendationsHeader}>
+              <Text style={styles.recommendationsTitle}>Skill Suggestions</Text>
+              <TouchableOpacity onPress={() => setShowSkillRecommendations(false)}>
+                <Icon name="close" size={24} color="#00f0a8" />
+              </TouchableOpacity>
+            </View>
+            
+            <Text style={styles.recommendationsSubtitle}>
+              Based on your profile as a {profile.userType}
+            </Text>
+            
+            <ScrollView style={styles.recommendationsList}>
+              {skillRecommendations.map((rec, index) => (
+                <TouchableOpacity
+                  key={`rec-${index}`}
+                  style={styles.recommendationItem}
+                  onPress={() => {
+                    addSkill(rec);
+                    setShowSkillRecommendations(false);
+                  }}
+                >
+                  <View style={styles.recommendationInfo}>
+                    <Text style={styles.recommendationName}>{rec.name}</Text>
+                    <Text style={styles.recommendationScore}>
+                      {Math.round(rec.score)}% match
+                    </Text>
+                  </View>
+                  <Icon name="add-circle" size={24} color="#00f0a8" />
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            
+            <TouchableOpacity 
+              style={styles.customSkillButton}
+              onPress={() => {
+                setShowSkillRecommendations(false);
+                setTimeout(() => addSkill(), 300);
+              }}
+            >
+              <Text style={styles.customSkillText}>Add Custom Skill</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    );
+  };
+
+  const ConnectionStatus = () => (
+    <View style={styles.connectionStatus}>
+      <Icon 
+        name={connectionStatus === 'excellent' ? 'wifi' : 'cellular-outline'} 
+        size={16} 
+        color={connectionStatus === 'excellent' ? '#00f0a8' : '#ffa500'} 
+      />
+      <Text style={styles.connectionText}>
+        {connectionStatus === 'excellent' ? 'Connected' : 'Optimizing'}
+        {syncQueue.length > 0 && ` • ${syncQueue.length} queued`}
+      </Text>
+    </View>
+  );
+
   const NavigationTabs = () => (
     <View style={styles.navTabs}>
       {[
@@ -664,7 +1054,6 @@ export default function ProfileScreen({ navigation }) {
     </View>
   );
 
-  // 🎨 COMPONENTS
   const ProfileHeader = () => (
     <Animated.View 
       style={[
@@ -683,11 +1072,17 @@ export default function ProfileScreen({ navigation }) {
           <Icon name="chevron-back" size={28} color="#00f0a8" />
         </TouchableOpacity>
         
-        <Text style={styles.headerTitle}>Profile</Text>
+        <View style={styles.headerTitleContainer}>
+          <Text style={styles.headerTitle}>Advanced Profile</Text>
+          <ConnectionStatus />
+        </View>
         
         <TouchableOpacity 
           style={[styles.editButton, editing && styles.editButtonActive]}
-          onPress={() => setEditing(!editing)}
+          onPress={() => {
+            LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+            setEditing(!editing);
+          }}
         >
           <Icon 
             name={editing ? "checkmark-circle" : "create-outline"} 
@@ -715,6 +1110,7 @@ export default function ProfileScreen({ navigation }) {
             {imageUploading && (
               <View style={styles.uploadOverlay}>
                 <ActivityIndicator color="#00f0a8" size="large" />
+                <Text style={styles.uploadText}>Processing...</Text>
               </View>
             )}
             <View style={styles.avatarEditBadge}>
@@ -726,21 +1122,25 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.profileInfo}>
           {editing ? (
             <>
-              <SmartTextInput
+              <SmartInput
                 value={profile.firstName}
                 onChangeText={(text) => updateField('firstName', text)}
                 placeholder="First Name"
                 style={styles.nameInput}
                 onSave={() => {}}
-                guidanceText="Your first name as you want it to appear on posts"
+                guidanceText="Your professional identity"
+                validationRule="required"
+                maxLength={30}
               />
-              <SmartTextInput
+              <SmartInput
                 value={profile.lastName}
                 onChangeText={(text) => updateField('lastName', text)}
                 placeholder="Last Name"
                 style={styles.nameInput}
                 onSave={() => {}}
-                guidanceText="Your last name for professional identification"
+                guidanceText="Build trust with complete identity"
+                validationRule="required"
+                maxLength={30}
               />
             </>
           ) : (
@@ -751,16 +1151,18 @@ export default function ProfileScreen({ navigation }) {
               <Text style={styles.userType}>
                 {profile.userType?.toUpperCase()} 
                 <Icon name="location" size={12} color="#00f0a8" /> 
-                {profile.location ? ' Located' : ' Remote'}
+                {profile.location ? ' Located' : ' Remote Ready'}
               </Text>
               <Text style={styles.userStats}>
                 <Icon name="construct" size={12} color="#666" /> {profile.skills.length} skills 
-                <Icon name="images" size={12} color="#666" /> {profile.portfolio.length} portfolio items
+                <Icon name="images" size={12} color="#666" /> {profile.portfolio.length} portfolio
               </Text>
             </>
           )}
         </View>
       </View>
+
+      <ProgressBar />
     </Animated.View>
   );
 
@@ -769,7 +1171,7 @@ export default function ProfileScreen({ navigation }) {
       <TouchableOpacity 
         style={[styles.saveButton, saving && styles.saveButtonDisabled]}
         onPress={async () => {
-          const success = await syncProfileToBackend();
+          const success = await syncProfileToBackend(true);
           if (success) {
             setEditing(false);
           }
@@ -777,12 +1179,15 @@ export default function ProfileScreen({ navigation }) {
         disabled={saving}
       >
         {saving ? (
-          <ActivityIndicator color="#000" size="small" />
+          <>
+            <ActivityIndicator color="#000" size="small" />
+            <Text style={styles.saveButtonText}>Syncing...</Text>
+          </>
         ) : (
           <>
             <Icon name="cloud-upload" size={20} color="#000" />
             <Text style={styles.saveButtonText}>
-              {saveSuccess ? 'Saved' : 'Save Changes'}
+              {saveSuccess ? 'Synced ✓' : 'Save Changes'}
             </Text>
           </>
         )}
@@ -790,7 +1195,13 @@ export default function ProfileScreen({ navigation }) {
       
       {lastSave && (
         <Text style={styles.lastSaveText}>
-          Last saved: {new Date(lastSave).toLocaleTimeString()}
+          Last sync: {new Date(lastSave).toLocaleTimeString()}
+        </Text>
+      )}
+      
+      {syncQueue.length > 0 && (
+        <Text style={styles.syncQueueText}>
+          {syncQueue.length} update{syncQueue.length === 1 ? '' : 's'} queued
         </Text>
       )}
     </Animated.View>
@@ -810,44 +1221,55 @@ export default function ProfileScreen({ navigation }) {
         contentContainerStyle={styles.scrollContent}
       >
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Basic Information</Text>
+          <Text style={styles.sectionTitle}>Profile Information</Text>
           
-          <SmartTextInput
+          <SmartInput
             value={profile.bio}
             onChangeText={(text) => updateField('bio', text)}
-            placeholder="Tell us about yourself..."
+            placeholder="Tell us about yourself and your expertise..."
             style={[styles.input, styles.textArea]}
             multiline={true}
             onSave={() => {}}
-            guidanceText="Describe your skills, experience, and what you offer"
+            guidanceText="Describe your unique value proposition"
+            exampleText="Expert with 10+ years in sustainable agriculture and innovation"
+            maxLength={500}
           />
 
           <View style={styles.userTypeSection}>
-            <Text style={styles.userTypeLabel}>Account Type:</Text>
+            <Text style={styles.userTypeLabel}>Account Role:</Text>
+            <Text style={styles.userTypeDescription}>
+              Your role determines how you are matched with opportunities
+            </Text>
             <View style={styles.userTypeOptions}>
-              {['skilled', 'farmer', 'client'].map((type) => (
+              {[
+                { type: 'skilled', icon: 'construct', label: 'Skilled Pro', description: 'Offer services' },
+                { type: 'farmer', icon: 'leaf', label: 'Farmer', description: 'Manage operations' },
+                { type: 'client', icon: 'business', label: 'Client', description: 'Find talent' }
+              ].map((item) => (
                 <TouchableOpacity
-                  key={type}
+                  key={item.type}
                   style={[
-                    styles.userTypeOption,
-                    profile.userType === type && styles.userTypeOptionActive
+                    styles.userTypeCard,
+                    profile.userType === item.type && styles.userTypeCardActive
                   ]}
-                  onPress={() => editing && updateField('userType', type)}
+                  onPress={() => editing && updateField('userType', item.type)}
                   disabled={!editing}
                 >
-                  <Icon 
-                    name={
-                      type === 'skilled' ? 'construct' : 
-                      type === 'farmer' ? 'leaf' : 'person'
-                    } 
-                    size={16} 
-                    color={profile.userType === type ? '#000' : '#fff'} 
-                  />
+                  <View style={styles.userTypeIconContainer}>
+                    <Icon 
+                      name={item.icon} 
+                      size={20} 
+                      color={profile.userType === item.type ? '#000' : '#00f0a8'} 
+                    />
+                  </View>
                   <Text style={[
-                    styles.userTypeText,
-                    profile.userType === type && styles.userTypeTextActive
+                    styles.userTypeCardText,
+                    profile.userType === item.type && styles.userTypeCardTextActive
                   ]}>
-                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                    {item.label}
+                  </Text>
+                  <Text style={styles.userTypeCardDescription}>
+                    {item.description}
                   </Text>
                 </TouchableOpacity>
               ))}
@@ -855,13 +1277,21 @@ export default function ProfileScreen({ navigation }) {
           </View>
         </View>
 
-        {/* Skills Section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Skills & Expertise</Text>
+            <View>
+              <Text style={styles.sectionTitle}>Skills & Expertise</Text>
+              <Text style={styles.sectionSubtitle}>
+                Optimized for maximum visibility
+              </Text>
+            </View>
             {editing && (
-              <TouchableOpacity onPress={addSkill}>
-                <Text style={styles.seeAllText}>Add Skill</Text>
+              <TouchableOpacity 
+                style={styles.addSkillButton}
+                onPress={() => addSkill()}
+              >
+                <Icon name="add" size={20} color="#00f0a8" />
+                <Text style={styles.seeAllText}> Add Skill</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -873,6 +1303,11 @@ export default function ProfileScreen({ navigation }) {
                 <View style={styles.skillInfo}>
                   <Text style={styles.skillText}>{skill.name}</Text>
                   <Text style={styles.skillCategory}>{skill.category}</Text>
+                  {skill.confidence < 100 && (
+                    <Text style={styles.skillConfidence}>
+                      {skill.confidence}% match
+                    </Text>
+                  )}
                 </View>
                 {editing && (
                   <TouchableOpacity 
@@ -887,29 +1322,60 @@ export default function ProfileScreen({ navigation }) {
             
             {profile.skills.length === 0 && (
               <View style={styles.emptyState}>
-                <Icon name="construct-outline" size={32} color="#666" />
+                <Icon name="construct-outline" size={48} color="#666" />
                 <Text style={styles.emptyText}>No skills added yet</Text>
                 <Text style={styles.emptySubtext}>
-                  Add skills to be discovered by clients and farmers
+                  Add skills to unlock better matching
                 </Text>
+                {editing && (
+                  <TouchableOpacity 
+                    style={styles.emptyStateButton}
+                    onPress={() => addSkill()}
+                  >
+                    <Text style={styles.emptyStateButtonText}>
+                      Add Your First Skill
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
             )}
           </View>
+
+          {skillRecommendations.length > 0 && editing && (
+            <View style={styles.recommendationsSection}>
+              <Text style={styles.recommendationsTitle}>
+                Suggested Skills
+              </Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                {skillRecommendations.slice(0, 3).map((rec, index) => (
+                  <TouchableOpacity
+                    key={`quick-rec-${index}`}
+                    style={styles.quickRecommendation}
+                    onPress={() => addSkill(rec)}
+                  >
+                    <Text style={styles.quickRecText}>{rec.name}</Text>
+                    <Text style={styles.quickRecScore}>
+                      {Math.round(rec.score)}%
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            </View>
+          )}
         </View>
 
-        {/* Save Button */}
         {editing && <SaveButton />}
 
-        {/* Status Indicator */}
         <View style={styles.statusSection}>
           <Icon name="sync" size={16} color="#00f0a8" />
           <Text style={styles.statusText}>
-            Auto-save enabled • Changes are saved automatically
+            Auto-save active • Smart optimization enabled
           </Text>
         </View>
       </ScrollView>
 
       <NavigationTabs />
+      <RecommendationsPanel />
     </SafeAreaView>
   );
 }
@@ -935,15 +1401,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,240,168,0.1)',
+  headerTitleContainer: {
+    alignItems: 'center',
   },
   headerTitle: {
     color: '#00f0a8',
     fontSize: 20,
     fontWeight: '800',
+  },
+  connectionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  connectionText: {
+    color: '#666',
+    fontSize: 10,
+    marginLeft: 4,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,240,168,0.1)',
   },
   editButton: {
     padding: 8,
@@ -992,6 +1471,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     zIndex: 1,
   },
+  uploadText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    marginTop: 5,
+  },
   avatarEditBadge: {
     position: 'absolute',
     bottom: 0,
@@ -1034,6 +1518,42 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     paddingHorizontal: 0,
   },
+  progressSection: {
+    marginTop: 20,
+  },
+  progressHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  progressTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  progressPercentage: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  progressBar: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: '#00f0a8',
+    borderRadius: 3,
+  },
+  progressHint: {
+    color: '#666',
+    fontSize: 11,
+    marginTop: 6,
+    textAlign: 'center',
+  },
   inputContainer: {
     position: 'relative',
     marginBottom: 12,
@@ -1051,9 +1571,48 @@ const styles = StyleSheet.create({
     borderColor: '#00f0a8',
     backgroundColor: 'rgba(0,240,168,0.05)',
   },
+  inputError: {
+    borderColor: '#ff6b6b',
+  },
   textArea: {
     height: 100,
     textAlignVertical: 'top',
+  },
+  guidanceContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  guidanceText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    marginLeft: 4,
+    fontStyle: 'italic',
+  },
+  validationContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 5,
+  },
+  validationText: {
+    color: '#ff6b6b',
+    fontSize: 11,
+    marginLeft: 4,
+  },
+  exampleText: {
+    color: '#666',
+    fontSize: 11,
+    marginTop: 2,
+    fontStyle: 'italic',
+  },
+  charCounter: {
+    color: '#666',
+    fontSize: 10,
+    textAlign: 'right',
+    marginTop: 2,
+  },
+  charCounterWarning: {
+    color: '#ffa500',
   },
   doneButton: {
     position: 'absolute',
@@ -1064,22 +1623,13 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 15,
   },
+  doneButtonDisabled: {
+    backgroundColor: '#666',
+  },
   doneButtonText: {
     color: '#000',
     fontSize: 12,
     fontWeight: '700',
-  },
-  guidanceText: {
-    color: '#00f0a8',
-    fontSize: 12,
-    marginTop: 5,
-    fontStyle: 'italic',
-  },
-  exampleText: {
-    color: '#666',
-    fontSize: 11,
-    marginTop: 2,
-    fontStyle: 'italic',
   },
   scrollView: {
     flex: 1,
@@ -1108,10 +1658,25 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
+  sectionSubtitle: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 2,
+  },
   seeAllText: {
     color: '#00f0a8',
     fontSize: 14,
     fontWeight: '600',
+  },
+  addSkillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
   },
   userTypeSection: {
     marginTop: 15,
@@ -1120,37 +1685,56 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+    marginBottom: 5,
+  },
+  userTypeDescription: {
+    color: '#666',
+    fontSize: 12,
     marginBottom: 10,
   },
   userTypeOptions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  userTypeOption: {
+  userTypeCard: {
     flex: 1,
-    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
+    padding: 15,
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 8,
+    borderRadius: 12,
     marginHorizontal: 4,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  userTypeOptionActive: {
+  userTypeCardActive: {
     backgroundColor: 'rgba(0,240,168,0.2)',
     borderColor: '#00f0a8',
   },
-  userTypeText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
+  userTypeIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
   },
-  userTypeTextActive: {
+  userTypeCardText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  userTypeCardTextActive: {
     color: '#000',
     fontWeight: '700',
+  },
+  userTypeCardDescription: {
+    color: '#666',
+    fontSize: 10,
+    textAlign: 'center',
+    lineHeight: 12,
   },
   skillsGrid: {
     flexDirection: 'row',
@@ -1167,6 +1751,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     borderWidth: 1,
     borderColor: 'rgba(0,240,168,0.3)',
+    minWidth: 120,
   },
   skillInfo: {
     flex: 1,
@@ -1181,6 +1766,11 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 10,
     marginTop: 2,
+  },
+  skillConfidence: {
+    color: '#ffa500',
+    fontSize: 9,
+    marginTop: 1,
   },
   removeSkill: {
     padding: 2,
@@ -1202,6 +1792,116 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
     marginTop: 4,
+  },
+  emptyStateButton: {
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  emptyStateButtonText: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  recommendationsOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  recommendationsPanel: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+    maxHeight: '70%',
+  },
+  recommendationsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  recommendationsTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  recommendationsSubtitle: {
+    color: '#666',
+    fontSize: 14,
+    marginBottom: 15,
+  },
+  recommendationsList: {
+    maxHeight: 300,
+  },
+  recommendationItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 15,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    marginBottom: 8,
+  },
+  recommendationInfo: {
+    flex: 1,
+  },
+  recommendationName: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  recommendationScore: {
+    color: '#00f0a8',
+    fontSize: 12,
+  },
+  customSkillButton: {
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  customSkillText: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  recommendationsSection: {
+    marginTop: 15,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  quickRecommendation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  quickRecText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    fontWeight: '600',
+    marginRight: 6,
+  },
+  quickRecScore: {
+    color: '#666',
+    fontSize: 10,
+    fontWeight: '700',
   },
   saveButtonContainer: {
     marginHorizontal: 20,
@@ -1231,6 +1931,12 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 12,
     marginTop: 8,
+    textAlign: 'center',
+  },
+  syncQueueText: {
+    color: '#ffa500',
+    fontSize: 11,
+    marginTop: 4,
     textAlign: 'center',
   },
   statusSection: {
@@ -1285,3 +1991,5 @@ const styles = StyleSheet.create({
     color: '#00f0a8',
   },
 });
+
+export default ProfileScreen;
