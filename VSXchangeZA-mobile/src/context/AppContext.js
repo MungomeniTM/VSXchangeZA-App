@@ -16,6 +16,7 @@ export const AppProvider = ({ children }) => {
 
   const [posts, setPosts] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     loadGlobalData();
@@ -23,9 +24,10 @@ export const AppProvider = ({ children }) => {
 
   const loadGlobalData = async () => {
     try {
-      const [userData, postsData] = await Promise.all([
+      const [userData, postsData, notificationsData] = await Promise.all([
         AsyncStorage.getItem('globalUserData'),
-        AsyncStorage.getItem('globalPosts')
+        AsyncStorage.getItem('globalPosts'),
+        AsyncStorage.getItem('globalNotifications')
       ]);
 
       if (userData) {
@@ -35,8 +37,14 @@ export const AppProvider = ({ children }) => {
       if (postsData) {
         setPosts(JSON.parse(postsData));
       }
+
+      if (notificationsData) {
+        setNotifications(JSON.parse(notificationsData));
+      }
     } catch (error) {
       console.warn('Global data loading failed:', error);
+    } finally {
+      setIsLoaded(true);
     }
   };
 
@@ -78,20 +86,30 @@ export const AppProvider = ({ children }) => {
     });
   };
 
+  const value = {
+    globalUser,
+    updateGlobalUser,
+    posts,
+    addPost,
+    setPosts,
+    notifications,
+    addNotification,
+    isLoaded
+  };
+
   return (
-    <AppContext.Provider value={{
-      globalUser,
-      updateGlobalUser,
-      posts,
-      addPost,
-      setPosts,
-      notifications,
-      addNotification
-    }}>
+    <AppContext.Provider value={value}>
       {children}
     </AppContext.Provider>
   );
 };
 
-export const useApp = () => useContext(AppContext);
+export const useApp = () => {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within an AppProvider');
+  }
+  return context;
+};
+
 export { AppContext };
