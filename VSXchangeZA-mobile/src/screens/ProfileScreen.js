@@ -17,10 +17,7 @@ import {
   Dimensions,
   Modal,
   Vibration,
-  Switch,
-  Keyboard,
-  KeyboardAvoidingView,
-  TouchableWithoutFeedback
+  Switch
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -29,7 +26,7 @@ import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
 
-// 🌀 QUANTUM STATE ENTANGLEMENT SYSTEM 3.0
+// 🌀 QUANTUM STATE ENTANGLEMENT SYSTEM 4.0
 const useQuantumState = (initialState, persistenceKey = null) => {
   const [state, setState] = useState(initialState);
   const quantumField = useRef(new Map());
@@ -79,32 +76,7 @@ const useQuantumState = (initialState, persistenceKey = null) => {
   return [state, setQuantumState, { entangle, quantumField, getCurrentState }];
 };
 
-// 🛡️ QUANTUM KEYBOARD MANAGER 2.0
-const useQuantumKeyboard = () => {
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
-
-  useEffect(() => {
-    const keyboardDidShow = Keyboard.addListener('keyboardDidShow', (e) => {
-      setKeyboardHeight(e.endCoordinates.height);
-      setKeyboardVisible(true);
-    });
-    
-    const keyboardDidHide = Keyboard.addListener('keyboardDidHide', () => {
-      setKeyboardHeight(0);
-      setKeyboardVisible(false);
-    });
-
-    return () => {
-      keyboardDidShow.remove();
-      keyboardDidHide.remove();
-    };
-  }, []);
-
-  return { keyboardHeight, keyboardVisible };
-};
-
-// 🌐 QUANTUM BACKEND INTEGRATION
+// 🌐 QUANTUM BACKEND INTEGRATION 2.0
 const useQuantumBackend = () => {
   const [saving, setSaving] = useState(false);
   const [lastSave, setLastSave] = useState(null);
@@ -200,7 +172,7 @@ const useQuantumBackend = () => {
 };
 
 export default function ProfileScreen({ navigation }) {
-  // 🌟 QUANTUM STATE ENTANGLEMENT 3.0
+  // 🌟 QUANTUM STATE ENTANGLEMENT 4.0
   const [user, setUser] = useQuantumState(null, 'userConsciousness');
   const [profile, setProfile, profileQuantum] = useQuantumState({
     firstName: '',
@@ -228,18 +200,17 @@ export default function ProfileScreen({ navigation }) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   
   // 🎮 QUANTUM SYSTEMS INTEGRATION
-  const { keyboardHeight, keyboardVisible } = useQuantumKeyboard();
   const { saving, lastSave, saveProfileToBackend, loadProfileFromBackend } = useQuantumBackend();
   const scrollViewRef = useRef(null);
 
-  // ✨ QUANTUM ANIMATIONS 3.0
+  // ✨ QUANTUM ANIMATIONS 4.0
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const quantumGlow = useRef(new Animated.Value(0)).current;
   const profileScale = useRef(new Animated.Value(0.95)).current;
   const savePulse = useRef(new Animated.Value(1)).current;
 
-  // 🚀 QUANTUM INITIALIZATION 2.0
+  // 🚀 QUANTUM INITIALIZATION 3.0
   useEffect(() => {
     const quantumInit = async () => {
       await loadUserData();
@@ -250,7 +221,7 @@ export default function ProfileScreen({ navigation }) {
     quantumInit();
   }, []);
 
-  // 🔗 QUANTUM SYNC SYSTEM 2.0
+  // 🔗 QUANTUM SYNC SYSTEM 3.0
   useEffect(() => {
     profileQuantum.entangle((newProfile) => {
       if (newProfile.firstName || newProfile.lastName || newProfile.profileImage) {
@@ -348,7 +319,7 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 💾 QUANTUM AUTO-SAVE SYSTEM 3.0
+  // 💾 QUANTUM AUTO-SAVE SYSTEM 4.0
   const quantumAutoSave = useCallback((field, value) => {
     setProfile(prev => {
       const newProfile = {
@@ -368,7 +339,7 @@ export default function ProfileScreen({ navigation }) {
     });
   }, []);
 
-  // 🌐 QUANTUM BACKEND SYNC
+  // 🌐 QUANTUM BACKEND SYNC 2.0
   const syncProfileToBackend = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
@@ -413,13 +384,9 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 🎯 ENHANCED NAVIGATION WITH KEYBOARD AWARENESS 2.0
+  // 🎯 SIMPLIFIED NAVIGATION - NO KEYBOARD DEPENDENCIES
   const NavigationTabs = () => (
-    <Animated.View style={[
-      styles.navTabs, 
-      keyboardVisible && styles.navTabsHidden,
-      { transform: [{ translateY: keyboardVisible ? 100 : 0 }] }
-    ]}>
+    <View style={styles.navTabs}>
       {[
         { id: 'feed', icon: 'home', label: 'Home' },
         { id: 'explore', icon: 'search', label: 'Discover' },
@@ -448,10 +415,10 @@ export default function ProfileScreen({ navigation }) {
           </Text>
         </TouchableOpacity>
       ))}
-    </Animated.View>
+    </View>
   );
 
-  // 📸 QUANTUM IMAGE UPLOAD 3.0
+  // 📸 QUANTUM IMAGE UPLOAD 4.0
   const uploadImages = async (type = 'profile') => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -520,7 +487,7 @@ export default function ProfileScreen({ navigation }) {
     });
   };
 
-  // 🗺️ QUANTUM LOCATION ENTANGLEMENT 3.0
+  // 🗺️ QUANTUM LOCATION ENTANGLEMENT 4.0
   const getCurrentLocation = async () => {
     try {
       if (!locationPermission) {
@@ -621,7 +588,7 @@ export default function ProfileScreen({ navigation }) {
     );
   };
 
-  // 🛠️ QUANTUM SKILL MATRIX 3.0
+  // 🛠️ QUANTUM SKILL MATRIX 4.0
   const addSkill = () => {
     Alert.prompt(
       'Acquire Quantum Skill',
@@ -656,7 +623,7 @@ export default function ProfileScreen({ navigation }) {
     }));
   };
 
-  // 🎨 COMPONENT RENDERING WITH KEYBOARD OPTIMIZATION 2.0
+  // 🎨 COMPONENT RENDERING - PERFECTLY ALIGNED
   const ProfileHeader = () => (
     <Animated.View 
       style={[
@@ -679,12 +646,7 @@ export default function ProfileScreen({ navigation }) {
         
         <TouchableOpacity 
           style={[styles.editButton, editing && styles.editButtonActive]}
-          onPress={() => {
-            setEditing(!editing);
-            if (keyboardVisible) {
-              Keyboard.dismiss();
-            }
-          }}
+          onPress={() => setEditing(!editing)}
         >
           <Icon 
             name={editing ? "checkmark-circle" : "create-outline"} 
@@ -731,7 +693,6 @@ export default function ProfileScreen({ navigation }) {
                 onChangeText={(text) => quantumAutoSave('firstName', text)}
                 placeholder="First Name"
                 placeholderTextColor="#888"
-                onSubmitEditing={Keyboard.dismiss}
                 returnKeyType="done"
               />
               <TextInput
@@ -740,7 +701,6 @@ export default function ProfileScreen({ navigation }) {
                 onChangeText={(text) => quantumAutoSave('lastName', text)}
                 placeholder="Last Name"
                 placeholderTextColor="#888"
-                onSubmitEditing={Keyboard.dismiss}
                 returnKeyType="done"
               />
             </>
@@ -765,7 +725,7 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 🌾 QUANTUM FARMER PROFILE 3.0
+  // 🌾 QUANTUM FARMER PROFILE 4.0
   const renderFarmerFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <Text style={styles.sectionTitle}>Quantum Farm Matrix</Text>
@@ -889,7 +849,7 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 👥 QUANTUM CLIENT PROFILE 3.0
+  // 👥 QUANTUM CLIENT PROFILE 4.0
   const renderClientFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <Text style={styles.sectionTitle}>Client Service Matrix</Text>
@@ -1097,7 +1057,6 @@ export default function ProfileScreen({ navigation }) {
         onChangeText={(text) => quantumAutoSave('company', text)}
         editable={editing}
         placeholderTextColor="#888"
-        onSubmitEditing={Keyboard.dismiss}
         returnKeyType="done"
       />
       
@@ -1109,7 +1068,6 @@ export default function ProfileScreen({ navigation }) {
         editable={editing}
         placeholderTextColor="#888"
         keyboardType="url"
-        onSubmitEditing={Keyboard.dismiss}
         returnKeyType="done"
       />
       
@@ -1122,7 +1080,6 @@ export default function ProfileScreen({ navigation }) {
         multiline
         numberOfLines={4}
         placeholderTextColor="#888"
-        onSubmitEditing={Keyboard.dismiss}
         returnKeyType="done"
       />
 
@@ -1167,69 +1124,65 @@ export default function ProfileScreen({ navigation }) {
       transparent={true}
       statusBarTranslucent={true}
     >
-      <TouchableWithoutFeedback onPress={() => setShowLocationPicker(false)}>
-        <View style={styles.modalOverlay}>
-          <TouchableWithoutFeedback>
-            <View style={styles.modalContainer}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Quantum Location Entanglement</Text>
-                <TouchableOpacity 
-                  onPress={() => setShowLocationPicker(false)}
-                  style={styles.modalCloseButton}
-                >
-                  <Icon name="close" size={24} color="#00f0a8" />
-                </TouchableOpacity>
-              </View>
-              
-              <View style={styles.locationOptions}>
-                <TouchableOpacity 
-                  style={styles.locationOption}
-                  onPress={getCurrentLocation}
-                >
-                  <Icon name="navigate" size={32} color="#00f0a8" />
-                  <Text style={styles.locationOptionTitle}>Quantum GPS Detection</Text>
-                  <Text style={styles.locationOptionDesc}>
-                    Precise spatial coordinate acquisition
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={styles.locationOption}
-                  onPress={() => handleManualLocation('general')}
-                >
-                  <Icon name="pencil" size={32} color="#00f0a8" />
-                  <Text style={styles.locationOptionTitle}>Manual Coordinate Input</Text>
-                  <Text style={styles.locationOptionDesc}>
-                    Enter spatial coordinates manually
-                  </Text>
-                </TouchableOpacity>
-
-                {profile.location && (
-                  <TouchableOpacity 
-                    style={[styles.locationOption, styles.removeLocationOption]}
-                    onPress={() => {
-                      quantumAutoSave('location', null);
-                      setShowLocationPicker(false);
-                    }}
-                  >
-                    <Icon name="trash" size={32} color="#ff6b6b" />
-                    <Text style={[styles.locationOptionTitle, styles.removeLocationText]}>
-                      Clear Quantum Coordinates
-                    </Text>
-                    <Text style={styles.locationOptionDesc}>
-                      Remove spatial entanglement
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-              
-              <Text style={styles.locationHint}>
-                Quantum location entanglement enables precise service matching across dimensions
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Quantum Location Entanglement</Text>
+            <TouchableOpacity 
+              onPress={() => setShowLocationPicker(false)}
+              style={styles.modalCloseButton}
+            >
+              <Icon name="close" size={24} color="#00f0a8" />
+            </TouchableOpacity>
+          </View>
+          
+          <View style={styles.locationOptions}>
+            <TouchableOpacity 
+              style={styles.locationOption}
+              onPress={getCurrentLocation}
+            >
+              <Icon name="navigate" size={32} color="#00f0a8" />
+              <Text style={styles.locationOptionTitle}>Quantum GPS Detection</Text>
+              <Text style={styles.locationOptionDesc}>
+                Precise spatial coordinate acquisition
               </Text>
-            </View>
-          </TouchableWithoutFeedback>
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.locationOption}
+              onPress={() => handleManualLocation('general')}
+            >
+              <Icon name="pencil" size={32} color="#00f0a8" />
+              <Text style={styles.locationOptionTitle}>Manual Coordinate Input</Text>
+              <Text style={styles.locationOptionDesc}>
+                Enter spatial coordinates manually
+              </Text>
+            </TouchableOpacity>
+
+            {profile.location && (
+              <TouchableOpacity 
+                style={[styles.locationOption, styles.removeLocationOption]}
+                onPress={() => {
+                  quantumAutoSave('location', null);
+                  setShowLocationPicker(false);
+                }}
+              >
+                <Icon name="trash" size={32} color="#ff6b6b" />
+                <Text style={[styles.locationOptionTitle, styles.removeLocationText]}>
+                  Clear Quantum Coordinates
+                </Text>
+                <Text style={styles.locationOptionDesc}>
+                  Remove spatial entanglement
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+          
+          <Text style={styles.locationHint}>
+            Quantum location entanglement enables precise service matching across dimensions
+          </Text>
         </View>
-      </TouchableWithoutFeedback>
+      </View>
     </Modal>
   );
 
@@ -1269,47 +1222,38 @@ export default function ProfileScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
       
-      <KeyboardAvoidingView 
-        style={styles.keyboardAvoid}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+      <ProfileHeader />
+      
+      <ScrollView 
+        ref={scrollViewRef}
+        style={styles.scrollView}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scrollContent}
       >
-        <ProfileHeader />
+        <BusinessSection />
+        <LocationSection />
+        <SkillsSection />
+        <PortfolioSection />
         
-        <ScrollView 
-          ref={scrollViewRef}
-          style={styles.scrollView}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: keyboardHeight > 0 ? keyboardHeight + 100 : 180 }
-          ]}
-        >
-          <BusinessSection />
-          <LocationSection />
-          <SkillsSection />
-          <PortfolioSection />
-          
-          {/* Conditional Quantum Fields */}
-          {profile.userType === 'farmer' && renderFarmerFields()}
-          {profile.userType === 'client' && renderClientFields()}
+        {/* Conditional Quantum Fields */}
+        {profile.userType === 'farmer' && renderFarmerFields()}
+        {profile.userType === 'client' && renderClientFields()}
 
-          {/* Save Button Section */}
-          {editing && <SaveButton />}
+        {/* Save Button Section */}
+        {editing && <SaveButton />}
 
-          {/* Quantum Status */}
-          <View style={styles.quantumStatusSection}>
-            <Icon name="infinite" size={16} color="#00f0a8" />
-            <Text style={styles.quantumStatusText}>
-              Quantum Auto-Save Active • All changes persist across dimensions
-            </Text>
-          </View>
-        </ScrollView>
+        {/* Quantum Status */}
+        <View style={styles.quantumStatusSection}>
+          <Icon name="infinite" size={16} color="#00f0a8" />
+          <Text style={styles.quantumStatusText}>
+            Quantum Auto-Save Active • All changes persist across dimensions
+          </Text>
+        </View>
+      </ScrollView>
 
-        <NavigationTabs />
-        <LocationPickerModal />
-      </KeyboardAvoidingView>
+      <NavigationTabs />
+      <LocationPickerModal />
     </SafeAreaView>
   );
 }
@@ -1318,9 +1262,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
-  },
-  keyboardAvoid: {
-    flex: 1,
   },
   header: {
     paddingTop: Platform.OS === 'ios' ? 20 : 10,
@@ -1453,6 +1394,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 10,
+    paddingBottom: 100, // Fixed padding for bottom navigation
   },
   section: {
     marginHorizontal: 20,
@@ -1754,10 +1696,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     zIndex: 1000,
-  },
-  navTabsHidden: {
-    opacity: 0,
-    transform: [{ translateY: 100 }],
   },
   navTab: {
     flex: 1,
