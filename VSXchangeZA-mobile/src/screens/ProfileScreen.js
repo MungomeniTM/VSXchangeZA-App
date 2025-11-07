@@ -24,13 +24,12 @@ import {
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { createAPI } from "../api";
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
 
-// 🌀 QUANTUM STATE ENTANGLEMENT SYSTEM 2.0
+// 🌀 QUANTUM STATE ENTANGLEMENT SYSTEM 3.0
 const useQuantumState = (initialState, persistenceKey = null) => {
   const [state, setState] = useState(initialState);
   const quantumField = useRef(new Map());
@@ -80,7 +79,7 @@ const useQuantumState = (initialState, persistenceKey = null) => {
   return [state, setQuantumState, { entangle, quantumField, getCurrentState }];
 };
 
-// 🛡️ QUANTUM KEYBOARD MANAGER
+// 🛡️ QUANTUM KEYBOARD MANAGER 2.0
 const useQuantumKeyboard = () => {
   const [keyboardHeight, setKeyboardHeight] = useState(0);
   const [keyboardVisible, setKeyboardVisible] = useState(false);
@@ -105,8 +104,103 @@ const useQuantumKeyboard = () => {
   return { keyboardHeight, keyboardVisible };
 };
 
+// 🌐 QUANTUM BACKEND INTEGRATION
+const useQuantumBackend = () => {
+  const [saving, setSaving] = useState(false);
+  const [lastSave, setLastSave] = useState(null);
+
+  const saveProfileToBackend = async (profileData, token) => {
+    try {
+      setSaving(true);
+      
+      // Transform frontend data to backend format
+      const backendData = {
+        first_name: profileData.firstName,
+        last_name: profileData.lastName,
+        bio: profileData.bio,
+        company: profileData.company,
+        website: profileData.website,
+        location: profileData.location,
+        avatar_url: profileData.profileImage,
+        role: profileData.userType,
+        // Include extended profile data
+        extended_profile: {
+          skills: profileData.skills,
+          portfolio: profileData.portfolio,
+          farmDetails: profileData.farmDetails,
+          clientDetails: profileData.clientDetails,
+          isAvailable: profileData.isAvailable
+        }
+      };
+
+      const response = await fetch('https://api.vsxchangeza.com/api/users/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(backendData)
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${await response.text()}`);
+      }
+
+      const result = await response.json();
+      setLastSave(new Date().toISOString());
+      return { success: true, data: result };
+      
+    } catch (error) {
+      console.error('Quantum backend sync failed:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const loadProfileFromBackend = async (token) => {
+    try {
+      const response = await fetch('https://api.vsxchangeza.com/api/users/me', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) throw new Error('Failed to load profile');
+      
+      const userData = await response.json();
+      
+      // Transform backend data to frontend format
+      return {
+        firstName: userData.first_name || '',
+        lastName: userData.last_name || '',
+        bio: userData.bio || '',
+        company: userData.company || '',
+        website: userData.website || '',
+        location: userData.location || null,
+        profileImage: userData.avatar_url || null,
+        userType: userData.role || 'skilled',
+        // Extended profile data
+        skills: userData.extended_profile?.skills || [],
+        portfolio: userData.extended_profile?.portfolio || [],
+        farmDetails: userData.extended_profile?.farmDetails || { images: [], location: null, name: '', description: '', size: '', mainCrop: '' },
+        clientDetails: userData.extended_profile?.clientDetails || { location: null, serviceNeeds: [] },
+        isAvailable: userData.extended_profile?.isAvailable ?? true,
+        quantumSignature: Math.random().toString(36).substr(2, 9)
+      };
+      
+    } catch (error) {
+      console.error('Quantum backend load failed:', error);
+      return null;
+    }
+  };
+
+  return { saving, lastSave, saveProfileToBackend, loadProfileFromBackend };
+};
+
 export default function ProfileScreen({ navigation }) {
-  // 🌟 QUANTUM STATE ENTANGLEMENT 2.0
+  // 🌟 QUANTUM STATE ENTANGLEMENT 3.0
   const [user, setUser] = useQuantumState(null, 'userConsciousness');
   const [profile, setProfile, profileQuantum] = useQuantumState({
     firstName: '',
@@ -131,18 +225,21 @@ export default function ProfileScreen({ navigation }) {
   const [imageUploading, setImageUploading] = useState(false);
   const [showLocationPicker, setShowLocationPicker] = useState(false);
   const [locationPermission, setLocationPermission] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
   
-  // 🎮 QUANTUM KEYBOARD INTEGRATION
+  // 🎮 QUANTUM SYSTEMS INTEGRATION
   const { keyboardHeight, keyboardVisible } = useQuantumKeyboard();
+  const { saving, lastSave, saveProfileToBackend, loadProfileFromBackend } = useQuantumBackend();
   const scrollViewRef = useRef(null);
 
-  // ✨ QUANTUM ANIMATIONS 2.0
+  // ✨ QUANTUM ANIMATIONS 3.0
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const quantumGlow = useRef(new Animated.Value(0)).current;
   const profileScale = useRef(new Animated.Value(0.95)).current;
+  const savePulse = useRef(new Animated.Value(1)).current;
 
-  // 🚀 QUANTUM INITIALIZATION
+  // 🚀 QUANTUM INITIALIZATION 2.0
   useEffect(() => {
     const quantumInit = async () => {
       await loadUserData();
@@ -153,7 +250,7 @@ export default function ProfileScreen({ navigation }) {
     quantumInit();
   }, []);
 
-  // 🔗 QUANTUM SYNC SYSTEM
+  // 🔗 QUANTUM SYNC SYSTEM 2.0
   useEffect(() => {
     profileQuantum.entangle((newProfile) => {
       if (newProfile.firstName || newProfile.lastName || newProfile.profileImage) {
@@ -187,6 +284,24 @@ export default function ProfileScreen({ navigation }) {
     ]).start();
   };
 
+  const triggerSaveAnimation = () => {
+    setSaveSuccess(true);
+    Animated.sequence([
+      Animated.timing(savePulse, {
+        toValue: 1.2,
+        duration: 200,
+        useNativeDriver: true,
+      }),
+      Animated.timing(savePulse, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      })
+    ]).start();
+    
+    setTimeout(() => setSaveSuccess(false), 3000);
+  };
+
   const requestLocationPermission = async () => {
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -198,9 +313,10 @@ export default function ProfileScreen({ navigation }) {
 
   const loadUserData = async () => {
     try {
-      const [userData, profileData] = await Promise.all([
+      const [userData, profileData, token] = await Promise.all([
         AsyncStorage.getItem('user'),
-        AsyncStorage.getItem('quantumProfile')
+        AsyncStorage.getItem('quantumProfile'),
+        AsyncStorage.getItem('userToken')
       ]);
       
       if (userData) {
@@ -208,14 +324,23 @@ export default function ProfileScreen({ navigation }) {
         setUser(userObj);
       }
       
-      if (profileData) {
-        const parsedProfile = JSON.parse(profileData);
+      // Try to load from backend first, fallback to local storage
+      let finalProfileData = null;
+      if (token) {
+        finalProfileData = await loadProfileFromBackend(token);
+      }
+      
+      if (!finalProfileData && profileData) {
+        finalProfileData = JSON.parse(profileData);
+      }
+      
+      if (finalProfileData) {
         setProfile(prev => ({ 
           ...prev, 
-          ...parsedProfile,
+          ...finalProfileData,
           // Ensure nested objects exist
-          farmDetails: { ...prev.farmDetails, ...parsedProfile.farmDetails },
-          clientDetails: { ...prev.clientDetails, ...parsedProfile.clientDetails }
+          farmDetails: { ...prev.farmDetails, ...finalProfileData.farmDetails },
+          clientDetails: { ...prev.clientDetails, ...finalProfileData.clientDetails }
         }));
       }
     } catch (error) {
@@ -223,7 +348,7 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 💾 QUANTUM AUTO-SAVE SYSTEM 2.0
+  // 💾 QUANTUM AUTO-SAVE SYSTEM 3.0
   const quantumAutoSave = useCallback((field, value) => {
     setProfile(prev => {
       const newProfile = {
@@ -242,6 +367,32 @@ export default function ProfileScreen({ navigation }) {
       return newProfile;
     });
   }, []);
+
+  // 🌐 QUANTUM BACKEND SYNC
+  const syncProfileToBackend = async () => {
+    try {
+      const token = await AsyncStorage.getItem('userToken');
+      if (!token) {
+        Alert.alert('Authentication Required', 'Please log in to save changes');
+        return false;
+      }
+
+      const result = await saveProfileToBackend(profileQuantum.getCurrentState(), token);
+      
+      if (result.success) {
+        triggerSaveAnimation();
+        Vibration.vibrate(100);
+        return true;
+      } else {
+        Alert.alert('Sync Failed', 'Could not save to server. Changes saved locally.');
+        return false;
+      }
+    } catch (error) {
+      console.error('Quantum sync failed:', error);
+      Alert.alert('Sync Error', 'Failed to connect to server. Changes saved locally.');
+      return false;
+    }
+  };
 
   const updateGlobalUserState = async (profileData) => {
     try {
@@ -262,7 +413,7 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 🎯 ENHANCED NAVIGATION WITH KEYBOARD AWARENESS
+  // 🎯 ENHANCED NAVIGATION WITH KEYBOARD AWARENESS 2.0
   const NavigationTabs = () => (
     <Animated.View style={[
       styles.navTabs, 
@@ -300,7 +451,7 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 📸 QUANTUM IMAGE UPLOAD 2.0
+  // 📸 QUANTUM IMAGE UPLOAD 3.0
   const uploadImages = async (type = 'profile') => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -369,7 +520,7 @@ export default function ProfileScreen({ navigation }) {
     });
   };
 
-  // 🗺️ QUANTUM LOCATION ENTANGLEMENT 2.0
+  // 🗺️ QUANTUM LOCATION ENTANGLEMENT 3.0
   const getCurrentLocation = async () => {
     try {
       if (!locationPermission) {
@@ -470,7 +621,7 @@ export default function ProfileScreen({ navigation }) {
     );
   };
 
-  // 🛠️ QUANTUM SKILL MATRIX 2.0
+  // 🛠️ QUANTUM SKILL MATRIX 3.0
   const addSkill = () => {
     Alert.prompt(
       'Acquire Quantum Skill',
@@ -505,7 +656,7 @@ export default function ProfileScreen({ navigation }) {
     }));
   };
 
-  // 🎨 COMPONENT RENDERING WITH KEYBOARD OPTIMIZATION
+  // 🎨 COMPONENT RENDERING WITH KEYBOARD OPTIMIZATION 2.0
   const ProfileHeader = () => (
     <Animated.View 
       style={[
@@ -614,7 +765,7 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 🌾 QUANTUM FARMER PROFILE 2.0
+  // 🌾 QUANTUM FARMER PROFILE 3.0
   const renderFarmerFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <Text style={styles.sectionTitle}>Quantum Farm Matrix</Text>
@@ -738,7 +889,7 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 👥 QUANTUM CLIENT PROFILE 2.0
+  // 👥 QUANTUM CLIENT PROFILE 3.0
   const renderClientFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <Text style={styles.sectionTitle}>Client Service Matrix</Text>
@@ -1082,6 +1233,38 @@ export default function ProfileScreen({ navigation }) {
     </Modal>
   );
 
+  const SaveButton = () => (
+    <Animated.View style={[styles.saveButtonContainer, { transform: [{ scale: savePulse }] }]}>
+      <TouchableOpacity 
+        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+        onPress={async () => {
+          const success = await syncProfileToBackend();
+          if (success) {
+            setEditing(false);
+          }
+        }}
+        disabled={saving}
+      >
+        {saving ? (
+          <ActivityIndicator color="#000" size="small" />
+        ) : (
+          <>
+            <Icon name="cloud-upload" size={20} color="#000" />
+            <Text style={styles.saveButtonText}>
+              {saveSuccess ? 'Saved ✓' : 'Save Changes'}
+            </Text>
+          </>
+        )}
+      </TouchableOpacity>
+      
+      {lastSave && (
+        <Text style={styles.lastSaveText}>
+          Last sync: {new Date(lastSave).toLocaleTimeString()}
+        </Text>
+      )}
+    </Animated.View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
@@ -1100,7 +1283,7 @@ export default function ProfileScreen({ navigation }) {
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={[
             styles.scrollContent,
-            { paddingBottom: keyboardHeight > 0 ? keyboardHeight + 20 : 100 }
+            { paddingBottom: keyboardHeight > 0 ? keyboardHeight + 100 : 180 }
           ]}
         >
           <BusinessSection />
@@ -1112,15 +1295,16 @@ export default function ProfileScreen({ navigation }) {
           {profile.userType === 'farmer' && renderFarmerFields()}
           {profile.userType === 'client' && renderClientFields()}
 
-          {/* Quantum Save Indicator */}
-          {editing && (
-            <View style={styles.quantumSaveSection}>
-              <Icon name="infinite" size={20} color="#00f0a8" />
-              <Text style={styles.quantumSaveText}>
-                Quantum Auto-Save Active • All changes persist across dimensions
-              </Text>
-            </View>
-          )}
+          {/* Save Button Section */}
+          {editing && <SaveButton />}
+
+          {/* Quantum Status */}
+          <View style={styles.quantumStatusSection}>
+            <Icon name="infinite" size={16} color="#00f0a8" />
+            <Text style={styles.quantumStatusText}>
+              Quantum Auto-Save Active • All changes persist across dimensions
+            </Text>
+          </View>
         </ScrollView>
 
         <NavigationTabs />
@@ -1509,7 +1693,37 @@ const styles = StyleSheet.create({
     color: '#000',
     fontWeight: '700',
   },
-  quantumSaveSection: {
+  saveButtonContainer: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    alignItems: 'center',
+  },
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00f0a8',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    minWidth: 200,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#666',
+  },
+  saveButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 8,
+  },
+  lastSaveText: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  quantumStatusSection: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -1521,7 +1735,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,240,168,0.3)',
   },
-  quantumSaveText: {
+  quantumStatusText: {
     color: '#00f0a8',
     fontSize: 14,
     fontWeight: '600',
