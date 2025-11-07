@@ -18,7 +18,8 @@ import {
   Modal,
   Vibration,
   Switch,
-  LayoutAnimation
+  LayoutAnimation,
+  FlatList
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -355,6 +356,62 @@ const useSkillRecommendations = (userSkills, userType) => {
   return recommendations;
 };
 
+// Image Gallery Component
+const ImageGallery = ({ images, onAddImage, onRemoveImage, editable, title, type }) => {
+  const renderImageItem = ({ item, index }) => (
+    <View style={styles.imageItem}>
+      <Image source={{ uri: item.uri }} style={styles.galleryImage} />
+      {editable && (
+        <TouchableOpacity 
+          style={styles.removeImageButton}
+          onPress={() => onRemoveImage(item.id)}
+        >
+          <Icon name="close-circle" size={24} color="#ff6b6b" />
+        </TouchableOpacity>
+      )}
+      {item.description && (
+        <Text style={styles.imageDescription}>{item.description}</Text>
+      )}
+    </View>
+  );
+
+  return (
+    <View style={styles.gallerySection}>
+      <View style={styles.galleryHeader}>
+        <Text style={styles.galleryTitle}>{title}</Text>
+        {editable && (
+          <TouchableOpacity 
+            style={styles.addImageButton}
+            onPress={() => onAddImage(type)}
+          >
+            <Icon name="add" size={20} color="#00f0a8" />
+            <Text style={styles.addImageText}>Add Images</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+      
+      {images.length > 0 ? (
+        <FlatList
+          horizontal
+          data={images}
+          renderItem={renderImageItem}
+          keyExtractor={(item) => item.id}
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.galleryList}
+        />
+      ) : (
+        <View style={styles.emptyGallery}>
+          <Icon name="images-outline" size={48} color="#666" />
+          <Text style={styles.emptyGalleryText}>No images yet</Text>
+          <Text style={styles.emptyGallerySubtext}>
+            Add images to showcase your {type === 'farm' ? 'farm' : 'work'}
+          </Text>
+        </View>
+      )}
+    </View>
+  );
+};
+
 export default function ProfileScreen({ navigation }) {
   const { globalUser, updateGlobalUser } = useContext(AppContext);
   
@@ -417,14 +474,18 @@ export default function ProfileScreen({ navigation }) {
     let score = 0;
     const maxScore = 100;
     
-    if (profileData.firstName) score += 15;
-    if (profileData.lastName) score += 15;
+    if (profileData.firstName) score += 10;
+    if (profileData.lastName) score += 10;
     if (profileData.bio) score += 10;
     if (profileData.profileImage) score += 10;
-    if (profileData.skills.length > 0) score += 20;
+    if (profileData.skills.length > 0) score += 15;
     if (profileData.location) score += 10;
-    if (profileData.userType !== 'skilled') score += 10;
+    if (profileData.userType !== 'skilled') score += 5;
     if (profileData.portfolio.length > 0) score += 10;
+    if (profileData.company) score += 5;
+    if (profileData.website) score += 5;
+    if (profileData.userType === 'farmer' && profileData.farmDetails?.images?.length > 0) score += 10;
+    if (profileData.userType === 'skilled' && profileData.portfolio.length > 0) score += 10;
     
     return Math.min(score, maxScore);
   }, []);
@@ -521,7 +582,12 @@ export default function ProfileScreen({ navigation }) {
           profileImage: finalProfileData.profileImage,
           userType: finalProfileData.userType,
           skills: finalProfileData.skills,
-          skillCategories: finalProfileData.skillCategories
+          skillCategories: finalProfileData.skillCategories,
+          company: finalProfileData.company,
+          website: finalProfileData.website,
+          location: finalProfileData.location,
+          portfolio: finalProfileData.portfolio,
+          farmDetails: finalProfileData.farmDetails
         });
       }
     } catch (error) {
@@ -540,20 +606,32 @@ export default function ProfileScreen({ navigation }) {
       
       animateProgress(newProfile.profileCompleteness);
       
-      if (['firstName', 'lastName', 'profileImage', 'userType', 'skills', 'skillCategories'].includes(field)) {
+      if (['firstName', 'lastName', 'profileImage', 'userType', 'skills', 'skillCategories', 'company', 'website', 'location', 'portfolio', 'farmDetails'].includes(field)) {
         updateGlobalUser({
           firstName: field === 'firstName' ? value : newProfile.firstName,
           lastName: field === 'lastName' ? value : newProfile.lastName,
           profileImage: field === 'profileImage' ? value : newProfile.profileImage,
           userType: field === 'userType' ? value : newProfile.userType,
           skills: field === 'skills' ? value : newProfile.skills,
-          skillCategories: field === 'skillCategories' ? value : newProfile.skillCategories
+          skillCategories: field === 'skillCategories' ? value : newProfile.skillCategories,
+          company: field === 'company' ? value : newProfile.company,
+          website: field === 'website' ? value : newProfile.website,
+          location: field === 'location' ? value : newProfile.location,
+          portfolio: field === 'portfolio' ? value : newProfile.portfolio,
+          farmDetails: field === 'farmDetails' ? value : newProfile.farmDetails
         });
       }
       
       return newProfile;
     });
   }, [updateGlobalUser, calculateProfileCompleteness]);
+
+  const updateFarmField = useCallback((field, value) => {
+    setProfile(prev => ({
+      ...prev,
+      farmDetails: { ...prev.farmDetails, [field]: value }
+    }));
+  }, []);
 
   const addSkill = useCallback((skillData = null) => {
     if (skillData) {
@@ -726,6 +804,25 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
+  const removeImage = useCallback((imageId, type) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+    
+    if (type === 'farm') {
+      setProfile(prev => ({
+        ...prev,
+        farmDetails: {
+          ...prev.farmDetails,
+          images: prev.farmDetails.images.filter(img => img.id !== imageId)
+        }
+      }));
+    } else if (type === 'portfolio') {
+      setProfile(prev => ({
+        ...prev,
+        portfolio: prev.portfolio.filter(img => img.id !== imageId)
+      }));
+    }
+  }, []);
+
   const getCurrentLocation = async () => {
     try {
       if (!locationPermission) {
@@ -765,26 +862,7 @@ export default function ProfileScreen({ navigation }) {
         serviceRadius: 50
       };
       
-      if (profile.userType === 'farmer') {
-        setProfile(prev => ({
-          ...prev,
-          farmDetails: { 
-            ...prev.farmDetails, 
-            location: locationData 
-          }
-        }));
-      } else if (profile.userType === 'client') {
-        setProfile(prev => ({
-          ...prev,
-          clientDetails: { 
-            ...prev.clientDetails, 
-            location: locationData 
-          }
-        }));
-      } else {
-        updateField('location', locationData);
-      }
-      
+      updateField('location', locationData);
       setShowLocationPicker(false);
       
       Alert.alert(
@@ -798,7 +876,7 @@ export default function ProfileScreen({ navigation }) {
         'Location Services', 
         'Try manual entry for now.',
         [
-          { text: 'Manual Entry', onPress: () => handleManualLocation(profile.userType) },
+          { text: 'Manual Entry', onPress: () => handleManualLocation() },
           { text: 'Try Again', onPress: getCurrentLocation }
         ]
       );
@@ -814,7 +892,7 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  const handleManualLocation = (userType = 'general') => {
+  const handleManualLocation = () => {
     Alert.prompt(
       'Enter Location',
       'Enter your address for service matching:',
@@ -832,19 +910,7 @@ export default function ProfileScreen({ navigation }) {
                 serviceRadius: 50
               };
 
-              if (userType === 'farmer') {
-                setProfile(prev => ({
-                  ...prev,
-                  farmDetails: { ...prev.farmDetails, location: manualLocation }
-                }));
-              } else if (userType === 'client') {
-                setProfile(prev => ({
-                  ...prev,
-                  clientDetails: { ...prev.clientDetails, location: manualLocation }
-                }));
-              } else {
-                updateField('location', manualLocation);
-              }
+              updateField('location', manualLocation);
               setShowLocationPicker(false);
             }
           }
@@ -878,7 +944,12 @@ export default function ProfileScreen({ navigation }) {
           userType: currentProfile.userType,
           skills: currentProfile.skills,
           skillCategories: currentProfile.skillCategories,
-          profileCompleteness: currentProfile.profileCompleteness
+          profileCompleteness: currentProfile.profileCompleteness,
+          company: currentProfile.company,
+          website: currentProfile.website,
+          location: currentProfile.location,
+          portfolio: currentProfile.portfolio,
+          farmDetails: currentProfile.farmDetails
         });
         
         triggerSaveAnimation();
@@ -1207,6 +1278,137 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
+  const BusinessInfoSection = () => (
+    <View style={styles.section}>
+      <Text style={styles.sectionTitle}>Business Information</Text>
+      
+      <SmartInput
+        value={profile.company}
+        onChangeText={(text) => updateField('company', text)}
+        placeholder="Company or Farm Name"
+        style={styles.input}
+        onSave={() => {}}
+        guidanceText="Your business name for professional recognition"
+        exampleText="Green Valley Farms"
+        maxLength={50}
+      />
+
+      <SmartInput
+        value={profile.website}
+        onChangeText={(text) => updateField('website', text)}
+        placeholder="Website URL (optional)"
+        style={styles.input}
+        onSave={() => {}}
+        guidanceText="Share your website for more visibility"
+        exampleText="https://www.greenvalleyfarms.com"
+        validationRule="url"
+        inputType="url"
+        maxLength={100}
+      />
+
+      <View style={styles.locationSection}>
+        <Text style={styles.locationLabel}>Business Location</Text>
+        <Text style={styles.locationDescription}>
+          Help clients find you with accurate location information
+        </Text>
+        
+        {profile.location ? (
+          <View style={styles.locationDisplay}>
+            <Icon name="location" size={16} color="#00f0a8" />
+            <Text style={styles.locationText}>{profile.location.address}</Text>
+            {editing && (
+              <TouchableOpacity 
+                style={styles.changeLocationButton}
+                onPress={() => setShowLocationPicker(true)}
+              >
+                <Text style={styles.changeLocationText}>Change</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          <TouchableOpacity 
+            style={styles.addLocationButton}
+            onPress={() => setShowLocationPicker(true)}
+            disabled={!editing}
+          >
+            <Icon name="add" size={20} color="#00f0a8" />
+            <Text style={styles.addLocationText}>Add Location</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+    </View>
+  );
+
+  const PortfolioSection = () => {
+    if (profile.userType === 'client') return null;
+
+    return (
+      <View style={styles.section}>
+        <ImageGallery
+          images={profile.portfolio}
+          onAddImage={() => uploadImages('portfolio')}
+          onRemoveImage={(id) => removeImage(id, 'portfolio')}
+          editable={editing}
+          title="Work Portfolio"
+          type="portfolio"
+        />
+      </View>
+    );
+  };
+
+  const FarmGallerySection = () => {
+    if (profile.userType !== 'farmer') return null;
+
+    return (
+      <View style={styles.section}>
+        <ImageGallery
+          images={profile.farmDetails?.images || []}
+          onAddImage={() => uploadImages('farm')}
+          onRemoveImage={(id) => removeImage(id, 'farm')}
+          editable={editing}
+          title="Farm Gallery"
+          type="farm"
+        />
+        
+        {editing && (
+          <View style={styles.farmDetailsSection}>
+            <Text style={styles.farmDetailsTitle}>Farm Details</Text>
+            
+            <SmartInput
+              value={profile.farmDetails?.name || ''}
+              onChangeText={(text) => updateFarmField('name', text)}
+              placeholder="Farm Name"
+              style={styles.input}
+              onSave={() => {}}
+              guidanceText="Official name of your farm"
+              maxLength={50}
+            />
+
+            <SmartInput
+              value={profile.farmDetails?.size || ''}
+              onChangeText={(text) => updateFarmField('size', text)}
+              placeholder="Farm Size (acres/hectares)"
+              style={styles.input}
+              onSave={() => {}}
+              guidanceText="Total land area of your farm"
+              maxLength={20}
+            />
+
+            <SmartInput
+              value={profile.farmDetails?.mainCrop || ''}
+              onChangeText={(text) => updateFarmField('mainCrop', text)}
+              placeholder="Main Crops or Livestock"
+              style={styles.input}
+              onSave={() => {}}
+              guidanceText="Primary agricultural products"
+              maxLength={50}
+            />
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
@@ -1276,6 +1478,10 @@ export default function ProfileScreen({ navigation }) {
             </View>
           </View>
         </View>
+
+        <BusinessInfoSection />
+        <PortfolioSection />
+        <FarmGallerySection />
 
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -1373,6 +1579,53 @@ export default function ProfileScreen({ navigation }) {
           </Text>
         </View>
       </ScrollView>
+
+      {/* Location Picker Modal */}
+      <Modal visible={showLocationPicker} transparent animationType="slide">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Set Your Location</Text>
+            <Text style={styles.modalDescription}>
+              Choose how to set your business location for better visibility
+            </Text>
+            
+            <TouchableOpacity 
+              style={styles.locationOption}
+              onPress={getCurrentLocation}
+            >
+              <Icon name="navigate" size={24} color="#00f0a8" />
+              <View style={styles.locationOptionInfo}>
+                <Text style={styles.locationOptionTitle}>Use Current Location</Text>
+                <Text style={styles.locationOptionDescription}>
+                  Automatically detect your location
+                </Text>
+              </View>
+              <Icon name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.locationOption}
+              onPress={handleManualLocation}
+            >
+              <Icon name="create" size={24} color="#00f0a8" />
+              <View style={styles.locationOptionInfo}>
+                <Text style={styles.locationOptionTitle}>Enter Manually</Text>
+                <Text style={styles.locationOptionDescription}>
+                  Type your address
+                </Text>
+              </View>
+              <Icon name="chevron-forward" size={20} color="#666" />
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.modalCloseButton}
+              onPress={() => setShowLocationPicker(false)}
+            >
+              <Text style={styles.modalCloseText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       <NavigationTabs />
       <RecommendationsPanel />
@@ -1989,6 +2242,212 @@ const styles = StyleSheet.create({
   },
   navTabTextActive: {
     color: '#00f0a8',
+  },
+  // New styles for enhanced features
+  locationSection: {
+    marginTop: 15,
+  },
+  locationLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+  },
+  locationDescription: {
+    color: '#666',
+    fontSize: 12,
+    marginBottom: 10,
+  },
+  locationDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    padding: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  locationText: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
+    flex: 1,
+    marginLeft: 8,
+  },
+  changeLocationButton: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  changeLocationText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  addLocationButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    padding: 15,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  addLocationText: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  gallerySection: {
+    marginTop: 10,
+  },
+  galleryHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  galleryTitle: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  addImageButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  addImageText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    fontWeight: '600',
+    marginLeft: 4,
+  },
+  galleryList: {
+    paddingVertical: 5,
+  },
+  imageItem: {
+    marginRight: 15,
+    alignItems: 'center',
+  },
+  galleryImage: {
+    width: 120,
+    height: 120,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  removeImageButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    backgroundColor: '#000',
+    borderRadius: 12,
+  },
+  imageDescription: {
+    color: '#666',
+    fontSize: 10,
+    marginTop: 4,
+    textAlign: 'center',
+    maxWidth: 120,
+  },
+  emptyGallery: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  emptyGalleryText: {
+    color: '#666',
+    fontSize: 14,
+    fontStyle: 'italic',
+    marginTop: 8,
+  },
+  emptyGallerySubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  farmDetailsSection: {
+    marginTop: 20,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  farmDetailsTitle: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 10,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1a1a2e',
+    borderRadius: 20,
+    padding: 20,
+    width: '90%',
+    maxWidth: 400,
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  modalDescription: {
+    color: '#666',
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  locationOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  locationOptionInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  locationOptionTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  locationOptionDescription: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  modalCloseButton: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  modalCloseText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
   },
 });
 
