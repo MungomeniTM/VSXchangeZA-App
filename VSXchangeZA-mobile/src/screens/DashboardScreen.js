@@ -1,5 +1,5 @@
-// src/screens/DashboardScreen.js - ADVANCED PROFESSIONAL VERSION
-import React, { useEffect, useState, useRef, useCallback, useMemo, useContext } from "react";
+// src/screens/DashboardScreen.js - UPDATED VERSION
+import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -19,13 +19,11 @@ import {
   Pressable,
   Platform,
   RefreshControl,
-  Share,
-  LayoutAnimation
+  Share
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchPosts } from "../api";
-import { AppContext } from '../context/AppContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -99,11 +97,46 @@ const useAIRecommendations = (user, posts) => {
   return recommendations;
 };
 
+// Custom hook for global user data
+const useGlobalUser = () => {
+  const [globalUser, setGlobalUser] = useState({
+    firstName: '',
+    lastName: '',
+    profileImage: null,
+    userType: 'skilled',
+    skills: [],
+    skillCategories: []
+  });
+
+  const loadGlobalUser = useCallback(async () => {
+    try {
+      const userData = await AsyncStorage.getItem('globalUserData');
+      if (userData) {
+        setGlobalUser(JSON.parse(userData));
+      }
+    } catch (error) {
+      console.warn('Failed to load global user data:', error);
+    }
+  }, []);
+
+  const updateGlobalUser = useCallback(async (userData) => {
+    setGlobalUser(prev => {
+      const newUser = { ...prev, ...userData };
+      AsyncStorage.setItem('globalUserData', JSON.stringify(newUser));
+      return newUser;
+    });
+  }, []);
+
+  useEffect(() => {
+    loadGlobalUser();
+  }, [loadGlobalUser]);
+
+  return { globalUser, updateGlobalUser, loadGlobalUser };
+};
+
 export default function DashboardScreen({ navigation }) {
-  // Global State Integration
-  const { globalUser, posts: contextPosts, addPost, updateGlobalUser } = useContext(AppContext);
-  
-  // Data + UI state
+  // Enhanced state management
+  const { globalUser, updateGlobalUser } = useGlobalUser();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -132,8 +165,6 @@ export default function DashboardScreen({ navigation }) {
 
   // Professional Navigation Handler
   const handleNavigation = useCallback((screenName, params = {}) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-
     const navigationPaths = {
       feed: () => setActiveTab('feed'),
       explore: () => setExploreOpen(true),
@@ -200,20 +231,17 @@ export default function DashboardScreen({ navigation }) {
   // Enhanced Data Management
   const loadUserData = useCallback(async () => {
     try {
-      const [userData, globalData] = await Promise.all([
-        AsyncStorage.getItem('user'),
-        AsyncStorage.getItem('globalUserData')
-      ]);
-      
+      const userData = await AsyncStorage.getItem('user');
       if (userData) {
         const userObj = JSON.parse(userData);
         setUser(userObj);
-        updateGlobalUser(userObj);
-      }
-      
-      if (globalData) {
-        const globalObj = JSON.parse(globalData);
-        setUser(prev => ({ ...prev, ...globalObj }));
+        // Update global user with basic data
+        updateGlobalUser({
+          firstName: userObj.firstName,
+          lastName: userObj.lastName,
+          profileImage: userObj.profileImage,
+          userType: userObj.role || 'skilled'
+        });
       }
     } catch (error) {
       console.warn('Failed to load user data:', error);
@@ -239,14 +267,10 @@ export default function DashboardScreen({ navigation }) {
       setPosts(formattedPosts);
     } catch (err) {
       console.warn("Fetch posts failed:", err);
-      // Fallback to context posts
-      if (contextPosts.length > 0) {
-        setPosts(contextPosts);
-      }
     } finally {
       setLoading(false);
     }
-  }, [globalUser, user, contextPosts]);
+  }, [globalUser, user]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -267,7 +291,7 @@ export default function DashboardScreen({ navigation }) {
     
     const author = item.author || item.user || globalUser || {};
     const userName = author.firstName ? `${author.firstName} ${author.lastName || ''}`.trim() : 'Community Member';
-    const userRole = author.userType || 'Member';
+    const userRole = author.userType || author.role || 'Member';
     const userInitial = userName.charAt(0).toUpperCase();
     const postText = item.text || item.content || item.body || '';
     const postTime = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Recently';
@@ -275,13 +299,11 @@ export default function DashboardScreen({ navigation }) {
     const shares = item.shares || 0;
 
     const handleLike = () => {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
       setLiked(!liked);
       setLikeCount(prev => liked ? prev - 1 : prev + 1);
     };
 
     const handleBookmark = () => {
-      LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
       setBookmarked(!bookmarked);
     };
 
