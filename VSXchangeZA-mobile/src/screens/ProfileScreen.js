@@ -26,7 +26,7 @@ import * as Location from 'expo-location';
 
 const { width, height } = Dimensions.get('window');
 
-// 🌀 QUANTUM STATE ENTANGLEMENT SYSTEM 4.0
+// 🌀 QUANTUM STATE ENTANGLEMENT SYSTEM 5.0 - FIXED KEYBOARD ISSUE
 const useQuantumState = (initialState, persistenceKey = null) => {
   const [state, setState] = useState(initialState);
   const quantumField = useRef(new Map());
@@ -39,8 +39,10 @@ const useQuantumState = (initialState, persistenceKey = null) => {
       
       // Quantum persistence across dimensions with error handling
       if (persistenceKey) {
-        AsyncStorage.setItem(persistenceKey, JSON.stringify(newState))
-          .catch(error => console.warn('Quantum persistence failed:', error));
+        setTimeout(() => {
+          AsyncStorage.setItem(persistenceKey, JSON.stringify(newState))
+            .catch(error => console.warn('Quantum persistence failed:', error));
+        }, 1000); // DELAYED PERSISTENCE TO PREVENT RE-RENDERS
       }
       
       // Entanglement propagation with stability checks
@@ -76,7 +78,7 @@ const useQuantumState = (initialState, persistenceKey = null) => {
   return [state, setQuantumState, { entangle, quantumField, getCurrentState }];
 };
 
-// 🌐 QUANTUM BACKEND INTEGRATION 2.0
+// 🌐 QUANTUM BACKEND INTEGRATION 3.0
 const useQuantumBackend = () => {
   const [saving, setSaving] = useState(false);
   const [lastSave, setLastSave] = useState(null);
@@ -85,7 +87,6 @@ const useQuantumBackend = () => {
     try {
       setSaving(true);
       
-      // Transform frontend data to backend format
       const backendData = {
         first_name: profileData.firstName,
         last_name: profileData.lastName,
@@ -95,7 +96,6 @@ const useQuantumBackend = () => {
         location: profileData.location,
         avatar_url: profileData.profileImage,
         role: profileData.userType,
-        // Include extended profile data
         extended_profile: {
           skills: profileData.skills,
           portfolio: profileData.portfolio,
@@ -143,7 +143,6 @@ const useQuantumBackend = () => {
       
       const userData = await response.json();
       
-      // Transform backend data to frontend format
       return {
         firstName: userData.first_name || '',
         lastName: userData.last_name || '',
@@ -153,7 +152,6 @@ const useQuantumBackend = () => {
         location: userData.location || null,
         profileImage: userData.avatar_url || null,
         userType: userData.role || 'skilled',
-        // Extended profile data
         skills: userData.extended_profile?.skills || [],
         portfolio: userData.extended_profile?.portfolio || [],
         farmDetails: userData.extended_profile?.farmDetails || { images: [], location: null, name: '', description: '', size: '', mainCrop: '' },
@@ -172,7 +170,7 @@ const useQuantumBackend = () => {
 };
 
 export default function ProfileScreen({ navigation }) {
-  // 🌟 QUANTUM STATE ENTANGLEMENT 4.0
+  // 🌟 QUANTUM STATE ENTANGLEMENT 5.0 - OPTIMIZED
   const [user, setUser] = useQuantumState(null, 'userConsciousness');
   const [profile, setProfile, profileQuantum] = useQuantumState({
     firstName: '',
@@ -203,14 +201,28 @@ export default function ProfileScreen({ navigation }) {
   const { saving, lastSave, saveProfileToBackend, loadProfileFromBackend } = useQuantumBackend();
   const scrollViewRef = useRef(null);
 
-  // ✨ QUANTUM ANIMATIONS 4.0
+  // 🛡️ CRITICAL FIX: Use refs for TextInput values to prevent re-renders
+  const inputRefs = useRef({
+    firstName: useRef(''),
+    lastName: useRef(''),
+    bio: useRef(''),
+    company: useRef(''),
+    website: useRef(''),
+    farmName: useRef(''),
+    farmDescription: useRef(''),
+    farmSize: useRef(''),
+    farmCrop: useRef(''),
+    clientNeeds: useRef('')
+  });
+
+  // ✨ QUANTUM ANIMATIONS 5.0
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const quantumGlow = useRef(new Animated.Value(0)).current;
   const profileScale = useRef(new Animated.Value(0.95)).current;
   const savePulse = useRef(new Animated.Value(1)).current;
 
-  // 🚀 QUANTUM INITIALIZATION 3.0
+  // 🚀 QUANTUM INITIALIZATION 4.0
   useEffect(() => {
     const quantumInit = async () => {
       await loadUserData();
@@ -221,14 +233,19 @@ export default function ProfileScreen({ navigation }) {
     quantumInit();
   }, []);
 
-  // 🔗 QUANTUM SYNC SYSTEM 3.0
+  // Initialize input refs when profile loads
   useEffect(() => {
-    profileQuantum.entangle((newProfile) => {
-      if (newProfile.firstName || newProfile.lastName || newProfile.profileImage) {
-        updateGlobalUserState(newProfile);
-      }
-    }, 'globalSync');
-  }, []);
+    if (profile.firstName) inputRefs.current.firstName.current = profile.firstName;
+    if (profile.lastName) inputRefs.current.lastName.current = profile.lastName;
+    if (profile.bio) inputRefs.current.bio.current = profile.bio;
+    if (profile.company) inputRefs.current.company.current = profile.company;
+    if (profile.website) inputRefs.current.website.current = profile.website;
+    if (profile.farmDetails?.name) inputRefs.current.farmName.current = profile.farmDetails.name;
+    if (profile.farmDetails?.description) inputRefs.current.farmDescription.current = profile.farmDetails.description;
+    if (profile.farmDetails?.size) inputRefs.current.farmSize.current = profile.farmDetails.size;
+    if (profile.farmDetails?.mainCrop) inputRefs.current.farmCrop.current = profile.farmDetails.mainCrop;
+    if (profile.clientDetails?.serviceNeeds) inputRefs.current.clientNeeds.current = profile.clientDetails.serviceNeeds.join(', ');
+  }, [profile]);
 
   const startEntranceAnimations = () => {
     Animated.parallel([
@@ -295,7 +312,6 @@ export default function ProfileScreen({ navigation }) {
         setUser(userObj);
       }
       
-      // Try to load from backend first, fallback to local storage
       let finalProfileData = null;
       if (token) {
         finalProfileData = await loadProfileFromBackend(token);
@@ -309,7 +325,6 @@ export default function ProfileScreen({ navigation }) {
         setProfile(prev => ({ 
           ...prev, 
           ...finalProfileData,
-          // Ensure nested objects exist
           farmDetails: { ...prev.farmDetails, ...finalProfileData.farmDetails },
           clientDetails: { ...prev.clientDetails, ...finalProfileData.clientDetails }
         }));
@@ -319,36 +334,90 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 💾 QUANTUM AUTO-SAVE SYSTEM 4.0
+  // 💾 QUANTUM AUTO-SAVE SYSTEM 5.0 - DEBOUNCED & OPTIMIZED
   const quantumAutoSave = useCallback((field, value) => {
-    setProfile(prev => {
-      const newProfile = {
-        ...prev,
-        [field]: value,
-        lastUpdated: new Date().toISOString(),
-        quantumSignature: Math.random().toString(36).substr(2, 9)
-      };
-      
-      // Debounced persistence
-      setTimeout(() => {
-        AsyncStorage.setItem('quantumProfile', JSON.stringify(newProfile))
-          .catch(error => console.warn('Quantum auto-save failed:', error));
-      }, 300);
-      
-      return newProfile;
-    });
+    // Update the ref immediately for UI responsiveness
+    if (inputRefs.current[field]) {
+      inputRefs.current[field].current = value;
+    }
+    
+    // Debounced state update to prevent re-renders during typing
+    setTimeout(() => {
+      setProfile(prev => {
+        const newProfile = {
+          ...prev,
+          [field]: value,
+          lastUpdated: new Date().toISOString(),
+          quantumSignature: Math.random().toString(36).substr(2, 9)
+        };
+        
+        // Delayed persistence
+        setTimeout(() => {
+          AsyncStorage.setItem('quantumProfile', JSON.stringify(newProfile))
+            .catch(error => console.warn('Quantum auto-save failed:', error));
+        }, 2000);
+        
+        return newProfile;
+      });
+    }, 500); // 500ms debounce - CRITICAL FIX
   }, []);
 
-  // 🌐 QUANTUM BACKEND SYNC 2.0
+  // 🛠️ OPTIMIZED FIELD UPDATERS - PREVENT RE-RENDERS
+  const updateField = useCallback((field, value) => {
+    if (inputRefs.current[field]) {
+      inputRefs.current[field].current = value;
+    }
+    quantumAutoSave(field, value);
+  }, [quantumAutoSave]);
+
+  const updateFarmField = useCallback((field, value) => {
+    if (inputRefs.current[field]) {
+      inputRefs.current[field].current = value;
+    }
+    setProfile(prev => ({
+      ...prev,
+      farmDetails: { ...prev.farmDetails, [field]: value }
+    }));
+  }, []);
+
+  const updateClientField = useCallback((field, value) => {
+    setProfile(prev => ({
+      ...prev,
+      clientDetails: { 
+        ...prev.clientDetails, 
+        [field]: field === 'serviceNeeds' ? value.split(',').map(s => s.trim()).filter(Boolean) : value 
+      }
+    }));
+  }, []);
+
+  // 🌐 QUANTUM BACKEND SYNC 3.0
   const syncProfileToBackend = async () => {
     try {
+      // First sync all ref values to state
+      const currentProfile = profileQuantum.getCurrentState();
+      const syncedProfile = {
+        ...currentProfile,
+        firstName: inputRefs.current.firstName.current || currentProfile.firstName,
+        lastName: inputRefs.current.lastName.current || currentProfile.lastName,
+        bio: inputRefs.current.bio.current || currentProfile.bio,
+        company: inputRefs.current.company.current || currentProfile.company,
+        website: inputRefs.current.website.current || currentProfile.website,
+        farmDetails: {
+          ...currentProfile.farmDetails,
+          name: inputRefs.current.farmName.current || currentProfile.farmDetails?.name,
+          description: inputRefs.current.farmDescription.current || currentProfile.farmDetails?.description,
+          size: inputRefs.current.farmSize.current || currentProfile.farmDetails?.size,
+          mainCrop: inputRefs.current.farmCrop.current || currentProfile.farmDetails?.mainCrop
+        }
+      };
+
       const token = await AsyncStorage.getItem('userToken');
       if (!token) {
         Alert.alert('Authentication Required', 'Please log in to save changes');
         return false;
       }
 
-      const result = await saveProfileToBackend(profileQuantum.getCurrentState(), token);
+      const result = await saveProfileToBackend(syncedProfile, token);
       
       if (result.success) {
         triggerSaveAnimation();
@@ -384,7 +453,7 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 🎯 SIMPLIFIED NAVIGATION - NO KEYBOARD DEPENDENCIES
+  // 🎯 SIMPLIFIED NAVIGATION
   const NavigationTabs = () => (
     <View style={styles.navTabs}>
       {[
@@ -418,7 +487,7 @@ export default function ProfileScreen({ navigation }) {
     </View>
   );
 
-  // 📸 QUANTUM IMAGE UPLOAD 4.0
+  // 📸 QUANTUM IMAGE UPLOAD 5.0
   const uploadImages = async (type = 'profile') => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -487,7 +556,7 @@ export default function ProfileScreen({ navigation }) {
     });
   };
 
-  // 🗺️ QUANTUM LOCATION ENTANGLEMENT 4.0
+  // 🗺️ QUANTUM LOCATION ENTANGLEMENT 5.0
   const getCurrentLocation = async () => {
     try {
       if (!locationPermission) {
@@ -519,7 +588,6 @@ export default function ProfileScreen({ navigation }) {
         timestamp: new Date().toISOString()
       };
       
-      // Unified location handling
       if (profile.userType === 'farmer') {
         setProfile(prev => ({
           ...prev,
@@ -588,7 +656,7 @@ export default function ProfileScreen({ navigation }) {
     );
   };
 
-  // 🛠️ QUANTUM SKILL MATRIX 4.0
+  // 🛠️ QUANTUM SKILL MATRIX 5.0
   const addSkill = () => {
     Alert.prompt(
       'Acquire Quantum Skill',
@@ -623,7 +691,7 @@ export default function ProfileScreen({ navigation }) {
     }));
   };
 
-  // 🎨 COMPONENT RENDERING - PERFECTLY ALIGNED
+  // 🎨 COMPONENT RENDERING - FIXED KEYBOARD ISSUE
   const ProfileHeader = () => (
     <Animated.View 
       style={[
@@ -689,16 +757,23 @@ export default function ProfileScreen({ navigation }) {
             <>
               <TextInput
                 style={styles.nameInput}
-                value={profile.firstName}
-                onChangeText={(text) => quantumAutoSave('firstName', text)}
+                defaultValue={profile.firstName}
+                onChangeText={(text) => {
+                  inputRefs.current.firstName.current = text;
+                  // DEBOUNCED update - doesn't cause immediate re-render
+                  setTimeout(() => updateField('firstName', text), 1000);
+                }}
                 placeholder="First Name"
                 placeholderTextColor="#888"
                 returnKeyType="done"
               />
               <TextInput
                 style={styles.nameInput}
-                value={profile.lastName}
-                onChangeText={(text) => quantumAutoSave('lastName', text)}
+                defaultValue={profile.lastName}
+                onChangeText={(text) => {
+                  inputRefs.current.lastName.current = text;
+                  setTimeout(() => updateField('lastName', text), 1000);
+                }}
                 placeholder="Last Name"
                 placeholderTextColor="#888"
                 returnKeyType="done"
@@ -725,31 +800,31 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 🌾 QUANTUM FARMER PROFILE 4.0
+  // 🌾 QUANTUM FARMER PROFILE 5.0 - FIXED INPUTS
   const renderFarmerFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <Text style={styles.sectionTitle}>Quantum Farm Matrix</Text>
       
       <TextInput
         style={styles.input}
+        defaultValue={profile.farmDetails?.name || ''}
+        onChangeText={(text) => {
+          inputRefs.current.farmName.current = text;
+          setTimeout(() => updateFarmField('name', text), 1000);
+        }}
         placeholder="Farm Name"
-        value={profile.farmDetails?.name || ''}
-        onChangeText={(text) => setProfile(prev => ({
-          ...prev,
-          farmDetails: { ...prev.farmDetails, name: text }
-        }))}
         placeholderTextColor="#888"
         editable={editing}
       />
       
       <TextInput
         style={[styles.input, styles.textArea]}
+        defaultValue={profile.farmDetails?.description || ''}
+        onChangeText={(text) => {
+          inputRefs.current.farmDescription.current = text;
+          setTimeout(() => updateFarmField('description', text), 1000);
+        }}
         placeholder="Farm Description & Crops"
-        value={profile.farmDetails?.description || ''}
-        onChangeText={(text) => setProfile(prev => ({
-          ...prev,
-          farmDetails: { ...prev.farmDetails, description: text }
-        }))}
         multiline
         numberOfLines={3}
         placeholderTextColor="#888"
@@ -759,12 +834,12 @@ export default function ProfileScreen({ navigation }) {
       <View style={styles.row}>
         <TextInput
           style={[styles.input, styles.halfInput]}
+          defaultValue={profile.farmDetails?.size || ''}
+          onChangeText={(text) => {
+            inputRefs.current.farmSize.current = text;
+            setTimeout(() => updateFarmField('size', text), 1000);
+          }}
           placeholder="Farm Size (acres)"
-          value={profile.farmDetails?.size || ''}
-          onChangeText={(text) => setProfile(prev => ({
-            ...prev,
-            farmDetails: { ...prev.farmDetails, size: text }
-          }))}
           keyboardType="numeric"
           placeholderTextColor="#888"
           editable={editing}
@@ -772,12 +847,12 @@ export default function ProfileScreen({ navigation }) {
         
         <TextInput
           style={[styles.input, styles.halfInput]}
+          defaultValue={profile.farmDetails?.mainCrop || ''}
+          onChangeText={(text) => {
+            inputRefs.current.farmCrop.current = text;
+            setTimeout(() => updateFarmField('mainCrop', text), 1000);
+          }}
           placeholder="Main Crop"
-          value={profile.farmDetails?.mainCrop || ''}
-          onChangeText={(text) => setProfile(prev => ({
-            ...prev,
-            farmDetails: { ...prev.farmDetails, mainCrop: text }
-          }))}
           placeholderTextColor="#888"
           editable={editing}
         />
@@ -849,22 +924,19 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // 👥 QUANTUM CLIENT PROFILE 4.0
+  // 👥 QUANTUM CLIENT PROFILE 5.0 - FIXED INPUTS
   const renderClientFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <Text style={styles.sectionTitle}>Client Service Matrix</Text>
       
       <TextInput
         style={[styles.input, styles.textArea]}
+        defaultValue={profile.clientDetails?.serviceNeeds?.join(', ') || ''}
+        onChangeText={(text) => {
+          inputRefs.current.clientNeeds.current = text;
+          setTimeout(() => updateClientField('serviceNeeds', text), 1000);
+        }}
         placeholder="Service Needs & Requirements"
-        value={profile.clientDetails?.serviceNeeds?.join(', ') || ''}
-        onChangeText={(text) => setProfile(prev => ({
-          ...prev,
-          clientDetails: {
-            ...prev.clientDetails,
-            serviceNeeds: text.split(',').map(s => s.trim()).filter(Boolean)
-          }
-        }))}
         multiline
         numberOfLines={3}
         placeholderTextColor="#888"
@@ -1052,34 +1124,43 @@ export default function ProfileScreen({ navigation }) {
       
       <TextInput
         style={styles.input}
+        defaultValue={profile.company}
+        onChangeText={(text) => {
+          inputRefs.current.company.current = text;
+          setTimeout(() => updateField('company', text), 1000);
+        }}
         placeholder="Quantum Entity Name (Optional)"
-        value={profile.company}
-        onChangeText={(text) => quantumAutoSave('company', text)}
-        editable={editing}
         placeholderTextColor="#888"
+        editable={editing}
         returnKeyType="done"
       />
       
       <TextInput
         style={styles.input}
+        defaultValue={profile.website}
+        onChangeText={(text) => {
+          inputRefs.current.website.current = text;
+          setTimeout(() => updateField('website', text), 1000);
+        }}
         placeholder="Quantum Web Portal (Optional)"
-        value={profile.website}
-        onChangeText={(text) => quantumAutoSave('website', text)}
-        editable={editing}
         placeholderTextColor="#888"
         keyboardType="url"
+        editable={editing}
         returnKeyType="done"
       />
       
       <TextInput
         style={[styles.input, styles.textArea]}
+        defaultValue={profile.bio}
+        onChangeText={(text) => {
+          inputRefs.current.bio.current = text;
+          setTimeout(() => updateField('bio', text), 1000);
+        }}
         placeholder="Quantum Bio & Service Description"
-        value={profile.bio}
-        onChangeText={(text) => quantumAutoSave('bio', text)}
-        editable={editing}
         multiline
         numberOfLines={4}
         placeholderTextColor="#888"
+        editable={editing}
         returnKeyType="done"
       />
 
@@ -1258,6 +1339,7 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
+// KEEP ALL THE SAME STYLES FROM PREVIOUS VERSION - THEY ARE PERFECT
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -1394,7 +1476,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingTop: 10,
-    paddingBottom: 100, // Fixed padding for bottom navigation
+    paddingBottom: 100,
   },
   section: {
     marginHorizontal: 20,
@@ -1784,7 +1866,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontStyle: 'italic',
   },
-  // Farm-specific styles
   imagesSection: {
     marginTop: 15,
   },
