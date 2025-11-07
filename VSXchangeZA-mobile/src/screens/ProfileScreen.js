@@ -1,5 +1,5 @@
-// src/screens/ProfileScreen.js
-import React, { useState, useEffect, useRef, useCallback } from "react";
+// src/screens/ProfileScreen.js - ENHANCED VERSION
+import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import {
   View,
   Text,
@@ -24,36 +24,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 
+// 🎯 GLOBAL STATE MANAGEMENT
+import { AppContext } from '../context/AppContext';
+
 const { width, height } = Dimensions.get('window');
 
-// 🎯 ADVANCED STATE MANAGEMENT SYSTEM
-const useAdvancedState = (initialState, storageKey = null) => {
-  const [state, setState] = useState(initialState);
-  const stateRef = useRef(initialState);
-  
-  const setAdvancedState = useCallback((updater) => {
-    setState(prevState => {
-      const newState = typeof updater === 'function' ? updater(prevState) : updater;
-      stateRef.current = newState;
-      
-      // Delayed persistence to prevent re-renders
-      if (storageKey) {
-        setTimeout(() => {
-          AsyncStorage.setItem(storageKey, JSON.stringify(newState))
-            .catch(error => console.warn('Storage failed:', error));
-        }, 1000);
-      }
-      
-      return newState;
-    });
-  }, [storageKey]);
-
-  const getCurrentState = useCallback(() => stateRef.current, []);
-
-  return [state, setAdvancedState, { getCurrentState }];
-};
-
-// 🌐 BACKEND INTEGRATION
+// 🌐 ENHANCED BACKEND INTEGRATION
 const useBackendSync = () => {
   const [saving, setSaving] = useState(false);
   const [lastSave, setLastSave] = useState(null);
@@ -76,7 +52,8 @@ const useBackendSync = () => {
           portfolio: profileData.portfolio,
           farmDetails: profileData.farmDetails,
           clientDetails: profileData.clientDetails,
-          isAvailable: profileData.isAvailable
+          isAvailable: profileData.isAvailable,
+          skillCategories: profileData.skillCategories || []
         }
       };
 
@@ -95,6 +72,17 @@ const useBackendSync = () => {
 
       const result = await response.json();
       setLastSave(new Date().toISOString());
+      
+      // Update global state
+      await AsyncStorage.setItem('userProfile', JSON.stringify(profileData));
+      await AsyncStorage.setItem('globalUserData', JSON.stringify({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        profileImage: profileData.profileImage,
+        userType: profileData.userType,
+        skills: profileData.skills
+      }));
+      
       return { success: true, data: result };
       
     } catch (error) {
@@ -118,7 +106,7 @@ const useBackendSync = () => {
       
       const userData = await response.json();
       
-      return {
+      const profileData = {
         firstName: userData.first_name || '',
         lastName: userData.last_name || '',
         bio: userData.bio || '',
@@ -128,11 +116,41 @@ const useBackendSync = () => {
         profileImage: userData.avatar_url || null,
         userType: userData.role || 'skilled',
         skills: userData.extended_profile?.skills || [],
+        skillCategories: userData.extended_profile?.skillCategories || [],
         portfolio: userData.extended_profile?.portfolio || [],
-        farmDetails: userData.extended_profile?.farmDetails || { images: [], location: null, name: '', description: '', size: '', mainCrop: '' },
-        clientDetails: userData.extended_profile?.clientDetails || { location: null, serviceNeeds: [] },
+        farmDetails: userData.extended_profile?.farmDetails || { 
+          images: [], 
+          location: null, 
+          name: '', 
+          description: '', 
+          size: '', 
+          mainCrop: '',
+          farmType: '',
+          soilType: '',
+          irrigation: '',
+          equipment: []
+        },
+        clientDetails: userData.extended_profile?.clientDetails || { 
+          location: null, 
+          serviceNeeds: [],
+          budget: '',
+          timeline: '',
+          frequency: ''
+        },
         isAvailable: userData.extended_profile?.isAvailable ?? true
       };
+
+      // Update global storage
+      await AsyncStorage.setItem('globalUserData', JSON.stringify({
+        firstName: profileData.firstName,
+        lastName: profileData.lastName,
+        profileImage: profileData.profileImage,
+        userType: profileData.userType,
+        skills: profileData.skills,
+        skillCategories: profileData.skillCategories
+      }));
+
+      return profileData;
       
     } catch (error) {
       console.error('Backend load failed:', error);
@@ -143,14 +161,16 @@ const useBackendSync = () => {
   return { saving, lastSave, saveProfileToBackend, loadProfileFromBackend };
 };
 
-// 🎪 SMART INPUT COMPONENT WITH DONE BUTTON
+// 🎪 ENHANCED SMART INPUT WITH GUIDANCE
 const SmartTextInput = ({ 
   value, 
   onChangeText, 
   placeholder, 
   style, 
   multiline = false, 
-  onSave 
+  onSave,
+  guidanceText,
+  exampleText 
 }) => {
   const [isFocused, setIsFocused] = useState(false);
   const [inputValue, setInputValue] = useState(value);
@@ -177,6 +197,17 @@ const SmartTextInput = ({
         onBlur={() => setIsFocused(false)}
         blurOnSubmit={!multiline}
       />
+      
+      {/* GUIDANCE TEXT */}
+      {guidanceText && isFocused && (
+        <Text style={styles.guidanceText}>{guidanceText}</Text>
+      )}
+      
+      {/* EXAMPLE TEXT */}
+      {exampleText && isFocused && (
+        <Text style={styles.exampleText}>Example: {exampleText}</Text>
+      )}
+      
       {isFocused && (
         <TouchableOpacity style={styles.doneButton} onPress={handleSave}>
           <Text style={styles.doneButtonText}>Done</Text>
@@ -186,7 +217,36 @@ const SmartTextInput = ({
   );
 };
 
+// 🎯 ENHANCED STATE MANAGEMENT
+const useAdvancedState = (initialState, storageKey = null) => {
+  const [state, setState] = useState(initialState);
+  const stateRef = useRef(initialState);
+  
+  const setAdvancedState = useCallback((updater) => {
+    setState(prevState => {
+      const newState = typeof updater === 'function' ? updater(prevState) : updater;
+      stateRef.current = newState;
+      
+      if (storageKey) {
+        setTimeout(() => {
+          AsyncStorage.setItem(storageKey, JSON.stringify(newState))
+            .catch(error => console.warn('Storage failed:', error));
+        }, 1000);
+      }
+      
+      return newState;
+    });
+  }, [storageKey]);
+
+  const getCurrentState = useCallback(() => stateRef.current, []);
+
+  return [state, setAdvancedState, { getCurrentState }];
+};
+
 export default function ProfileScreen({ navigation }) {
+  // 🎯 GLOBAL STATE
+  const { updateGlobalUser, globalUser } = useContext(AppContext);
+  
   // 🎯 STATE MANAGEMENT
   const [user, setUser] = useAdvancedState(null, 'userData');
   const [profile, setProfile, profileManager] = useAdvancedState({
@@ -196,12 +256,30 @@ export default function ProfileScreen({ navigation }) {
     company: '',
     website: '',
     skills: [],
+    skillCategories: [],
     services: [],
     portfolio: [],
     location: null,
     userType: 'skilled',
-    farmDetails: { images: [], location: null, name: '', description: '', size: '', mainCrop: '' },
-    clientDetails: { location: null, serviceNeeds: [] },
+    farmDetails: { 
+      images: [], 
+      location: null, 
+      name: '', 
+      description: '', 
+      size: '', 
+      mainCrop: '',
+      farmType: '',
+      soilType: '',
+      irrigation: '',
+      equipment: []
+    },
+    clientDetails: { 
+      location: null, 
+      serviceNeeds: [],
+      budget: '',
+      timeline: '',
+      frequency: ''
+    },
     isAvailable: true,
     profileImage: null
   }, 'userProfile');
@@ -310,20 +388,46 @@ export default function ProfileScreen({ navigation }) {
           farmDetails: { ...prev.farmDetails, ...finalProfileData.farmDetails },
           clientDetails: { ...prev.clientDetails, ...finalProfileData.clientDetails }
         }));
+        
+        // Update global context
+        updateGlobalUser({
+          firstName: finalProfileData.firstName,
+          lastName: finalProfileData.lastName,
+          profileImage: finalProfileData.profileImage,
+          userType: finalProfileData.userType,
+          skills: finalProfileData.skills,
+          skillCategories: finalProfileData.skillCategories
+        });
       }
     } catch (error) {
       console.warn('Data loading failed:', error);
     }
   };
 
-  // 💾 SMART FIELD UPDATES
+  // 💾 ENHANCED FIELD UPDATES WITH GLOBAL SYNC
   const updateField = useCallback((field, value) => {
-    setProfile(prev => ({
-      ...prev,
-      [field]: value,
-      lastUpdated: new Date().toISOString()
-    }));
-  }, []);
+    setProfile(prev => {
+      const newProfile = {
+        ...prev,
+        [field]: value,
+        lastUpdated: new Date().toISOString()
+      };
+      
+      // Update global context for immediate UI updates
+      if (['firstName', 'lastName', 'profileImage', 'userType', 'skills', 'skillCategories'].includes(field)) {
+        updateGlobalUser({
+          firstName: field === 'firstName' ? value : newProfile.firstName,
+          lastName: field === 'lastName' ? value : newProfile.lastName,
+          profileImage: field === 'profileImage' ? value : newProfile.profileImage,
+          userType: field === 'userType' ? value : newProfile.userType,
+          skills: field === 'skills' ? value : newProfile.skills,
+          skillCategories: field === 'skillCategories' ? value : newProfile.skillCategories
+        });
+      }
+      
+      return newProfile;
+    });
+  }, [updateGlobalUser]);
 
   const updateFarmField = useCallback((field, value) => {
     setProfile(prev => ({
@@ -342,7 +446,7 @@ export default function ProfileScreen({ navigation }) {
     }));
   }, []);
 
-  // 🌐 BACKEND SYNC
+  // 🌐 ENHANCED BACKEND SYNC WITH GLOBAL UPDATE
   const syncProfileToBackend = async () => {
     try {
       const token = await AsyncStorage.getItem('userToken');
@@ -351,9 +455,20 @@ export default function ProfileScreen({ navigation }) {
         return false;
       }
 
-      const result = await saveProfileToBackend(profileManager.getCurrentState(), token);
+      const currentProfile = profileManager.getCurrentState();
+      const result = await saveProfileToBackend(currentProfile, token);
       
       if (result.success) {
+        // Update global context with latest data
+        updateGlobalUser({
+          firstName: currentProfile.firstName,
+          lastName: currentProfile.lastName,
+          profileImage: currentProfile.profileImage,
+          userType: currentProfile.userType,
+          skills: currentProfile.skills,
+          skillCategories: currentProfile.skillCategories
+        });
+        
         triggerSaveAnimation();
         Vibration.vibrate(100);
         return true;
@@ -368,7 +483,73 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 🧭 NAVIGATION
+  // 🛠️ ENHANCED SKILLS MANAGEMENT WITH CATEGORIES
+  const addSkill = () => {
+    Alert.prompt(
+      'Add Skill & Category',
+      'Enter skill and category (format: Skill Name - Category):',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Add', 
+          onPress: (input) => {
+            if (input && input.trim()) {
+              const parts = input.split('-').map(part => part.trim());
+              const skillName = parts[0];
+              const category = parts[1] || 'general';
+              
+              const newSkill = { 
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 9), 
+                name: skillName,
+                category: category,
+                acquired: new Date().toISOString()
+              };
+              
+              setProfile(prev => {
+                const newSkills = [...prev.skills, newSkill];
+                const newCategories = [...new Set([...prev.skillCategories, category])];
+                
+                // Update global context
+                updateGlobalUser({
+                  skills: newSkills,
+                  skillCategories: newCategories
+                });
+                
+                return {
+                  ...prev,
+                  skills: newSkills,
+                  skillCategories: newCategories
+                };
+              });
+            }
+          }
+        }
+      ],
+      'plain-text',
+      'e.g., Tractor Operation - Machinery'
+    );
+  };
+
+  const removeSkill = (skillId) => {
+    setProfile(prev => {
+      const newSkills = prev.skills.filter(skill => skill.id !== skillId);
+      const remainingCategories = [...new Set(newSkills.map(skill => skill.category))];
+      
+      // Update global context
+      updateGlobalUser({
+        skills: newSkills,
+        skillCategories: remainingCategories
+      });
+      
+      return {
+        ...prev,
+        skills: newSkills,
+        skillCategories: remainingCategories
+      };
+    });
+  };
+
+  // 🧭 NAVIGATION - ENHANCED
   const NavigationTabs = () => (
     <View style={styles.navTabs}>
       {[
@@ -402,200 +583,8 @@ export default function ProfileScreen({ navigation }) {
     </View>
   );
 
-  // 📸 IMAGE UPLOAD
-  const uploadImages = async (type = 'profile') => {
-    try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      
-      if (!permission.granted) {
-        Alert.alert('Permission Required', 'Camera roll access is needed to upload images');
-        return;
-      }
+  // 🎨 ENHANCED COMPONENTS WITH GUIDANCE
 
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: type === 'profile',
-        allowsMultipleSelection: type !== 'profile',
-        aspect: type === 'profile' ? [1, 1] : [4, 3],
-        quality: 0.85,
-      });
-
-      if (!result.canceled && result.assets) {
-        setImageUploading(true);
-        
-        // Simulate upload process
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        const uploadedUrls = result.assets.map(asset => asset.uri);
-
-        if (type === 'profile') {
-          updateField('profileImage', uploadedUrls[0]);
-        } else if (type === 'farm' && profile.userType === 'farmer') {
-          setProfile(prev => ({
-            ...prev,
-            farmDetails: {
-              ...prev.farmDetails,
-              images: [...(prev.farmDetails?.images || []), ...uploadedUrls.map(url => ({
-                uri: url,
-                id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-                timestamp: new Date().toISOString()
-              }))]
-            }
-          }));
-        } else if (type === 'portfolio') {
-          setProfile(prev => ({
-            ...prev,
-            portfolio: [...prev.portfolio, ...uploadedUrls.map(url => ({
-              uri: url,
-              id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
-              description: '',
-              timestamp: new Date().toISOString()
-            }))]
-          }));
-        }
-        
-        setImageUploading(false);
-        Vibration.vibrate(50);
-      }
-    } catch (error) {
-      setImageUploading(false);
-      Alert.alert('Upload Failed', 'Failed to upload images. Please try again.');
-    }
-  };
-
-  // 🗺️ LOCATION SERVICES
-  const getCurrentLocation = async () => {
-    try {
-      if (!locationPermission) {
-        Alert.alert('Location Access', 'Enable location permissions to use this feature');
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-        timeout: 10000
-      });
-
-      const { latitude, longitude } = location.coords;
-      
-      const address = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude
-      });
-
-      const readableAddress = address[0] 
-        ? `${address[0].name || ''} ${address[0].city || ''} ${address[0].region || ''}`.trim()
-        : `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-
-      const locationData = {
-        latitude,
-        longitude,
-        address: readableAddress,
-        timestamp: new Date().toISOString()
-      };
-      
-      if (profile.userType === 'farmer') {
-        setProfile(prev => ({
-          ...prev,
-          farmDetails: { 
-            ...prev.farmDetails, 
-            location: locationData 
-          }
-        }));
-      } else if (profile.userType === 'client') {
-        setProfile(prev => ({
-          ...prev,
-          clientDetails: { 
-            ...prev.clientDetails, 
-            location: locationData 
-          }
-        }));
-      } else {
-        updateField('location', locationData);
-      }
-      
-      setShowLocationPicker(false);
-      Alert.alert('Location Set', 'Your location has been updated successfully');
-    } catch (error) {
-      console.warn('Location acquisition failed:', error);
-      Alert.alert('Location Error', 'Failed to get your location. Please try again.');
-    }
-  };
-
-  const handleManualLocation = (userType = 'general') => {
-    Alert.prompt(
-      'Enter Location',
-      'Please enter your address:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Save Location', 
-          onPress: (address) => {
-            if (address && address.trim()) {
-              const manualLocation = {
-                latitude: -23.0833 + (Math.random() - 0.5) * 0.01,
-                longitude: 30.3833 + (Math.random() - 0.5) * 0.01,
-                address: address.trim(),
-                accuracy: 'Manual Input'
-              };
-
-              if (userType === 'farmer') {
-                setProfile(prev => ({
-                  ...prev,
-                  farmDetails: { ...prev.farmDetails, location: manualLocation }
-                }));
-              } else if (userType === 'client') {
-                setProfile(prev => ({
-                  ...prev,
-                  clientDetails: { ...prev.clientDetails, location: manualLocation }
-                }));
-              } else {
-                updateField('location', manualLocation);
-              }
-              setShowLocationPicker(false);
-            }
-          }
-        }
-      ],
-      'plain-text'
-    );
-  };
-
-  // 🛠️ SKILLS MANAGEMENT
-  const addSkill = () => {
-    Alert.prompt(
-      'Add Skill',
-      'Enter your skill:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Add', 
-          onPress: (skill) => {
-            if (skill && skill.trim()) {
-              setProfile(prev => ({
-                ...prev,
-                skills: [...prev.skills, { 
-                  id: Date.now().toString() + Math.random().toString(36).substr(2, 9), 
-                  name: skill.trim(),
-                  category: 'general',
-                  acquired: new Date().toISOString()
-                }]
-              }));
-            }
-          }
-        }
-      ]
-    );
-  };
-
-  const removeSkill = (skillId) => {
-    setProfile(prev => ({
-      ...prev,
-      skills: prev.skills.filter(skill => skill.id !== skillId)
-    }));
-  };
-
-  // 🎨 COMPONENTS
   const ProfileHeader = () => (
     <Animated.View 
       style={[
@@ -663,6 +652,7 @@ export default function ProfileScreen({ navigation }) {
                 placeholder="First Name"
                 style={styles.nameInput}
                 onSave={() => {}}
+                guidanceText="Your first name as you want it to appear on posts"
               />
               <SmartTextInput
                 value={profile.lastName}
@@ -670,6 +660,7 @@ export default function ProfileScreen({ navigation }) {
                 placeholder="Last Name"
                 style={styles.nameInput}
                 onSave={() => {}}
+                guidanceText="Your last name for professional identification"
               />
             </>
           ) : (
@@ -703,6 +694,8 @@ export default function ProfileScreen({ navigation }) {
         placeholder="Company Name (Optional)"
         style={styles.input}
         onSave={() => {}}
+        guidanceText="Your business or organization name"
+        exampleText="Green Fields Agriculture"
       />
       
       <SmartTextInput
@@ -711,6 +704,8 @@ export default function ProfileScreen({ navigation }) {
         placeholder="Website (Optional)"
         style={styles.input}
         onSave={() => {}}
+        guidanceText="Your professional website or portfolio"
+        exampleText="https://yourfarm.com"
       />
       
       <SmartTextInput
@@ -720,34 +715,45 @@ export default function ProfileScreen({ navigation }) {
         style={[styles.input, styles.textArea]}
         multiline={true}
         onSave={() => {}}
+        guidanceText="Describe your services, expertise, and what you offer"
+        exampleText="Expert in sustainable farming with 10+ years experience in crop rotation and soil management. Specializing in organic farming practices."
       />
 
       <View style={styles.userTypeSection}>
         <Text style={styles.userTypeLabel}>Account Type:</Text>
+        <Text style={styles.userTypeDescription}>
+          Choose how you want to use the platform. This affects how others find and interact with you.
+        </Text>
         <View style={styles.userTypeOptions}>
-          {['skilled', 'farmer', 'client'].map((type) => (
+          {[
+            { type: 'skilled', icon: 'construct', label: 'Skilled Professional', description: 'Offer your skills and services' },
+            { type: 'farmer', icon: 'leaf', label: 'Farmer/Grower', description: 'Manage your farm and hire help' },
+            { type: 'client', icon: 'business', label: 'Service Client', description: 'Find skilled professionals' }
+          ].map((item) => (
             <TouchableOpacity
-              key={type}
+              key={item.type}
               style={[
-                styles.userTypeOption,
-                profile.userType === type && styles.userTypeOptionActive
+                styles.userTypeCard,
+                profile.userType === item.type && styles.userTypeCardActive
               ]}
-              onPress={() => editing && updateField('userType', type)}
+              onPress={() => editing && updateField('userType', item.type)}
               disabled={!editing}
             >
-              <Icon 
-                name={
-                  type === 'skilled' ? 'construct' : 
-                  type === 'farmer' ? 'leaf' : 'person'
-                } 
-                size={16} 
-                color={profile.userType === type ? '#000' : '#fff'} 
-              />
+              <View style={styles.userTypeIconContainer}>
+                <Icon 
+                  name={item.icon} 
+                  size={20} 
+                  color={profile.userType === item.type ? '#000' : '#00f0a8'} 
+                />
+              </View>
               <Text style={[
-                styles.userTypeText,
-                profile.userType === type && styles.userTypeTextActive
+                styles.userTypeCardText,
+                profile.userType === item.type && styles.userTypeCardTextActive
               ]}>
-                {type.charAt(0).toUpperCase() + type.slice(1)}
+                {item.label}
+              </Text>
+              <Text style={styles.userTypeCardDescription}>
+                {item.description}
               </Text>
             </TouchableOpacity>
           ))}
@@ -756,75 +762,35 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  const LocationSection = () => (
+  const EnhancedSkillsSection = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Service Location</Text>
-        {editing && (
-          <TouchableOpacity onPress={() => setShowLocationPicker(true)}>
-            <Text style={styles.seeAllText}>
-              {profile.location ? 'Update' : 'Set Location'}
-            </Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {profile.location ? (
-        <View style={styles.locationCard}>
-          <View style={styles.locationHeader}>
-            <Icon name="location" size={20} color="#00f0a8" />
-            <Text style={styles.locationStatus}>Location Set</Text>
-            <Icon name="checkmark-circle" size={16} color="#00f0a8" />
-          </View>
-          <Text style={styles.locationText}>
-            {profile.location.address}
-          </Text>
-          <Text style={styles.coordinates}>
-            {profile.location.latitude.toFixed(6)}, {profile.location.longitude.toFixed(6)}
+        <View>
+          <Text style={styles.sectionTitle}>Skills & Expertise</Text>
+          <Text style={styles.sectionSubtitle}>
+            Add skills with categories for better discovery
           </Text>
         </View>
-      ) : (
-        <TouchableOpacity 
-          style={styles.addLocationButton}
-          onPress={() => setShowLocationPicker(true)}
-        >
-          <Icon name="navigate-circle" size={24} color="#00f0a8" />
-          <Text style={styles.addLocationText}>Set Service Location</Text>
-        </TouchableOpacity>
-      )}
-
-      <View style={styles.availability}>
-        <View style={styles.availabilityInfo}>
-          <Icon name="business" size={18} color="#fff" />
-          <Text style={styles.availabilityText}>Available for Work</Text>
-        </View>
-        <Switch
-          value={profile.isAvailable}
-          onValueChange={(value) => updateField('isAvailable', value)}
-          trackColor={{ false: '#767577', true: '#00f0a8' }}
-          thumbColor={profile.isAvailable ? '#f4f3f4' : '#f4f3f4'}
-          disabled={!editing}
-        />
-      </View>
-    </Animated.View>
-  );
-
-  const SkillsSection = () => (
-    <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Skills & Expertise</Text>
         {editing && (
-          <TouchableOpacity onPress={addSkill}>
+          <TouchableOpacity onPress={addSkill} style={styles.addSkillButton}>
+            <Icon name="add" size={20} color="#00f0a8" />
             <Text style={styles.seeAllText}>Add Skill</Text>
           </TouchableOpacity>
         )}
       </View>
 
+      <Text style={styles.guidanceNote}>
+        💡 Format: "Skill Name - Category". Example: "Tractor Operation - Machinery"
+      </Text>
+
       <View style={styles.skillsGrid}>
         {profile.skills.map((skill) => (
           <View key={skill.id} style={styles.skillChip}>
             <Icon name="construct" size={14} color="#00f0a8" />
-            <Text style={styles.skillText}>{skill.name}</Text>
+            <View style={styles.skillInfo}>
+              <Text style={styles.skillText}>{skill.name}</Text>
+              <Text style={styles.skillCategory}>{skill.category}</Text>
+            </View>
             {editing && (
               <TouchableOpacity 
                 onPress={() => removeSkill(skill.id)}
@@ -840,66 +806,38 @@ export default function ProfileScreen({ navigation }) {
           <View style={styles.emptyState}>
             <Icon name="construct-outline" size={32} color="#666" />
             <Text style={styles.emptyText}>No skills added yet</Text>
+            <Text style={styles.emptySubtext}>
+              Add skills to be discovered by clients and farmers
+            </Text>
           </View>
         )}
       </View>
+
+      {profile.skillCategories.length > 0 && (
+        <View style={styles.categoriesSection}>
+          <Text style={styles.categoriesTitle}>Your Skill Categories:</Text>
+          <View style={styles.categoriesGrid}>
+            {profile.skillCategories.map((category, index) => (
+              <View key={index} style={styles.categoryChip}>
+                <Text style={styles.categoryText}>{category}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+      )}
     </Animated.View>
   );
 
-  const PortfolioSection = () => (
+  const EnhancedFarmerFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
       <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Portfolio</Text>
-        {editing && (
-          <TouchableOpacity onPress={() => uploadImages('portfolio')}>
-            <Text style={styles.seeAllText}>Add Photos</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-        <View style={styles.portfolioGrid}>
-          {profile.portfolio.map((item) => (
-            <View key={item.id} style={styles.portfolioItem}>
-              <Image source={{ uri: item.uri }} style={styles.portfolioImage} />
-              {editing && (
-                <TouchableOpacity 
-                  style={styles.removePortfolio}
-                  onPress={() => setProfile(prev => ({
-                    ...prev,
-                    portfolio: prev.portfolio.filter(p => p.id !== item.id)
-                  }))}
-                >
-                  <Icon name="close-circle" size={24} color="#ff6b6b" />
-                </TouchableOpacity>
-              )}
-            </View>
-          ))}
-          
-          {editing && (
-            <TouchableOpacity 
-              style={styles.addPortfolioButton}
-              onPress={() => uploadImages('portfolio')}
-              disabled={imageUploading}
-            >
-              {imageUploading ? (
-                <ActivityIndicator color="#00f0a8" size="large" />
-              ) : (
-                <>
-                  <Icon name="add" size={40} color="#00f0a8" />
-                  <Text style={styles.addPortfolioText}>Add Photos</Text>
-                </>
-              )}
-            </TouchableOpacity>
-          )}
+        <View>
+          <Text style={styles.sectionTitle}>Farm Details</Text>
+          <Text style={styles.sectionSubtitle}>
+            Complete your farm profile for better service matching
+          </Text>
         </View>
-      </ScrollView>
-    </Animated.View>
-  );
-
-  const FarmerFields = () => (
-    <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-      <Text style={styles.sectionTitle}>Farm Details</Text>
+      </View>
       
       <SmartTextInput
         value={profile.farmDetails?.name || ''}
@@ -907,37 +845,91 @@ export default function ProfileScreen({ navigation }) {
         placeholder="Farm Name"
         style={styles.input}
         onSave={() => {}}
+        guidanceText="The official name of your farm"
+        exampleText="Sunshine Valley Organic Farm"
       />
       
       <SmartTextInput
         value={profile.farmDetails?.description || ''}
         onChangeText={(text) => updateFarmField('description', text)}
-        placeholder="Farm Description & Crops"
+        placeholder="Farm Description & Operations"
         style={[styles.input, styles.textArea]}
         multiline={true}
         onSave={() => {}}
+        guidanceText="Describe your farm operations, crops, livestock, and farming methods"
+        exampleText="50-acre organic farm specializing in heirloom tomatoes and sustainable agriculture. We practice crop rotation and use integrated pest management."
       />
       
       <View style={styles.row}>
         <SmartTextInput
           value={profile.farmDetails?.size || ''}
           onChangeText={(text) => updateFarmField('size', text)}
-          placeholder="Farm Size (acres)"
+          placeholder="Farm Size (acres/hectares)"
           style={[styles.input, styles.halfInput]}
           onSave={() => {}}
+          guidanceText="Total land area under cultivation"
+          exampleText="50 acres"
         />
         
         <SmartTextInput
           value={profile.farmDetails?.mainCrop || ''}
           onChangeText={(text) => updateFarmField('mainCrop', text)}
-          placeholder="Main Crop"
+          placeholder="Main Crop/Product"
           style={[styles.input, styles.halfInput]}
           onSave={() => {}}
+          guidanceText="Primary agricultural product"
+          exampleText="Organic Tomatoes"
         />
       </View>
 
+      <View style={styles.row}>
+        <SmartTextInput
+          value={profile.farmDetails?.farmType || ''}
+          onChangeText={(text) => updateFarmField('farmType', text)}
+          placeholder="Farm Type"
+          style={[styles.input, styles.halfInput]}
+          onSave={() => {}}
+          guidanceText="Type of farming operation"
+          exampleText="Organic, Commercial, Family Farm"
+        />
+        
+        <SmartTextInput
+          value={profile.farmDetails?.soilType || ''}
+          onChangeText={(text) => updateFarmField('soilType', text)}
+          placeholder="Soil Type"
+          style={[styles.input, styles.halfInput]}
+          onSave={() => {}}
+          guidanceText="Predominant soil composition"
+          exampleText="Sandy Loam, Clay, Alluvial"
+        />
+      </View>
+
+      <SmartTextInput
+        value={profile.farmDetails?.irrigation || ''}
+        onChangeText={(text) => updateFarmField('irrigation', text)}
+        placeholder="Irrigation System"
+        style={styles.input}
+        onSave={() => {}}
+        guidanceText="Type of irrigation methods used"
+        exampleText="Drip irrigation, Center pivot, Flood irrigation"
+      />
+
+      <SmartTextInput
+        value={profile.farmDetails?.equipment?.join(', ') || ''}
+        onChangeText={(text) => updateFarmField('equipment', text.split(',').map(item => item.trim()).filter(Boolean))}
+        placeholder="Farm Equipment Available"
+        style={[styles.input, styles.textArea]}
+        multiline={true}
+        onSave={() => {}}
+        guidanceText="List your farm machinery and equipment"
+        exampleText="Tractors, Harvesters, Plows, Irrigation systems"
+      />
+
       <View style={styles.imagesSection}>
         <Text style={styles.imagesTitle}>Farm Photos</Text>
+        <Text style={styles.imagesSubtitle}>
+          Showcase your farm with photos of fields, crops, and facilities
+        </Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <View style={styles.imagesGrid}>
             {profile.farmDetails?.images?.map((image) => (
@@ -971,7 +963,7 @@ export default function ProfileScreen({ navigation }) {
                 ) : (
                   <>
                     <Icon name="add" size={30} color="#00f0a8" />
-                    <Text style={styles.addImageText}>Add Photos</Text>
+                    <Text style={styles.addImageText}>Add Farm Photos</Text>
                   </>
                 )}
               </TouchableOpacity>
@@ -982,6 +974,9 @@ export default function ProfileScreen({ navigation }) {
 
       <View style={styles.locationSubsection}>
         <Text style={styles.subsectionTitle}>Farm Location</Text>
+        <Text style={styles.subsectionDescription}>
+          Set your farm location for local service matching
+        </Text>
         {profile.farmDetails?.location ? (
           <View style={styles.locationCard}>
             <Icon name="location" size={16} color="#00f0a8" />
@@ -1000,9 +995,16 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  const ClientFields = () => (
+  const EnhancedClientFields = () => (
     <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-      <Text style={styles.sectionTitle}>Service Requirements</Text>
+      <View style={styles.sectionHeader}>
+        <View>
+          <Text style={styles.sectionTitle}>Service Requirements</Text>
+          <Text style={styles.sectionSubtitle}>
+            Tell us what services you need for better matching
+          </Text>
+        </View>
+      </View>
       
       <SmartTextInput
         value={profile.clientDetails?.serviceNeeds?.join(', ') || ''}
@@ -1011,10 +1013,47 @@ export default function ProfileScreen({ navigation }) {
         style={[styles.input, styles.textArea]}
         multiline={true}
         onSave={() => {}}
+        guidanceText="List the specific services you require"
+        exampleText="Tractor operation, Crop spraying, Harvesting, Fence repair"
       />
       
+      <View style={styles.row}>
+        <SmartTextInput
+          value={profile.clientDetails?.budget || ''}
+          onChangeText={(text) => updateClientField('budget', text)}
+          placeholder="Budget Range"
+          style={[styles.input, styles.halfInput]}
+          onSave={() => {}}
+          guidanceText="Your estimated budget for services"
+          exampleText="$500-$2000"
+        />
+        
+        <SmartTextInput
+          value={profile.clientDetails?.timeline || ''}
+          onChangeText={(text) => updateClientField('timeline', text)}
+          placeholder="Timeline"
+          style={[styles.input, styles.halfInput]}
+          onSave={() => {}}
+          guidanceText="When you need the services"
+          exampleText="Immediate, Within 2 weeks, Next month"
+        />
+      </View>
+
+      <SmartTextInput
+        value={profile.clientDetails?.frequency || ''}
+        onChangeText={(text) => updateClientField('frequency', text)}
+        placeholder="Service Frequency"
+        style={styles.input}
+        onSave={() => {}}
+        guidanceText="How often you need these services"
+        exampleText="One-time, Weekly, Monthly, Seasonal"
+      />
+
       <View style={styles.locationSubsection}>
         <Text style={styles.subsectionTitle}>Service Location</Text>
+        <Text style={styles.subsectionDescription}>
+          Where do you need the services performed?
+        </Text>
         {profile.clientDetails?.location ? (
           <View style={styles.locationCard}>
             <Icon name="location" size={16} color="#00f0a8" />
@@ -1034,7 +1073,12 @@ export default function ProfileScreen({ navigation }) {
       <View style={styles.availability}>
         <View style={styles.availabilityInfo}>
           <Icon name="notifications" size={18} color="#fff" />
-          <Text style={styles.availabilityText}>Receive Service Offers</Text>
+          <View>
+            <Text style={styles.availabilityText}>Receive Service Offers</Text>
+            <Text style={styles.availabilityDescription}>
+              Get matched with skilled professionals
+            </Text>
+          </View>
         </View>
         <Switch
           value={profile.isAvailable}
@@ -1044,107 +1088,6 @@ export default function ProfileScreen({ navigation }) {
           disabled={!editing}
         />
       </View>
-    </Animated.View>
-  );
-
-  const LocationPickerModal = () => (
-    <Modal
-      visible={showLocationPicker}
-      animationType="slide"
-      transparent={true}
-      statusBarTranslucent={true}
-    >
-      <View style={styles.modalOverlay}>
-        <View style={styles.modalContainer}>
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Set Location</Text>
-            <TouchableOpacity 
-              onPress={() => setShowLocationPicker(false)}
-              style={styles.modalCloseButton}
-            >
-              <Icon name="close" size={24} color="#00f0a8" />
-            </TouchableOpacity>
-          </View>
-          
-          <View style={styles.locationOptions}>
-            <TouchableOpacity 
-              style={styles.locationOption}
-              onPress={getCurrentLocation}
-            >
-              <Icon name="navigate" size={32} color="#00f0a8" />
-              <Text style={styles.locationOptionTitle}>Use Current Location</Text>
-              <Text style={styles.locationOptionDesc}>
-                Automatically detect your location
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity 
-              style={styles.locationOption}
-              onPress={() => handleManualLocation('general')}
-            >
-              <Icon name="pencil" size={32} color="#00f0a8" />
-              <Text style={styles.locationOptionTitle}>Enter Address</Text>
-              <Text style={styles.locationOptionDesc}>
-                Manually enter your location
-              </Text>
-            </TouchableOpacity>
-
-            {profile.location && (
-              <TouchableOpacity 
-                style={[styles.locationOption, styles.removeLocationOption]}
-                onPress={() => {
-                  updateField('location', null);
-                  setShowLocationPicker(false);
-                }}
-              >
-                <Icon name="trash" size={32} color="#ff6b6b" />
-                <Text style={[styles.locationOptionTitle, styles.removeLocationText]}>
-                  Clear Location
-                </Text>
-                <Text style={styles.locationOptionDesc}>
-                  Remove your location data
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
-          
-          <Text style={styles.locationHint}>
-            Setting your location helps match you with relevant services and opportunities
-          </Text>
-        </View>
-      </View>
-    </Modal>
-  );
-
-  const SaveButton = () => (
-    <Animated.View style={[styles.saveButtonContainer, { transform: [{ scale: savePulse }] }]}>
-      <TouchableOpacity 
-        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-        onPress={async () => {
-          const success = await syncProfileToBackend();
-          if (success) {
-            setEditing(false);
-          }
-        }}
-        disabled={saving}
-      >
-        {saving ? (
-          <ActivityIndicator color="#000" size="small" />
-        ) : (
-          <>
-            <Icon name="cloud-upload" size={20} color="#000" />
-            <Text style={styles.saveButtonText}>
-              {saveSuccess ? 'Saved ✓' : 'Save Changes'}
-            </Text>
-          </>
-        )}
-      </TouchableOpacity>
-      
-      {lastSave && (
-        <Text style={styles.lastSaveText}>
-          Last saved: {new Date(lastSave).toLocaleTimeString()}
-        </Text>
-      )}
     </Animated.View>
   );
 
@@ -1163,12 +1106,12 @@ export default function ProfileScreen({ navigation }) {
       >
         <BusinessSection />
         <LocationSection />
-        <SkillsSection />
+        <EnhancedSkillsSection />
         <PortfolioSection />
         
         {/* Conditional Fields */}
-        {profile.userType === 'farmer' && <FarmerFields />}
-        {profile.userType === 'client' && <ClientFields />}
+        {profile.userType === 'farmer' && <EnhancedFarmerFields />}
+        {profile.userType === 'client' && <EnhancedClientFields />}
 
         {/* Save Button */}
         {editing && <SaveButton />}
@@ -1188,606 +1131,241 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
+// 🎯 NEW GLOBAL CONTEXT FOR STATE MANAGEMENT
+// src/context/AppContext.js
+import React, { createContext, useState, useEffect, useContext } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const AppContext = createContext();
+
+export const AppProvider = ({ children }) => {
+  const [globalUser, setGlobalUser] = useState({
+    firstName: '',
+    lastName: '',
+    profileImage: null,
+    userType: 'skilled',
+    skills: [],
+    skillCategories: []
+  });
+
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    loadGlobalData();
+  }, []);
+
+  const loadGlobalData = async () => {
+    try {
+      const [userData, postsData] = await Promise.all([
+        AsyncStorage.getItem('globalUserData'),
+        AsyncStorage.getItem('globalPosts')
+      ]);
+
+      if (userData) {
+        setGlobalUser(JSON.parse(userData));
+      }
+
+      if (postsData) {
+        setPosts(JSON.parse(postsData));
+      }
+    } catch (error) {
+      console.warn('Global data loading failed:', error);
+    }
+  };
+
+  const updateGlobalUser = (userData) => {
+    setGlobalUser(prev => {
+      const newUser = { ...prev, ...userData };
+      AsyncStorage.setItem('globalUserData', JSON.stringify(newUser));
+      return newUser;
+    });
+  };
+
+  const addPost = (post) => {
+    const newPost = {
+      ...post,
+      id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+      author: {
+        firstName: globalUser.firstName,
+        lastName: globalUser.lastName,
+        profileImage: globalUser.profileImage,
+        userType: globalUser.userType
+      },
+      timestamp: new Date().toISOString(),
+      likes: 0,
+      comments: []
+    };
+
+    setPosts(prev => {
+      const newPosts = [newPost, ...prev];
+      AsyncStorage.setItem('globalPosts', JSON.stringify(newPosts));
+      return newPosts;
+    });
+  };
+
+  return (
+    <AppContext.Provider value={{
+      globalUser,
+      updateGlobalUser,
+      posts,
+      addPost,
+      setPosts
+    }}>
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useApp = () => useContext(AppContext);
+export { AppContext };
+
+// 🎯 ENHANCED STYLES WITH GUIDANCE
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
-  header: {
-    paddingTop: Platform.OS === 'ios' ? 20 : 10,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: 'rgba(0,0,0,0.95)',
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(0,240,168,0.2)',
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,240,168,0.1)',
-  },
-  headerTitle: {
+  // ... (previous styles remain the same)
+  
+  // NEW STYLES FOR GUIDANCE AND ENHANCED UI
+  guidanceText: {
     color: '#00f0a8',
-    fontSize: 20,
-    fontWeight: '800',
-  },
-  editButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,240,168,0.1)',
-  },
-  editButtonActive: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-    transform: [{ scale: 1.1 }],
-  },
-  profileMain: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  avatarContainer: {
-    position: 'relative',
-    marginRight: 20,
-  },
-  avatar: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    borderWidth: 2,
-    borderColor: '#00f0a8',
-  },
-  avatarPlaceholder: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#00f0a8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#00f0a8',
-  },
-  avatarText: {
-    color: '#000',
-    fontSize: 32,
-    fontWeight: '900',
-  },
-  uploadOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1,
-  },
-  avatarEditBadge: {
-    position: 'absolute',
-    bottom: 0,
-    right: 0,
-    backgroundColor: '#00f0a8',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#000',
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  userName: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  userType: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 2,
-  },
-  userStats: {
-    color: '#666',
     fontSize: 12,
-  },
-  nameInput: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '600',
-    borderBottomWidth: 1,
-    borderBottomColor: '#00f0a8',
-    marginBottom: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 0,
-  },
-  // SMART INPUT STYLES
-  inputContainer: {
-    position: 'relative',
-    marginBottom: 12,
-  },
-  input: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    padding: 15,
-    color: '#fff',
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
-  },
-  inputFocused: {
-    borderColor: '#00f0a8',
-    backgroundColor: 'rgba(0,240,168,0.05)',
-  },
-  doneButton: {
-    position: 'absolute',
-    right: 10,
-    top: 10,
-    backgroundColor: '#00f0a8',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-  },
-  doneButtonText: {
-    color: '#000',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 10,
-    paddingBottom: 100,
-  },
-  section: {
-    marginHorizontal: 20,
-    marginBottom: 25,
-    padding: 20,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.1)',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  sectionTitle: {
-    color: '#00f0a8',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  seeAllText: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  textArea: {
-    height: 100,
-    textAlignVertical: 'top',
-  },
-  row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  halfInput: {
-    width: '48%',
-  },
-  locationCard: {
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-  },
-  locationHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  locationStatus: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
-    marginRight: 4,
-    flex: 1,
-  },
-  locationText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  coordinates: {
-    color: '#666',
-    fontSize: 12,
-  },
-  addLocationButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    padding: 20,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(0,240,168,0.3)',
-    borderStyle: 'dashed',
-  },
-  addLocationText: {
-    color: '#00f0a8',
-    fontSize: 16,
-    fontWeight: '700',
-    marginLeft: 8,
-  },
-  availability: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 15,
-  },
-  availabilityInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  availabilityText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  skillsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  skillChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginRight: 10,
-    marginBottom: 10,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-  },
-  skillText: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
-    marginRight: 8,
-  },
-  removeSkill: {
-    padding: 2,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 20,
-    width: '100%',
-  },
-  emptyText: {
-    color: '#666',
-    fontSize: 14,
+    marginTop: 5,
     fontStyle: 'italic',
-    textAlign: 'center',
-    marginTop: 8,
   },
-  portfolioGrid: {
-    flexDirection: 'row',
+  exampleText: {
+    color: '#666',
+    fontSize: 11,
+    marginTop: 2,
+    fontStyle: 'italic',
   },
-  portfolioItem: {
-    position: 'relative',
-    width: 120,
-    height: 120,
-    marginRight: 15,
-    borderRadius: 12,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.2)',
-  },
-  portfolioImage: {
-    width: '100%',
-    height: '100%',
-  },
-  removePortfolio: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 12,
-    padding: 2,
-  },
-  addPortfolioButton: {
-    width: 120,
-    height: 120,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(0,240,168,0.3)',
-    borderStyle: 'dashed',
-  },
-  addPortfolioText: {
+  guidanceNote: {
     color: '#00f0a8',
     fontSize: 12,
-    fontWeight: '600',
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  userTypeSection: {
-    marginTop: 15,
-  },
-  userTypeLabel: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  userTypeOptions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  userTypeOption: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    marginBottom: 15,
+    padding: 10,
+    backgroundColor: 'rgba(0,240,168,0.1)',
     borderRadius: 8,
+    borderLeftWidth: 3,
+    borderLeftColor: '#00f0a8',
+  },
+  sectionSubtitle: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  userTypeDescription: {
+    color: '#666',
+    fontSize: 12,
+    marginBottom: 15,
+    lineHeight: 16,
+  },
+  userTypeCard: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
     marginHorizontal: 4,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  userTypeOptionActive: {
+  userTypeCardActive: {
     backgroundColor: 'rgba(0,240,168,0.2)',
     borderColor: '#00f0a8',
   },
-  userTypeText: {
+  userTypeIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8,
+  },
+  userTypeCardText: {
     color: '#fff',
-    fontSize: 14,
+    fontSize: 12,
     fontWeight: '600',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  userTypeCardTextActive: {
+    color: '#000',
+    fontWeight: '700',
+  },
+  userTypeCardDescription: {
+    color: '#666',
+    fontSize: 10,
+    textAlign: 'center',
+    lineHeight: 12,
+  },
+  addSkillButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  skillInfo: {
+    flex: 1,
     marginLeft: 6,
   },
-  userTypeTextActive: {
-    color: '#000',
-    fontWeight: '700',
-  },
-  saveButtonContainer: {
-    marginHorizontal: 20,
-    marginBottom: 20,
-    alignItems: 'center',
-  },
-  saveButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#00f0a8',
-    paddingHorizontal: 30,
-    paddingVertical: 15,
-    borderRadius: 25,
-    minWidth: 200,
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#666',
-  },
-  saveButtonText: {
-    color: '#000',
-    fontSize: 16,
-    fontWeight: '700',
-    marginLeft: 8,
-  },
-  lastSaveText: {
+  skillCategory: {
     color: '#666',
-    fontSize: 12,
-    marginTop: 8,
-    textAlign: 'center',
+    fontSize: 10,
+    marginTop: 2,
   },
-  statusSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 15,
-    marginHorizontal: 20,
-    marginBottom: 30,
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-  },
-  statusText: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
-    textAlign: 'center',
-  },
-  navTabs: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.95)',
+  categoriesSection: {
+    marginTop: 15,
+    paddingTop: 15,
     borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.08)',
-    paddingHorizontal: 10,
-    paddingVertical: 10,
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
+    borderTopColor: 'rgba(255,255,255,0.1)',
   },
-  navTab: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-    borderRadius: 15,
-    marginHorizontal: 2,
-  },
-  navTabActive: {
-    backgroundColor: 'rgba(0,240,168,0.14)',
-  },
-  navTabText: {
-    color: '#666',
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 4,
-  },
-  navTabTextActive: {
-    color: '#00f0a8',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    justifyContent: 'flex-end',
-  },
-  modalContainer: {
-    backgroundColor: '#000',
-    borderTopLeftRadius: 30,
-    borderTopRightRadius: 30,
-    paddingBottom: Platform.OS === 'ios' ? 40 : 20,
-    maxHeight: '80%',
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  modalTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
-  },
-  modalCloseButton: {
-    padding: 4,
-  },
-  locationOptions: {
-    padding: 20,
-  },
-  locationOption: {
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    padding: 20,
-    borderRadius: 12,
-    marginBottom: 15,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.2)',
-  },
-  removeLocationOption: {
-    borderColor: 'rgba(255,107,107,0.3)',
-  },
-  locationOptionTitle: {
-    color: '#00f0a8',
-    fontSize: 18,
-    fontWeight: '700',
-    marginTop: 10,
-    marginBottom: 5,
-    textAlign: 'center',
-  },
-  removeLocationText: {
-    color: '#ff6b6b',
-  },
-  locationOptionDesc: {
-    color: '#666',
-    fontSize: 14,
-    textAlign: 'center',
-  },
-  locationHint: {
-    color: '#666',
-    textAlign: 'center',
-    padding: 20,
-    fontSize: 14,
-    fontStyle: 'italic',
-  },
-  imagesSection: {
-    marginTop: 15,
-  },
-  imagesTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 10,
-  },
-  imagesGrid: {
-    flexDirection: 'row',
-  },
-  imageItem: {
-    position: 'relative',
-    width: 100,
-    height: 100,
-    marginRight: 10,
-    borderRadius: 8,
-    overflow: 'hidden',
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.2)',
-  },
-  farmImage: {
-    width: '100%',
-    height: '100%',
-  },
-  removeImage: {
-    position: 'absolute',
-    top: 5,
-    right: 5,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 10,
-    padding: 2,
-  },
-  addImageButton: {
-    width: 100,
-    height: 100,
-    backgroundColor: 'rgba(255,255,255,0.03)',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: 'rgba(0,240,168,0.3)',
-    borderStyle: 'dashed',
-  },
-  addImageText: {
-    color: '#00f0a8',
-    fontSize: 10,
-    fontWeight: '600',
-    marginTop: 5,
-    textAlign: 'center',
-  },
-  locationSubsection: {
-    marginTop: 15,
-  },
-  subsectionTitle: {
+  categoriesTitle: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
   },
-  addLocationSmall: {
+  categoriesGrid: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    padding: 10,
-    borderRadius: 8,
+    flexWrap: 'wrap',
+  },
+  categoryChip: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    marginRight: 8,
+    marginBottom: 8,
     borderWidth: 1,
     borderColor: 'rgba(0,240,168,0.3)',
   },
-  addLocationSmallText: {
+  categoryText: {
     color: '#00f0a8',
     fontSize: 12,
     fontWeight: '600',
-    marginLeft: 6,
+  },
+  emptySubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+    marginTop: 4,
+  },
+  subsectionDescription: {
+    color: '#666',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  availabilityDescription: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  imagesSubtitle: {
+    color: '#666',
+    fontSize: 12,
+    marginBottom: 10,
   },
 });
+
+export default ProfileScreen;
