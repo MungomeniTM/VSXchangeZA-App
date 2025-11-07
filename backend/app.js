@@ -1,5 +1,8 @@
 import dotenv from "dotenv";
 dotenv.config();
+import userRoutes from "./routes/userRoutes.js";
+
+
 
 import express from "express";
 import http from "http";
@@ -27,6 +30,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 // ✅ Routes
+app.use("/api/users", userRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/posts", postRoutes);
 
