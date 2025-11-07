@@ -1,6 +1,5 @@
-
-  // src/screens/ProfileScreen.js - CLEANED VERSION
-import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
+// src/screens/ProfileScreen.js - FIXED VERSION
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -24,7 +23,6 @@ import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import { AppContext } from '../context/AppContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -243,9 +241,31 @@ const SmartTextInput = ({
   );
 };
 
+// Custom hook for global user data as fallback
+const useGlobalUserFallback = () => {
+  const [globalUser, setGlobalUser] = useState({
+    firstName: '',
+    lastName: '',
+    profileImage: null,
+    userType: 'skilled',
+    skills: [],
+    skillCategories: []
+  });
+
+  const updateGlobalUser = useCallback(async (userData) => {
+    setGlobalUser(prev => {
+      const newUser = { ...prev, ...userData };
+      AsyncStorage.setItem('globalUserData', JSON.stringify(newUser));
+      return newUser;
+    });
+  }, []);
+
+  return { globalUser, updateGlobalUser };
+};
+
 export default function ProfileScreen({ navigation }) {
-  // 🎯 GLOBAL STATE
-  const { updateGlobalUser, globalUser } = useContext(AppContext);
+  // 🎯 GLOBAL STATE - Using fallback if context fails
+  const { globalUser, updateGlobalUser } = useGlobalUserFallback();
   
   // 🎯 STATE MANAGEMENT
   const [user, setUser] = useAdvancedState(null, 'userData');
@@ -610,104 +630,6 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
-  // 🗺️ LOCATION SERVICES
-  const getCurrentLocation = async () => {
-    try {
-      if (!locationPermission) {
-        Alert.alert('Location Access', 'Enable location permissions to use this feature');
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-        timeout: 10000
-      });
-
-      const { latitude, longitude } = location.coords;
-      
-      const address = await Location.reverseGeocodeAsync({
-        latitude,
-        longitude
-      });
-
-      const readableAddress = address[0] 
-        ? `${address[0].name || ''} ${address[0].city || ''} ${address[0].region || ''}`.trim()
-        : `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
-
-      const locationData = {
-        latitude,
-        longitude,
-        address: readableAddress,
-        timestamp: new Date().toISOString()
-      };
-      
-      if (profile.userType === 'farmer') {
-        setProfile(prev => ({
-          ...prev,
-          farmDetails: { 
-            ...prev.farmDetails, 
-            location: locationData 
-          }
-        }));
-      } else if (profile.userType === 'client') {
-        setProfile(prev => ({
-          ...prev,
-          clientDetails: { 
-            ...prev.clientDetails, 
-            location: locationData 
-          }
-        }));
-      } else {
-        updateField('location', locationData);
-      }
-      
-      setShowLocationPicker(false);
-      Alert.alert('Location Set', 'Your location has been updated successfully');
-    } catch (error) {
-      console.warn('Location acquisition failed:', error);
-      Alert.alert('Location Error', 'Failed to get your location. Please try again.');
-    }
-  };
-
-  const handleManualLocation = (userType = 'general') => {
-    Alert.prompt(
-      'Enter Location',
-      'Please enter your address:',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Save Location', 
-          onPress: (address) => {
-            if (address && address.trim()) {
-              const manualLocation = {
-                latitude: -23.0833 + (Math.random() - 0.5) * 0.01,
-                longitude: 30.3833 + (Math.random() - 0.5) * 0.01,
-                address: address.trim(),
-                accuracy: 'Manual Input'
-              };
-
-              if (userType === 'farmer') {
-                setProfile(prev => ({
-                  ...prev,
-                  farmDetails: { ...prev.farmDetails, location: manualLocation }
-                }));
-              } else if (userType === 'client') {
-                setProfile(prev => ({
-                  ...prev,
-                  clientDetails: { ...prev.clientDetails, location: manualLocation }
-                }));
-              } else {
-                updateField('location', manualLocation);
-              }
-              setShowLocationPicker(false);
-            }
-          }
-        }
-      ],
-      'plain-text'
-    );
-  };
-
   // 🧭 NAVIGATION
   const NavigationTabs = () => (
     <View style={styles.navTabs}>
@@ -842,8 +764,37 @@ export default function ProfileScreen({ navigation }) {
     </Animated.View>
   );
 
-  // ... [Rest of the component code remains the same as your original ProfileScreen]
-  // Include all the other components like BusinessSection, LocationSection, etc.
+  const SaveButton = () => (
+    <Animated.View style={[styles.saveButtonContainer, { transform: [{ scale: savePulse }] }]}>
+      <TouchableOpacity 
+        style={[styles.saveButton, saving && styles.saveButtonDisabled]}
+        onPress={async () => {
+          const success = await syncProfileToBackend();
+          if (success) {
+            setEditing(false);
+          }
+        }}
+        disabled={saving}
+      >
+        {saving ? (
+          <ActivityIndicator color="#000" size="small" />
+        ) : (
+          <>
+            <Icon name="cloud-upload" size={20} color="#000" />
+            <Text style={styles.saveButtonText}>
+              {saveSuccess ? 'Saved' : 'Save Changes'}
+            </Text>
+          </>
+        )}
+      </TouchableOpacity>
+      
+      {lastSave && (
+        <Text style={styles.lastSaveText}>
+          Last saved: {new Date(lastSave).toLocaleTimeString()}
+        </Text>
+      )}
+    </Animated.View>
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -858,35 +809,104 @@ export default function ProfileScreen({ navigation }) {
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.scrollContent}
       >
-        {/* Your existing sections here */}
-        <Text>Profile Content Goes Here</Text>
-        
-        {/* Save Button */}
-        {editing && (
-          <Animated.View style={[styles.saveButtonContainer, { transform: [{ scale: savePulse }] }]}>
-            <TouchableOpacity 
-              style={[styles.saveButton, saving && styles.saveButtonDisabled]}
-              onPress={async () => {
-                const success = await syncProfileToBackend();
-                if (success) {
-                  setEditing(false);
-                }
-              }}
-              disabled={saving}
-            >
-              {saving ? (
-                <ActivityIndicator color="#000" size="small" />
-              ) : (
-                <>
-                  <Icon name="cloud-upload" size={20} color="#000" />
-                  <Text style={styles.saveButtonText}>
-                    {saveSuccess ? 'Saved' : 'Save Changes'}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Basic Information</Text>
+          
+          <SmartTextInput
+            value={profile.bio}
+            onChangeText={(text) => updateField('bio', text)}
+            placeholder="Tell us about yourself..."
+            style={[styles.input, styles.textArea]}
+            multiline={true}
+            onSave={() => {}}
+            guidanceText="Describe your skills, experience, and what you offer"
+          />
+
+          <View style={styles.userTypeSection}>
+            <Text style={styles.userTypeLabel}>Account Type:</Text>
+            <View style={styles.userTypeOptions}>
+              {['skilled', 'farmer', 'client'].map((type) => (
+                <TouchableOpacity
+                  key={type}
+                  style={[
+                    styles.userTypeOption,
+                    profile.userType === type && styles.userTypeOptionActive
+                  ]}
+                  onPress={() => editing && updateField('userType', type)}
+                  disabled={!editing}
+                >
+                  <Icon 
+                    name={
+                      type === 'skilled' ? 'construct' : 
+                      type === 'farmer' ? 'leaf' : 'person'
+                    } 
+                    size={16} 
+                    color={profile.userType === type ? '#000' : '#fff'} 
+                  />
+                  <Text style={[
+                    styles.userTypeText,
+                    profile.userType === type && styles.userTypeTextActive
+                  ]}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
                   </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        </View>
+
+        {/* Skills Section */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Skills & Expertise</Text>
+            {editing && (
+              <TouchableOpacity onPress={addSkill}>
+                <Text style={styles.seeAllText}>Add Skill</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+
+          <View style={styles.skillsGrid}>
+            {profile.skills.map((skill) => (
+              <View key={skill.id} style={styles.skillChip}>
+                <Icon name="construct" size={14} color="#00f0a8" />
+                <View style={styles.skillInfo}>
+                  <Text style={styles.skillText}>{skill.name}</Text>
+                  <Text style={styles.skillCategory}>{skill.category}</Text>
+                </View>
+                {editing && (
+                  <TouchableOpacity 
+                    onPress={() => removeSkill(skill.id)}
+                    style={styles.removeSkill}
+                  >
+                    <Icon name="close" size={16} color="#00f0a8" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+            
+            {profile.skills.length === 0 && (
+              <View style={styles.emptyState}>
+                <Icon name="construct-outline" size={32} color="#666" />
+                <Text style={styles.emptyText}>No skills added yet</Text>
+                <Text style={styles.emptySubtext}>
+                  Add skills to be discovered by clients and farmers
+                </Text>
+              </View>
+            )}
+          </View>
+        </View>
+
+        {/* Save Button */}
+        {editing && <SaveButton />}
+
+        {/* Status Indicator */}
+        <View style={styles.statusSection}>
+          <Icon name="sync" size={16} color="#00f0a8" />
+          <Text style={styles.statusText}>
+            Auto-save enabled • Changes are saved automatically
+          </Text>
+        </View>
       </ScrollView>
 
       <NavigationTabs />
@@ -894,14 +914,161 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
-// Your existing styles remain the same
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#000000',
   },
-  
-  // NEW STYLES FOR GUIDANCE AND ENHANCED UI
+  header: {
+    paddingTop: Platform.OS === 'ios' ? 20 : 10,
+    paddingHorizontal: 20,
+    paddingBottom: 20,
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    borderBottomLeftRadius: 30,
+    borderBottomRightRadius: 30,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(0,240,168,0.2)',
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  backButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,240,168,0.1)',
+  },
+  headerTitle: {
+    color: '#00f0a8',
+    fontSize: 20,
+    fontWeight: '800',
+  },
+  editButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,240,168,0.1)',
+  },
+  editButtonActive: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    transform: [{ scale: 1.1 }],
+  },
+  profileMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginRight: 20,
+  },
+  avatar: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth: 2,
+    borderColor: '#00f0a8',
+  },
+  avatarPlaceholder: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#00f0a8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#00f0a8',
+  },
+  avatarText: {
+    color: '#000',
+    fontSize: 32,
+    fontWeight: '900',
+  },
+  uploadOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    borderRadius: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 1,
+  },
+  avatarEditBadge: {
+    position: 'absolute',
+    bottom: 0,
+    right: 0,
+    backgroundColor: '#00f0a8',
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: '#000',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  userName: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  userType: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  userStats: {
+    color: '#666',
+    fontSize: 12,
+  },
+  nameInput: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '600',
+    borderBottomWidth: 1,
+    borderBottomColor: '#00f0a8',
+    marginBottom: 8,
+    paddingVertical: 4,
+    paddingHorizontal: 0,
+  },
+  inputContainer: {
+    position: 'relative',
+    marginBottom: 12,
+  },
+  input: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 15,
+    color: '#fff',
+    fontSize: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  inputFocused: {
+    borderColor: '#00f0a8',
+    backgroundColor: 'rgba(0,240,168,0.05)',
+  },
+  textArea: {
+    height: 100,
+    textAlignVertical: 'top',
+  },
+  doneButton: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    backgroundColor: '#00f0a8',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+  },
+  doneButtonText: {
+    color: '#000',
+    fontSize: 12,
+    fontWeight: '700',
+  },
   guidanceText: {
     color: '#00f0a8',
     fontSize: 12,
@@ -914,114 +1081,121 @@ const styles = StyleSheet.create({
     marginTop: 2,
     fontStyle: 'italic',
   },
-  guidanceNote: {
-    color: '#00f0a8',
-    fontSize: 12,
-    marginBottom: 15,
-    padding: 10,
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    borderRadius: 8,
-    borderLeftWidth: 3,
-    borderLeftColor: '#00f0a8',
-  },
-  sectionSubtitle: {
-    color: '#666',
-    fontSize: 12,
-    marginTop: 2,
-  },
-  userTypeDescription: {
-    color: '#666',
-    fontSize: 12,
-    marginBottom: 15,
-    lineHeight: 16,
-  },
-  userTypeCard: {
+  scrollView: {
     flex: 1,
+  },
+  scrollContent: {
+    paddingTop: 10,
+    paddingBottom: 100,
+  },
+  section: {
+    marginHorizontal: 20,
+    marginBottom: 25,
+    padding: 20,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.1)',
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    padding: 15,
+    marginBottom: 15,
+  },
+  sectionTitle: {
+    color: '#00f0a8',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  seeAllText: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  userTypeSection: {
+    marginTop: 15,
+  },
+  userTypeLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  userTypeOptions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  userTypeOption: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 12,
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
+    borderRadius: 8,
     marginHorizontal: 4,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
-  userTypeCardActive: {
+  userTypeOptionActive: {
     backgroundColor: 'rgba(0,240,168,0.2)',
     borderColor: '#00f0a8',
   },
-  userTypeIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 8,
-  },
-  userTypeCardText: {
+  userTypeText: {
     color: '#fff',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 4,
+    marginLeft: 6,
   },
-  userTypeCardTextActive: {
+  userTypeTextActive: {
     color: '#000',
     fontWeight: '700',
   },
-  userTypeCardDescription: {
-    color: '#666',
-    fontSize: 10,
-    textAlign: 'center',
-    lineHeight: 12,
+  skillsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
-  addSkillButton: {
+  skillChip: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,240,168,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 10,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
   },
   skillInfo: {
     flex: 1,
     marginLeft: 6,
+  },
+  skillText: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
   },
   skillCategory: {
     color: '#666',
     fontSize: 10,
     marginTop: 2,
   },
-  categoriesSection: {
-    marginTop: 15,
-    paddingTop: 15,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+  removeSkill: {
+    padding: 2,
   },
-  categoriesTitle: {
-    color: '#fff',
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    width: '100%',
+  },
+  emptyText: {
+    color: '#666',
     fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  categoriesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  categoryChip: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    marginRight: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-  },
-  categoryText: {
-    color: '#00f0a8',
-    fontSize: 12,
-    fontWeight: '600',
+    fontStyle: 'italic',
+    textAlign: 'center',
+    marginTop: 8,
   },
   emptySubtext: {
     color: '#666',
@@ -1029,19 +1203,85 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginTop: 4,
   },
-  subsectionDescription: {
-    color: '#666',
-    fontSize: 12,
-    marginBottom: 8,
+  saveButtonContainer: {
+    marginHorizontal: 20,
+    marginBottom: 20,
+    alignItems: 'center',
   },
-  availabilityDescription: {
-    color: '#666',
-    fontSize: 12,
-    marginTop: 2,
+  saveButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00f0a8',
+    paddingHorizontal: 30,
+    paddingVertical: 15,
+    borderRadius: 25,
+    minWidth: 200,
   },
-  imagesSubtitle: {
+  saveButtonDisabled: {
+    backgroundColor: '#666',
+  },
+  saveButtonText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '700',
+    marginLeft: 8,
+  },
+  lastSaveText: {
     color: '#666',
     fontSize: 12,
-    marginBottom: 10,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+  statusSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    marginHorizontal: 20,
+    marginBottom: 30,
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+  },
+  statusText: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+    textAlign: 'center',
+  },
+  navTabs: {
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.08)',
+    paddingHorizontal: 10,
+    paddingVertical: 10,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    zIndex: 1000,
+  },
+  navTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginHorizontal: 2,
+  },
+  navTabActive: {
+    backgroundColor: 'rgba(0,240,168,0.14)',
+  },
+  navTabText: {
+    color: '#666',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  navTabTextActive: {
+    color: '#00f0a8',
   },
 });
