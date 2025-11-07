@@ -1,9 +1,8 @@
-// src/screens/DashboardScreen.js - UPDATED VERSION
+// src/screens/DashboardScreen.js - FIXED & OPTIMIZED VERSION
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
-  FlatList,
   StyleSheet,
   TouchableOpacity,
   ActivityIndicator,
@@ -27,13 +26,6 @@ import { fetchPosts } from "../api";
 
 const { width, height } = Dimensions.get('window');
 
-// Enable LayoutAnimation for Android
-if (Platform.OS === 'android') {
-  if (UIManager.setLayoutAnimationEnabledExperimental) {
-    UIManager.setLayoutAnimationEnabledExperimental(true);
-  }
-}
-
 // Professional Gradient Component
 const ProfessionalGradient = ({ colors, style, children }) => (
   <View style={[style, { backgroundColor: colors[0], overflow: 'hidden' }]}>
@@ -41,7 +33,7 @@ const ProfessionalGradient = ({ colors, style, children }) => (
   </View>
 );
 
-// AI Recommendation Engine
+// AI Recommendation Engine - FIXED DEPENDENCIES
 const useAIRecommendations = (user, posts) => {
   const [recommendations, setRecommendations] = useState([]);
 
@@ -54,7 +46,6 @@ const useAIRecommendations = (user, posts) => {
     const scoredPosts = posts.map(post => {
       let score = 0;
       
-      // Skill-based matching
       if (post.skills && userSkills.length) {
         const matchingSkills = post.skills.filter(skill => 
           userSkills.some(userSkill => 
@@ -65,17 +56,12 @@ const useAIRecommendations = (user, posts) => {
         score += matchingSkills.length * 10;
       }
 
-      // Location-based matching
-      if (user.location && post.location) {
-        score += 5;
-      }
+      if (user.location && post.location) score += 5;
 
-      // User type optimization
       if (userType === 'farmer' && post.type === 'service_offer') score += 15;
       if (userType === 'client' && post.type === 'service_request') score += 15;
       if (userType === 'skilled' && post.type === 'job_opportunity') score += 15;
 
-      // Recency bonus
       const postDate = new Date(post.createdAt || post.timestamp);
       const daysAgo = (Date.now() - postDate.getTime()) / (1000 * 3600 * 24);
       if (daysAgo < 7) score += 10 - daysAgo;
@@ -87,17 +73,17 @@ const useAIRecommendations = (user, posts) => {
       .filter(post => post.relevanceScore > 5)
       .sort((a, b) => b.relevanceScore - a.relevanceScore)
       .slice(0, 5);
-  }, [user, posts]);
+  }, [user?.skills, user?.userType, user?.location, posts]);
 
   useEffect(() => {
     const newRecs = generateRecommendations();
     setRecommendations(newRecs);
-  }, [generateRecommendations]);
+  }, [posts.length, user?.skills?.length]); // FIXED: Only update when posts or skills change
 
   return recommendations;
 };
 
-// Custom hook for global user data
+// Custom hook for global user data - FIXED INFINITE LOOP
 const useGlobalUser = () => {
   const [globalUser, setGlobalUser] = useState({
     firstName: '',
@@ -108,16 +94,22 @@ const useGlobalUser = () => {
     skillCategories: []
   });
 
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const loadGlobalUser = useCallback(async () => {
+    if (isLoaded) return; // PREVENT MULTIPLE LOADS
+    
     try {
       const userData = await AsyncStorage.getItem('globalUserData');
       if (userData) {
         setGlobalUser(JSON.parse(userData));
       }
+      setIsLoaded(true);
     } catch (error) {
       console.warn('Failed to load global user data:', error);
+      setIsLoaded(true);
     }
-  }, []);
+  }, [isLoaded]);
 
   const updateGlobalUser = useCallback(async (userData) => {
     setGlobalUser(prev => {
@@ -129,7 +121,7 @@ const useGlobalUser = () => {
 
   useEffect(() => {
     loadGlobalUser();
-  }, [loadGlobalUser]);
+  }, []); // FIXED: Empty dependency array - load once
 
   return { globalUser, updateGlobalUser, loadGlobalUser };
 };
@@ -149,7 +141,10 @@ export default function DashboardScreen({ navigation }) {
   const [notifications, setNotifications] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
 
-  // AI Recommendations
+  // Track initial load to prevent multiple calls
+  const initialLoadRef = useRef(false);
+
+  // AI Recommendations - FIXED DEPENDENCIES
   const aiRecommendations = useAIRecommendations(user, posts);
 
   // Anim values
@@ -163,19 +158,19 @@ export default function DashboardScreen({ navigation }) {
   const rippleScale = useRef(new Animated.Value(0)).current;
   const rippleOpacity = useRef(new Animated.Value(0)).current;
 
-  // Professional Navigation Handler
+  // Professional Navigation Handler - FIXED DEPENDENCIES
   const handleNavigation = useCallback((screenName, params = {}) => {
+    console.log('Navigating to:', screenName);
+    
     const navigationPaths = {
       feed: () => setActiveTab('feed'),
       explore: () => setExploreOpen(true),
       create: () => setShowCreateMenu(true),
       messages: () => navigation?.navigate?.('Messages'),
-      profile: () => navigation?.navigate?.('Profile', { 
-        userId: user?.id
-      }),
+      profile: () => navigation?.navigate?.('Profile'),
       analytics: () => navigation?.navigate?.('Analytics'),
       network: () => navigation?.navigate?.('Network'),
-      farms: () => navigation?.navigate?.('Farms'),
+      farms: () => navigation?.navigate?.('FarmManagement'),
       services: () => navigation?.navigate?.('Services'),
       notifications: () => navigation?.navigate?.('Notifications'),
     };
@@ -185,11 +180,15 @@ export default function DashboardScreen({ navigation }) {
       navigationHandler();
     } else if (navigation?.navigate) {
       navigation.navigate(screenName, params);
+    } else {
+      console.warn('Navigation not available for:', screenName);
     }
-  }, [navigation, user]);
+  }, [navigation]); // FIXED: Removed user dependency
 
-  // Animation Orchestration
+  // Animation Orchestration - FIXED: Run once
   useEffect(() => {
+    if (initialLoadRef.current) return;
+    
     Animated.parallel([
       Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
       Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
@@ -204,10 +203,12 @@ export default function DashboardScreen({ navigation }) {
     );
     pulsate.start();
 
+    initialLoadRef.current = true;
+
     return () => {
-      [orbScale, rippleScale, rippleOpacity].forEach(anim => anim.stopAnimation());
+      pulsate.stop();
     };
-  }, []);
+  }, []); // FIXED: Empty dependency array
 
   // Create Menu Animation
   useEffect(() => {
@@ -228,7 +229,7 @@ export default function DashboardScreen({ navigation }) {
     }).start();
   }, [exploreOpen]);
 
-  // Enhanced Data Management
+  // Enhanced Data Management - FIXED DEPENDENCIES
   const loadUserData = useCallback(async () => {
     try {
       const userData = await AsyncStorage.getItem('user');
@@ -237,8 +238,8 @@ export default function DashboardScreen({ navigation }) {
         setUser(userObj);
         // Update global user with basic data
         updateGlobalUser({
-          firstName: userObj.firstName,
-          lastName: userObj.lastName,
+          firstName: userObj.firstName || userObj.username || 'User',
+          lastName: userObj.lastName || '',
           profileImage: userObj.profileImage,
           userType: userObj.role || 'skilled'
         });
@@ -246,20 +247,22 @@ export default function DashboardScreen({ navigation }) {
     } catch (error) {
       console.warn('Failed to load user data:', error);
     }
-  }, [updateGlobalUser]);
+  }, [updateGlobalUser]); // FIXED: Stable dependency
 
   const loadPosts = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetchPosts();
       const postsData = res?.data?.posts || res?.data || res || [];
-      const formattedPosts = Array.isArray(postsData) ? postsData.map(post => ({
+      
+      const formattedPosts = Array.isArray(postsData) ? postsData.map((post, index) => ({
         ...post,
+        id: post._id || post.id || `post-${index}-${Date.now()}`,
         author: post.user || globalUser || {
-          firstName: user?.firstName,
-          lastName: user?.lastName,
+          firstName: user?.firstName || 'Community',
+          lastName: user?.lastName || 'Member',
           profileImage: user?.profileImage,
-          userType: user?.userType,
+          userType: user?.userType || 'member',
           skills: user?.skills || []
         }
       })) : [];
@@ -267,23 +270,36 @@ export default function DashboardScreen({ navigation }) {
       setPosts(formattedPosts);
     } catch (err) {
       console.warn("Fetch posts failed:", err);
+      // Fallback to empty array instead of causing errors
+      setPosts([]);
     } finally {
       setLoading(false);
     }
-  }, [globalUser, user]);
+  }, []); // FIXED: Removed dependencies causing loops
 
   const onRefresh = useCallback(async () => {
+    if (refreshing) return; // PREVENT MULTIPLE REFRESHES
     setRefreshing(true);
-    await Promise.all([loadUserData(), loadPosts()]);
-    setRefreshing(false);
-  }, [loadUserData, loadPosts]);
+    try {
+      await Promise.all([loadUserData(), loadPosts()]);
+    } catch (error) {
+      console.warn('Refresh failed:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, [loadUserData, loadPosts, refreshing]); // FIXED: Added refreshing to dependencies
 
+  // Initial load - FIXED: Run once on mount
   useEffect(() => {
-    loadUserData();
-    loadPosts();
-  }, [loadUserData, loadPosts]);
+    const initializeData = async () => {
+      await loadUserData();
+      await loadPosts();
+    };
+    
+    initializeData();
+  }, []); // FIXED: Empty dependency array
 
-  // Enhanced Post Card with Global User Data
+  // Enhanced Post Card with Global User Data - FIXED PERFORMANCE
   const PostCard = React.memo(({ item }) => {
     const [liked, setLiked] = useState(false);
     const [likeCount, setLikeCount] = useState(item.approvals || item.likes || 0);
@@ -298,25 +314,25 @@ export default function DashboardScreen({ navigation }) {
     const comments = item.comments?.length || 0;
     const shares = item.shares || 0;
 
-    const handleLike = () => {
-      setLiked(!liked);
+    const handleLike = useCallback(() => {
+      setLiked(prev => !prev);
       setLikeCount(prev => liked ? prev - 1 : prev + 1);
-    };
+    }, [liked]);
 
-    const handleBookmark = () => {
-      setBookmarked(!bookmarked);
-    };
+    const handleBookmark = useCallback(() => {
+      setBookmarked(prev => !prev);
+    }, []);
 
-    const handleShare = async () => {
+    const handleShare = useCallback(async () => {
       try {
         await Share.share({
-          message: `Check out this post from VSXchangeZA: ${postText}`,
+          message: `Check out this post from VSXchangeZA: ${postText.substring(0, 100)}...`,
           url: 'https://vsxchangeza.com',
         });
       } catch (error) {
         console.warn('Share failed:', error);
       }
-    };
+    }, [postText]);
 
     return (
       <Animated.View style={[styles.postCard, { opacity: fadeAnim }]}>
@@ -335,7 +351,7 @@ export default function DashboardScreen({ navigation }) {
               {author.skills?.length > 0 && (
                 <View style={styles.postSkills}>
                   {author.skills.slice(0, 2).map((skill, index) => (
-                    <View key={index} style={styles.skillTag}>
+                    <View key={`skill-${index}`} style={styles.skillTag}>
                       <Text style={styles.skillTagText}>{skill.name || skill}</Text>
                     </View>
                   ))}
@@ -480,9 +496,9 @@ export default function DashboardScreen({ navigation }) {
           <Text style={styles.sectionSubtitle}>Curated based on your profile</Text>
         </View>
         
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recommendationsScroll}>
           {aiRecommendations.map((rec, index) => (
-            <TouchableOpacity key={rec.id || index} style={styles.recommendationCard}>
+            <TouchableOpacity key={`rec-${rec.id || index}`} style={styles.recommendationCard}>
               <ProfessionalGradient colors={['rgba(0,240,168,0.1)', 'rgba(30,144,255,0.1)']}>
                 <View style={styles.recommendationHeader}>
                   <Text style={styles.recommendationTitle} numberOfLines={2}>
@@ -508,7 +524,7 @@ export default function DashboardScreen({ navigation }) {
   // Enhanced Quick Actions
   const QuickActions = () => (
     <Animated.View style={[styles.quickActions, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickActionsScroll}>
         {[
           { 
             icon: 'add-circle', 
@@ -522,7 +538,7 @@ export default function DashboardScreen({ navigation }) {
           { icon: 'construct', label: 'Services', color: '#fed330', onPress: () => handleNavigation('services') },
           { icon: 'chatbubbles', label: 'Messages', color: '#00d2d3', onPress: () => handleNavigation('messages') },
         ].map((action, index) => (
-          <TouchableOpacity key={index} style={styles.quickActionItem} onPress={action.onPress}>
+          <TouchableOpacity key={`action-${index}`} style={styles.quickActionItem} onPress={action.onPress}>
             <View style={[styles.actionIcon, { backgroundColor: action.color }]}>
               <Icon name={action.icon} size={22} color="#000" />
             </View>
@@ -561,7 +577,7 @@ export default function DashboardScreen({ navigation }) {
             { icon: 'help-circle', label: 'Service Request', color: '#fed330', action: () => navigation.navigate('CreateRequest') },
           ].map((item, index) => (
             <TouchableOpacity 
-              key={index}
+              key={`menu-${index}`}
               style={styles.createMenuItem}
               onPress={() => {
                 setShowCreateMenu(false);
@@ -590,7 +606,7 @@ export default function DashboardScreen({ navigation }) {
         { id: 'profile', icon: 'person', label: 'Profile' },
       ].map((tab) => (
         <TouchableOpacity 
-          key={tab.id} 
+          key={`tab-${tab.id}`} 
           style={[styles.navTab, activeTab === tab.id && styles.navTabActive]} 
           onPress={() => handleNavigation(tab.id)}
         >
@@ -642,7 +658,7 @@ export default function DashboardScreen({ navigation }) {
                 const active = activeFilters.has(skill);
                 return (
                   <TouchableOpacity
-                    key={skill}
+                    key={`skill-${skill}`}
                     style={[styles.skillChip, active && styles.skillChipActive]}
                     onPress={() => {
                       setActiveFilters(prev => {
@@ -668,7 +684,7 @@ export default function DashboardScreen({ navigation }) {
     </Modal>
   );
 
-  // Enhanced Filtering Logic
+  // Enhanced Filtering Logic - FIXED PERFORMANCE
   const filteredPosts = useMemo(() => {
     if ((!activeFilters || activeFilters.size === 0) && !searchQuery.trim()) return posts;
     
@@ -766,9 +782,9 @@ export default function DashboardScreen({ navigation }) {
         {activeFilters.size > 0 && (
           <View style={styles.activeFilters}>
             <Text style={styles.filtersTitle}>Active Filters:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll}>
               {Array.from(activeFilters).map((filter) => (
-                <View key={filter} style={styles.activeFilterChip}>
+                <View key={`filter-${filter}`} style={styles.activeFilterChip}>
                   <Text style={styles.activeFilterText}>{filter}</Text>
                   <TouchableOpacity onPress={() => {
                     setActiveFilters(prev => {
@@ -809,7 +825,7 @@ export default function DashboardScreen({ navigation }) {
           ) : (
             <View style={styles.feed}>
               {filteredPosts.map((post, index) => (
-                <PostCard key={post._id || post.id || `post-${index}`} item={post} />
+                <PostCard key={post.id} item={post} />
               ))}
             </View>
           )}
@@ -833,6 +849,10 @@ export default function DashboardScreen({ navigation }) {
 // Enhanced Professional Styles
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000000' },
+  scrollView: { flex: 1 },
+  recommendationsScroll: { marginHorizontal: -18 },
+  quickActionsScroll: { paddingHorizontal: 18 },
+  filtersScroll: { marginHorizontal: -18 },
 
   professionalHeader: {
     paddingTop: Platform.OS === 'ios' ? 56 : 48,
@@ -926,7 +946,7 @@ const styles = StyleSheet.create({
   relevanceText: { color: '#00f0a8', fontSize: 10, fontWeight: '700' },
   recommendationType: { color: '#666', fontSize: 12, padding: 12, paddingTop: 0 },
 
-  quickActions: { marginHorizontal: 18, marginBottom: 16 },
+  quickActions: { marginBottom: 16 },
   quickActionItem: { alignItems: 'center', marginRight: 16 },
   actionIcon: { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
   actionLabel: { color: '#fff', fontSize: 12, fontWeight: '600', textAlign: 'center' },
@@ -1054,7 +1074,6 @@ const styles = StyleSheet.create({
   createMenuIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   createMenuLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
 
-  scrollView: { flex: 1 },
   loader: { marginVertical: 40 },
   emptyState: { alignItems: 'center', paddingVertical: 60 },
   emptyStateText: { color: '#fff', fontSize: 18, fontWeight: '600', marginTop: 16, marginBottom: 8 },
