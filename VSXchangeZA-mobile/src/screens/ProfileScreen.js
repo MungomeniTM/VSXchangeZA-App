@@ -1,4 +1,4 @@
-// src/screens/ProfessionalProfileScreen.js - ENTERPRISE-GRADE PROFESSIONAL PROFILE
+// src/screens/AdvancedProfessionalProfileScreen.js - REAL-TIME ENTERPRISE PROFILE
 import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import {
   View,
@@ -20,7 +20,8 @@ import {
   Switch,
   LayoutAnimation,
   FlatList,
-  Share
+  Share,
+  KeyboardAvoidingView
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -31,726 +32,1006 @@ import { LinearGradient } from 'expo-linear-gradient';
 
 const { width, height } = Dimensions.get('window');
 
-// ENTERPRISE PROFILE STATE MANAGEMENT
-const useProfessionalProfile = (initialState) => {
-  const [profile, setProfile] = useState(initialState);
-  const [activeTab, setActiveTab] = useState('about');
-  const [editing, setEditing] = useState(false);
-  const [imageUploading, setImageUploading] = useState(false);
-
-  const updateProfile = useCallback((updates) => {
-    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setProfile(prev => ({ ...prev, ...updates }));
-  }, []);
-
-  const updateService = useCallback((serviceId, updates) => {
-    setProfile(prev => ({
-      ...prev,
-      services: prev.services.map(service => 
-        service.id === serviceId ? { ...service, ...updates } : service
-      )
-    }));
-  }, []);
-
-  return {
-    profile,
-    activeTab,
-    setActiveTab,
-    editing,
-    setEditing,
-    imageUploading,
-    setImageUploading,
-    updateProfile,
-    updateService
-  };
-};
-
-// INTELLIGENT PRICING ENGINE
-const usePricingEngine = (userType, experience, rating) => {
-  const calculateIntelligentPricing = useCallback((basePrice) => {
-    const experienceMultiplier = 1 + (experience * 0.05); // 5% per year
-    const ratingMultiplier = 1 + ((rating - 4) * 0.1); // 10% per rating point above 4
-    const typeMultiplier = userType === 'skilled' ? 1.2 : 1.0;
-    
-    return Math.round(basePrice * experienceMultiplier * ratingMultiplier * typeMultiplier);
-  }, [userType, experience, rating]);
-
-  const getServiceTiers = useCallback((serviceType) => {
-    const basePrices = {
-      electrician: { hourly: 45, project: 300 },
-      plumbing: { hourly: 40, project: 250 },
-      carpentry: { hourly: 35, project: 200 },
-      farming: { hourly: 30, project: 150 }
-    };
-
-    const base = basePrices[serviceType] || basePrices.electrician;
-    
-    return {
-      hourly: calculateIntelligentPricing(base.hourly),
-      halfDay: calculateIntelligentPricing(base.hourly * 4),
-      fullDay: calculateIntelligentPricing(base.hourly * 8),
-      project: calculateIntelligentPricing(base.project)
-    };
-  }, [calculateIntelligentPricing]);
-
-  return { getServiceTiers, calculateIntelligentPricing };
-};
-
-// AI PROFILE OPTIMIZATION ENGINE
-const useProfileOptimization = (profileData) => {
-  const [optimizationScore, setOptimizationScore] = useState(0);
-  const [improvementTips, setImprovementTips] = useState([]);
-
-  const analyzeProfile = useCallback(() => {
-    let score = 0;
-    const tips = [];
-
-    // Profile completeness (40 points)
-    if (profileData.firstName && profileData.lastName) score += 10;
-    if (profileData.profileImage) score += 10;
-    if (profileData.bio && profileData.bio.length > 100) score += 10;
-    if (profileData.skills.length >= 3) score += 10;
-
-    // Professional metrics (30 points)
-    if (profileData.experienceYears >= 3) score += 10;
-    if (profileData.rating >= 4.5) score += 10;
-    if (profileData.completedProjects >= 50) score += 10;
-
-    // Content quality (30 points)
-    if (profileData.portfolio.length >= 5) score += 10;
-    if (profileData.services.length >= 2) score += 10;
-    if (profileData.certifications.length >= 1) score += 10;
-
-    // Generate improvement tips
-    if (!profileData.profileImage) {
-      tips.push({
-        id: 'add-photo',
-        title: 'Add Professional Photo',
-        description: 'Increase trust with a professional profile picture',
-        priority: 'high',
-        impact: 10
-      });
-    }
-
-    if (profileData.bio?.length < 100) {
-      tips.push({
-        id: 'enhance-bio',
-        title: 'Enhance Your Bio',
-        description: 'Write a detailed bio to showcase your expertise',
-        priority: 'medium',
-        impact: 8
-      });
-    }
-
-    if (profileData.portfolio.length < 3) {
-      tips.push({
-        id: 'add-portfolio',
-        title: 'Add Portfolio Items',
-        description: 'Showcase your work with photos and descriptions',
-        priority: 'medium',
-        impact: 7
-      });
-    }
-
-    setOptimizationScore(score);
-    setImprovementTips(tips.sort((a, b) => b.impact - a.impact));
-  }, [profileData]);
-
-  useEffect(() => {
-    analyzeProfile();
-  }, [analyzeProfile]);
-
-  return { optimizationScore, improvementTips };
-};
-
-// PROFESSIONAL HEADER COMPONENT
-const ProfessionalHeader = ({ 
-  profile, 
-  onEditPress, 
-  onSharePress, 
-  onMessagePress,
-  optimizationScore 
-}) => {
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-
-  useEffect(() => {
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 800,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 600,
-        useNativeDriver: true,
-      })
-    ]).start();
-  }, []);
-
-  return (
-    <LinearGradient
-      colors={['#000000', '#1a1a1a']}
-      style={styles.headerGradient}
-    >
-      <Animated.View 
-        style={[
-          styles.header,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }]
-          }
-        ]}
-      >
-        {/* Profile Image and Basic Info */}
-        <View style={styles.profileMain}>
-          <View style={styles.avatarSection}>
-            <View style={styles.avatarContainer}>
-              <Image 
-                source={{ uri: profile.profileImage || 'https://via.placeholder.com/120' }} 
-                style={styles.avatar}
-              />
-              <View style={styles.onlineIndicator} />
-              {optimizationScore >= 80 && (
-                <View style={styles.verifiedBadge}>
-                  <Icon name="shield-checkmark" size={16} color="#000" />
-                </View>
-              )}
-            </View>
-            
-            <View style={styles.quickStats}>
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{profile.experienceYears || 0}</Text>
-                <Text style={styles.statLabel}>Years</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{profile.rating || 4.9}</Text>
-                <Text style={styles.statLabel}>Rating</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statNumber}>{profile.completedProjects || 0}+</Text>
-                <Text style={styles.statLabel}>Projects</Text>
-              </View>
-            </View>
-          </View>
-
-          <View style={styles.profileInfo}>
-            <View style={styles.nameSection}>
-              <Text style={styles.userName}>
-                {profile.firstName} {profile.lastName}
-              </Text>
-              <Text style={styles.profession}>
-                {profile.profession || 'Professional Service Provider'}
-              </Text>
-              <View style={styles.locationSection}>
-                <Icon name="location" size={14} color="#00f0a8" />
-                <Text style={styles.locationText}>
-                  {profile.location?.address || 'Location not set'}
-                </Text>
-              </View>
-            </View>
-
-            <View style={styles.actionButtons}>
-              <TouchableOpacity 
-                style={styles.secondaryButton}
-                onPress={onEditPress}
-              >
-                <Icon name="create-outline" size={18} color="#00f0a8" />
-                <Text style={styles.secondaryButtonText}>Edit</Text>
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={styles.primaryButton}
-                onPress={onMessagePress}
-              >
-                <Icon name="chatbubble" size={18} color="#000" />
-                <Text style={styles.primaryButtonText}>Message</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.iconButton}
-                onPress={onSharePress}
-              >
-                <Icon name="share-social" size={18} color="#00f0a8" />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* Optimization Score */}
-        {optimizationScore < 90 && (
-          <View style={styles.optimizationBanner}>
-            <Icon name="trending-up" size={16} color="#00f0a8" />
-            <Text style={styles.optimizationText}>
-              Profile Strength: {optimizationScore}% - Complete your profile for better visibility
-            </Text>
-          </View>
-        )}
-      </Animated.View>
-    </LinearGradient>
-  );
-};
-
-// SERVICE PRICING TIER COMPONENT
-const ServiceTier = ({ title, duration, price, description, isPopular, onSelect }) => {
-  return (
-    <TouchableOpacity 
-      style={[styles.tierCard, isPopular && styles.popularTier]}
-      onPress={onSelect}
-    >
-      {isPopular && (
-        <View style={styles.popularBadge}>
-          <Text style={styles.popularBadgeText}>MOST POPULAR</Text>
-        </View>
-      )}
-      
-      <Text style={styles.tierTitle}>{title}</Text>
-      <Text style={styles.tierDuration}>{duration}</Text>
-      
-      <View style={styles.priceSection}>
-        <Text style={styles.price}>${price}</Text>
-        {duration.includes('Hour') && (
-          <Text style={styles.priceUnit}>/hour</Text>
-        )}
-      </View>
-      
-      <Text style={styles.tierDescription}>{description}</Text>
-      
-      <TouchableOpacity style={styles.selectButton}>
-        <Text style={styles.selectButtonText}>Select</Text>
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
-};
-
-// PORTFOLIO GALLERY COMPONENT
-const PortfolioGallery = ({ images, onAddImage, onRemoveImage, editable }) => {
-  const renderPortfolioItem = ({ item, index }) => (
-    <View style={styles.portfolioItem}>
-      <Image source={{ uri: item.uri }} style={styles.portfolioImage} />
-      {editable && (
-        <TouchableOpacity 
-          style={styles.removePortfolioButton}
-          onPress={() => onRemoveImage(item.id)}
-        >
-          <Icon name="close-circle" size={20} color="#ff6b6b" />
-        </TouchableOpacity>
-      )}
-      {item.description && (
-        <Text style={styles.portfolioDescription} numberOfLines={2}>
-          {item.description}
-        </Text>
-      )}
-    </View>
-  );
-
-  return (
-    <View style={styles.portfolioSection}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Portfolio Gallery</Text>
-        {editable && (
-          <TouchableOpacity 
-            style={styles.addButton}
-            onPress={onAddImage}
-          >
-            <Icon name="add" size={20} color="#00f0a8" />
-            <Text style={styles.addButtonText}>Add Work</Text>
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {images.length > 0 ? (
-        <FlatList
-          horizontal
-          data={images}
-          renderItem={renderPortfolioItem}
-          keyExtractor={(item) => item.id}
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.portfolioList}
-        />
-      ) : (
-        <View style={styles.emptyPortfolio}>
-          <Icon name="images-outline" size={48} color="#666" />
-          <Text style={styles.emptyPortfolioText}>No portfolio items yet</Text>
-          <Text style={styles.emptyPortfolioSubtext}>
-            Showcase your best work to attract more clients
-          </Text>
-        </View>
-      )}
-    </View>
-  );
-};
-
-// TAB NAVIGATION COMPONENT
-const ProfileTabs = ({ activeTab, onTabChange }) => {
-  const tabs = [
-    { id: 'about', label: 'About', icon: 'person' },
-    { id: 'availability', label: 'Availability', icon: 'calendar' },
-    { id: 'experience', label: 'Experience', icon: 'briefcase' },
-    { id: 'reviews', label: 'Reviews', icon: 'star' },
-    { id: 'portfolio', label: 'Portfolio', icon: 'images' }
-  ];
-
-  return (
-    <View style={styles.tabsContainer}>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.tabsScrollContent}
-      >
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[
-              styles.tab,
-              activeTab === tab.id && styles.activeTab
-            ]}
-            onPress={() => onTabChange(tab.id)}
-          >
-            <Icon 
-              name={activeTab === tab.id ? tab.icon : `${tab.icon}-outline`} 
-              size={16} 
-              color={activeTab === tab.id ? '#00f0a8' : '#666'} 
-            />
-            <Text style={[
-              styles.tabText,
-              activeTab === tab.id && styles.activeTabText
-            ]}>
-              {tab.label}
-            </Text>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
-    </View>
-  );
-};
-
-// MAIN PROFESSIONAL PROFILE SCREEN
-export default function ProfessionalProfileScreen({ navigation, route }) {
-  const { globalUser, updateGlobalUser } = useContext(AppContext);
-  
-  // Initialize professional profile state
-  const {
-    profile,
-    activeTab,
-    setActiveTab,
-    editing,
-    setEditing,
-    imageUploading,
-    setImageUploading,
-    updateProfile,
-    updateService
-  } = useProfessionalProfile({
+// REAL-TIME ENTERPRISE STATE MANAGEMENT
+const useRealTimeProfile = () => {
+  const [profile, setProfile] = useState({
+    id: 'user_001',
     firstName: 'James',
     lastName: 'Carter',
+    displayName: 'James Carter',
     profession: 'Best Electrician',
+    userType: 'skilled', // 'skilled', 'farmer', 'client'
     profileImage: null,
     bio: 'James Carter is a certified electrician with 8 years of experience. He specializes in residential and commercial wiring, completing numerous projects from home rewiring to large-scale commercial installations.',
     experienceYears: 8,
     rating: 4.9,
     completedProjects: 150,
     location: null,
-    skills: ['Electrical Wiring', 'Commercial Installation', 'Residential Repair', 'Safety Inspection'],
-    services: [
+    contactInfo: {
+      phone: '+1 (555) 123-4567',
+      email: 'james.carter@example.com'
+    },
+    // Dynamic skills based on user type
+    skills: [
       {
-        id: '1',
-        type: 'electrician',
-        title: 'Electrical Services',
-        description: 'Professional electrical wiring and repair services'
+        id: 'skill_1',
+        name: 'Electrical Wiring',
+        category: 'electrical',
+        level: 'expert',
+        years: 8,
+        certified: true
       }
     ],
+    // Professional services
+    services: [
+      {
+        id: 'service_1',
+        title: 'Electrical Installation',
+        description: 'Professional electrical wiring and installation',
+        category: 'electrical',
+        basePrice: 159,
+        duration: '1-4 hours',
+        popular: true
+      }
+    ],
+    // Portfolio with real images
     portfolio: [],
-    certifications: ['Certified Electrician', 'Safety Certified'],
-    hourlyRate: 159,
+    // Certifications and credentials
+    certifications: [
+      {
+        id: 'cert_1',
+        name: 'Certified Electrician',
+        issuer: 'National Electrical Association',
+        year: 2016,
+        verified: true
+      }
+    ],
+    // Availability schedule
     availability: {
-      monday: { available: true, hours: '9:00 AM - 6:00 PM' },
-      tuesday: { available: true, hours: '9:00 AM - 6:00 PM' },
-      wednesday: { available: true, hours: '9:00 AM - 6:00 PM' },
-      thursday: { available: true, hours: '9:00 AM - 6:00 PM' },
-      friday: { available: true, hours: '9:00 AM - 5:00 PM' },
-      saturday: { available: false, hours: 'Not Available' },
-      sunday: { available: false, hours: 'Not Available' }
+      monday: { available: true, start: '09:00', end: '18:00' },
+      tuesday: { available: true, start: '09:00', end: '18:00' },
+      wednesday: { available: true, start: '09:00', end: '18:00' },
+      thursday: { available: true, start: '09:00', end: '18:00' },
+      friday: { available: true, start: '09:00', end: '17:00' },
+      saturday: { available: false, start: '00:00', end: '00:00' },
+      sunday: { available: false, start: '00:00', end: '00:00' }
     },
-    isAvailable: true
+    // Farmer-specific fields
+    farmDetails: {
+      farmName: '',
+      farmSize: 0, // hectares
+      mainCrops: [],
+      farmType: '', // dairy, crop, poultry, etc.
+      equipment: [],
+      livestock: [],
+      certifications: [],
+      irrigationSystems: [],
+      soilType: ''
+    },
+    // Client-specific fields
+    clientDetails: {
+      companyName: '',
+      industry: '',
+      projectTypes: [],
+      budgetRange: { min: 0, max: 0 },
+      timeline: '',
+      serviceNeeds: []
+    },
+    // Real-time status
+    isAvailable: true,
+    lastUpdated: new Date().toISOString(),
+    profileCompleteness: 85
   });
 
-  const { getServiceTiers } = usePricingEngine(
-    'skilled', 
-    profile.experienceYears, 
-    profile.rating
-  );
-  
-  const { optimizationScore, improvementTips } = useProfileOptimization(profile);
+  const [editing, setEditing] = useState(false);
+  const [activeTab, setActiveTab] = useState('about');
+  const [saving, setSaving] = useState(false);
 
-  const serviceTiers = getServiceTiers('electrician');
-
-  // Handler functions
-  const handleEditProfile = () => {
-    setEditing(!editing);
-  };
-
-  const handleShareProfile = async () => {
-    try {
-      await Share.share({
-        message: `Check out ${profile.firstName} ${profile.lastName}'s professional profile!`,
-        url: 'https://vsxchangeza.com/profile',
-        title: `${profile.firstName} ${profile.lastName}'s Profile`
-      });
-    } catch (error) {
-      console.warn('Share failed:', error);
-    }
-  };
-
-  const handleMessage = () => {
-    navigation.navigate('Messages', { 
-      recipient: `${profile.firstName} ${profile.lastName}`,
-      profileId: profile.id 
-    });
-  };
-
-  const handleUploadImage = async (type = 'profile') => {
-    try {
-      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('Permission Required', 'Need camera roll access to upload images');
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        allowsEditing: type === 'profile',
-        allowsMultipleSelection: type !== 'profile',
-        aspect: type === 'profile' ? [1, 1] : [4, 3],
-        quality: 0.8,
-      });
-
-      if (!result.canceled && result.assets) {
-        setImageUploading(true);
-        
-        const processedImages = await Promise.all(
-          result.assets.map(async (asset) => {
-            // Simulate image processing
-            await new Promise(resolve => setTimeout(resolve, 500));
-            
-            return {
-              uri: asset.uri,
-              id: Date.now().toString(),
-              description: '',
-              timestamp: new Date().toISOString()
-            };
-          })
-        );
-
-        if (type === 'profile') {
-          updateProfile({ profileImage: processedImages[0].uri });
-        } else {
-          updateProfile({ 
-            portfolio: [...profile.portfolio, ...processedImages] 
-          });
-        }
-        
-        setImageUploading(false);
-        Vibration.vibrate(50);
-      }
-    } catch (error) {
-      setImageUploading(false);
-      Alert.alert('Upload Failed', 'Please try again');
-    }
-  };
-
-  const handleRemovePortfolioImage = (imageId) => {
+  // Real-time update function
+  const updateProfile = useCallback((updates) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    updateProfile({
-      portfolio: profile.portfolio.filter(img => img.id !== imageId)
-    });
+    setProfile(prev => ({
+      ...prev,
+      ...updates,
+      lastUpdated: new Date().toISOString(),
+      displayName: `${updates.firstName || prev.firstName} ${updates.lastName || prev.lastName}`.trim()
+    }));
+  }, []);
+
+  // Update nested objects
+  const updateFarmDetails = useCallback((updates) => {
+    setProfile(prev => ({
+      ...prev,
+      farmDetails: { ...prev.farmDetails, ...updates },
+      lastUpdated: new Date().toISOString()
+    }));
+  }, []);
+
+  const updateClientDetails = useCallback((updates) => {
+    setProfile(prev => ({
+      ...prev,
+      clientDetails: { ...prev.clientDetails, ...updates },
+      lastUpdated: new Date().toISOString()
+    }));
+  }, []);
+
+  const updateContactInfo = useCallback((updates) => {
+    setProfile(prev => ({
+      ...prev,
+      contactInfo: { ...prev.contactInfo, ...updates },
+      lastUpdated: new Date().toISOString()
+    }));
+  }, []);
+
+  // Skill management
+  const addSkill = useCallback((skill) => {
+    const newSkill = {
+      id: `skill_${Date.now()}`,
+      added: new Date().toISOString(),
+      ...skill
+    };
+    setProfile(prev => ({
+      ...prev,
+      skills: [...prev.skills, newSkill],
+      lastUpdated: new Date().toISOString()
+    }));
+  }, []);
+
+  const removeSkill = useCallback((skillId) => {
+    setProfile(prev => ({
+      ...prev,
+      skills: prev.skills.filter(skill => skill.id !== skillId),
+      lastUpdated: new Date().toISOString()
+    }));
+  }, []);
+
+  // Service management
+  const addService = useCallback((service) => {
+    const newService = {
+      id: `service_${Date.now()}`,
+      ...service
+    };
+    setProfile(prev => ({
+      ...prev,
+      services: [...prev.services, newService],
+      lastUpdated: new Date().toISOString()
+    }));
+  }, []);
+
+  const updateService = useCallback((serviceId, updates) => {
+    setProfile(prev => ({
+      ...prev,
+      services: prev.services.map(service =>
+        service.id === serviceId ? { ...service, ...updates } : service
+      ),
+      lastUpdated: new Date().toISOString()
+    }));
+  }, []);
+
+  // Portfolio management
+  const addPortfolioItem = useCallback((item) => {
+    const newItem = {
+      id: `portfolio_${Date.now()}`,
+      uploaded: new Date().toISOString(),
+      ...item
+    };
+    setProfile(prev => ({
+      ...prev,
+      portfolio: [...prev.portfolio, newItem],
+      lastUpdated: new Date().toISOString()
+    }));
+  }, []);
+
+  const removePortfolioItem = useCallback((itemId) => {
+    setProfile(prev => ({
+      ...prev,
+      portfolio: prev.portfolio.filter(item => item.id !== itemId),
+      lastUpdated: new Date().toISOString()
+    }));
+  }, []);
+
+  // Save to backend
+  const saveProfile = async () => {
+    setSaving(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Save to local storage
+      await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
+      
+      // In real app, would save to backend
+      console.log('Profile saved:', profile);
+      
+      setSaving(false);
+      return true;
+    } catch (error) {
+      console.error('Save failed:', error);
+      setSaving(false);
+      return false;
+    }
   };
 
-  const handleLocationUpdate = async () => {
+  return {
+    profile,
+    editing,
+    setEditing,
+    activeTab,
+    setActiveTab,
+    saving,
+    updateProfile,
+    updateFarmDetails,
+    updateClientDetails,
+    updateContactInfo,
+    addSkill,
+    removeSkill,
+    addService,
+    updateService,
+    addPortfolioItem,
+    removePortfolioItem,
+    saveProfile
+  };
+};
+
+// INTELLIGENT CATEGORY SYSTEM
+const useCategorySystem = (userType) => {
+  const skillCategories = {
+    skilled: {
+      electrical: ['Residential Wiring', 'Commercial Installation', 'Safety Inspection', 'Panel Upgrade', 'Lighting Installation'],
+      plumbing: ['Pipe Installation', 'Leak Repair', 'Water Heater', 'Drain Cleaning', 'Fixture Installation'],
+      carpentry: ['Framing', 'Finishing', 'Cabinet Making', 'Furniture Building', 'Structural Repair'],
+      mechanical: ['Engine Repair', 'Equipment Maintenance', 'Diagnostic', 'Preventive Maintenance', 'Parts Replacement'],
+      construction: ['Renovation', 'New Construction', 'Demolition', 'Structural Work', 'Project Management'],
+      technology: ['Network Setup', 'Computer Repair', 'Smart Home', 'Security Systems', 'Software Installation']
+    },
+    farmer: {
+      crops: ['Maize/Corn', 'Wheat', 'Soybeans', 'Vegetables', 'Fruits', 'Grains', 'Organic Crops'],
+      livestock: ['Cattle', 'Poultry', 'Swine', 'Dairy', 'Sheep/Goats', 'Fish Farming'],
+      equipment: ['Tractors', 'Harvesters', 'Irrigation Systems', 'Planters', 'Sprayers', 'Balers'],
+      specialties: ['Organic Farming', 'Hydroponics', 'Precision Agriculture', 'Sustainable Farming', 'Greenhouse'],
+      skills: ['Soil Analysis', 'Crop Rotation', 'Pest Management', 'Irrigation Management', 'Harvest Planning']
+    },
+    client: {
+      projectTypes: ['Residential', 'Commercial', 'Industrial', 'Agricultural', 'Renovation', 'New Construction'],
+      serviceNeeds: ['Electrical', 'Plumbing', 'Carpentry', 'Mechanical', 'Construction', 'Technology'],
+      timelines: ['Immediate', '1-2 Weeks', '1 Month', '3 Months', '6 Months+'],
+      budgets: ['Under $1k', '$1k-$5k', '$5k-$10k', '$10k-$25k', '$25k+']
+    }
+  };
+
+  const getCategories = useCallback(() => {
+    return skillCategories[userType] || {};
+  }, [userType]);
+
+  const getSubcategories = useCallback((category) => {
+    return skillCategories[userType]?.[category] || [];
+  }, [userType]);
+
+  return {
+    getCategories,
+    getSubcategories,
+    skillCategories
+  };
+};
+
+// REAL-TIME EDITING COMPONENTS
+const EditableField = ({ 
+  value, 
+  onSave, 
+  placeholder, 
+  multiline = false, 
+  style,
+  type = 'text',
+  options = []
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(value);
+
+  const handleSave = () => {
+    onSave(tempValue);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setTempValue(value);
+    setIsEditing(false);
+  };
+
+  if (!isEditing) {
+    return (
+      <TouchableOpacity 
+        style={[styles.viewField, style]}
+        onPress={() => setIsEditing(true)}
+      >
+        <Text style={styles.viewFieldText}>
+          {value || placeholder}
+        </Text>
+        <Icon name="create-outline" size={16} color="#00f0a8" />
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={[styles.editFieldContainer, style]}>
+      {type === 'select' ? (
+        <ScrollView style={styles.optionsContainer}>
+          {options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.optionItem,
+                tempValue === option && styles.optionItemSelected
+              ]}
+              onPress={() => setTempValue(option)}
+            >
+              <Text style={styles.optionText}>{option}</Text>
+              {tempValue === option && (
+                <Icon name="checkmark" size={16} color="#00f0a8" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : (
+        <TextInput
+          style={[styles.editField, multiline && styles.multilineField]}
+          value={tempValue}
+          onChangeText={setTempValue}
+          placeholder={placeholder}
+          multiline={multiline}
+          numberOfLines={multiline ? 4 : 1}
+        />
+      )}
+      
+      <View style={styles.editButtons}>
+        <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+// USER TYPE SELECTOR WITH REAL-TIME UPDATES
+const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
+  const userTypes = [
+    {
+      type: 'skilled',
+      icon: 'construct',
+      title: 'Skilled Professional',
+      description: 'Offer vocational services and expertise',
+      color: '#00f0a8'
+    },
+    {
+      type: 'farmer',
+      icon: 'leaf',
+      title: 'Farmer',
+      description: 'Agricultural services and farm management',
+      color: '#4CD964'
+    },
+    {
+      type: 'client',
+      icon: 'business',
+      title: 'Client',
+      description: 'Find and hire skilled professionals',
+      color: '#007AFF'
+    }
+  ];
+
+  if (!editing) {
+    const current = userTypes.find(t => t.type === currentType);
+    return (
+      <View style={styles.userTypeDisplay}>
+        <View style={[styles.typeIcon, { backgroundColor: current.color }]}>
+          <Icon name={current.icon} size={20} color="#000" />
+        </View>
+        <View>
+          <Text style={styles.typeTitle}>{current.title}</Text>
+          <Text style={styles.typeDescription}>{current.description}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.userTypeSelector}>
+      <Text style={styles.selectorTitle}>Select Your Role</Text>
+      <View style={styles.typeOptions}>
+        {userTypes.map((userType) => (
+          <TouchableOpacity
+            key={userType.type}
+            style={[
+              styles.typeOption,
+              currentType === userType.type && styles.typeOptionSelected,
+              { borderColor: userType.color }
+            ]}
+            onPress={() => onTypeChange(userType.type)}
+          >
+            <View style={[styles.typeOptionIcon, { backgroundColor: userType.color }]}>
+              <Icon name={userType.icon} size={24} color="#000" />
+            </View>
+            <Text style={styles.typeOptionTitle}>{userType.title}</Text>
+            <Text style={styles.typeOptionDescription}>{userType.description}</Text>
+            {currentType === userType.type && (
+              <View style={styles.selectedBadge}>
+                <Icon name="checkmark" size={16} color="#000" />
+              </View>
+            )}
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+// DYNAMIC SKILL MANAGER BASED ON USER TYPE
+const SkillManager = ({ 
+  skills, 
+  userType, 
+  onAddSkill, 
+  onRemoveSkill, 
+  editing 
+}) => {
+  const { getCategories, getSubcategories } = useCategorySystem(userType);
+  const [showAddSkill, setShowAddSkill] = useState(false);
+  const [newSkill, setNewSkill] = useState({
+    name: '',
+    category: '',
+    subcategory: '',
+    level: 'intermediate',
+    years: 1
+  });
+
+  const categories = getCategories();
+  const subcategories = newSkill.category ? getSubcategories(newSkill.category) : [];
+
+  const handleAddSkill = () => {
+    if (!newSkill.name || !newSkill.category) {
+      Alert.alert('Error', 'Please fill in skill name and category');
+      return;
+    }
+
+    onAddSkill(newSkill);
+    setNewSkill({ name: '', category: '', subcategory: '', level: 'intermediate', years: 1 });
+    setShowAddSkill(false);
+  };
+
+  const SkillChip = ({ skill, onRemove }) => (
+    <View style={styles.skillChip}>
+      <View style={styles.skillInfo}>
+        <Text style={styles.skillName}>{skill.name}</Text>
+        <Text style={styles.skillMeta}>
+          {skill.category} • {skill.level} • {skill.years} year{skill.years !== 1 ? 's' : ''}
+        </Text>
+      </View>
+      {editing && (
+        <TouchableOpacity onPress={onRemove} style={styles.removeSkillButton}>
+          <Icon name="close" size={16} color="#ff6b6b" />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  return (
+    <View style={styles.skillManager}>
+      <View style={styles.skillHeader}>
+        <Text style={styles.skillTitle}>
+          {userType === 'skilled' && 'Skills & Expertise'}
+          {userType === 'farmer' && 'Farm Specialties'}
+          {userType === 'client' && 'Service Interests'}
+        </Text>
+        {editing && (
+          <TouchableOpacity 
+            style={styles.addSkillButton}
+            onPress={() => setShowAddSkill(true)}
+          >
+            <Icon name="add" size={20} color="#00f0a8" />
+            <Text style={styles.addSkillText}>Add</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={styles.skillsGrid}>
+        {skills.map((skill) => (
+          <SkillChip 
+            key={skill.id} 
+            skill={skill} 
+            onRemove={() => onRemoveSkill(skill.id)} 
+          />
+        ))}
+        
+        {skills.length === 0 && (
+          <View style={styles.noSkills}>
+            <Icon name="construct-outline" size={32} color="#666" />
+            <Text style={styles.noSkillsText}>No skills added yet</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Add Skill Modal */}
+      <Modal visible={showAddSkill} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add New Skill</Text>
+              <TouchableOpacity onPress={() => setShowAddSkill(false)}>
+                <Icon name="close" size={24} color="#00f0a8" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Skill Name</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={newSkill.name}
+                  onChangeText={(text) => setNewSkill(prev => ({ ...prev, name: text }))}
+                  placeholder="e.g., Electrical Wiring, Crop Management"
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Category</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {Object.keys(categories).map((category) => (
+                    <TouchableOpacity
+                      key={category}
+                      style={[
+                        styles.categoryChip,
+                        newSkill.category === category && styles.categoryChipSelected
+                      ]}
+                      onPress={() => setNewSkill(prev => ({ ...prev, category, subcategory: '' }))}
+                    >
+                      <Text style={styles.categoryChipText}>{category}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {newSkill.category && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Specialization</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {subcategories.map((subcat) => (
+                      <TouchableOpacity
+                        key={subcat}
+                        style={[
+                          styles.subcategoryChip,
+                          newSkill.subcategory === subcat && styles.subcategoryChipSelected
+                        ]}
+                        onPress={() => setNewSkill(prev => ({ ...prev, subcategory: subcat }))}
+                      >
+                        <Text style={styles.subcategoryChipText}>{subcat}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Experience Level</Text>
+                <View style={styles.levelOptions}>
+                  {['beginner', 'intermediate', 'advanced', 'expert'].map((level) => (
+                    <TouchableOpacity
+                      key={level}
+                      style={[
+                        styles.levelChip,
+                        newSkill.level === level && styles.levelChipSelected
+                      ]}
+                      onPress={() => setNewSkill(prev => ({ ...prev, level }))}
+                    >
+                      <Text style={styles.levelChipText}>
+                        {level.charAt(0).toUpperCase() + level.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Years of Experience</Text>
+                <View style={styles.yearsSelector}>
+                  {[1,2,3,5,8,10,15].map((years) => (
+                    <TouchableOpacity
+                      key={years}
+                      style={[
+                        styles.yearChip,
+                        newSkill.years === years && styles.yearChipSelected
+                      ]}
+                      onPress={() => setNewSkill(prev => ({ ...prev, years }))}
+                    >
+                      <Text style={styles.yearChipText}>{years}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.cancelModalButton}
+                onPress={() => setShowAddSkill(false)}
+              >
+                <Text style={styles.cancelModalText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={styles.saveModalButton}
+                onPress={handleAddSkill}
+              >
+                <Text style={styles.saveModalText}>Add Skill</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
+// FARMER-SPECIFIC COMPONENTS
+const FarmerDetailsManager = ({ farmDetails, onUpdate, editing }) => {
+  if (!editing) {
+    return (
+      <View style={styles.detailsSection}>
+        <Text style={styles.sectionTitle}>Farm Details</Text>
+        <View style={styles.detailsGrid}>
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>Farm Name</Text>
+            <Text style={styles.detailValue}>{farmDetails.farmName || 'Not set'}</Text>
+          </View>
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>Farm Size</Text>
+            <Text style={styles.detailValue}>{farmDetails.farmSize || 0} hectares</Text>
+          </View>
+          <View style={styles.detailItem}>
+            <Text style={styles.detailLabel}>Farm Type</Text>
+            <Text style={styles.detailValue}>{farmDetails.farmType || 'Not specified'}</Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.detailsSection}>
+      <Text style={styles.sectionTitle}>Farm Details</Text>
+      
+      <View style={styles.formGroup}>
+        <Text style={styles.formLabel}>Farm Name</Text>
+        <EditableField
+          value={farmDetails.farmName}
+          onSave={(value) => onUpdate({ farmName: value })}
+          placeholder="Enter farm name"
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.formLabel}>Farm Size (hectares)</Text>
+        <EditableField
+          value={farmDetails.farmSize?.toString()}
+          onSave={(value) => onUpdate({ farmSize: parseFloat(value) || 0 })}
+          placeholder="Enter farm size"
+          type="number"
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.formLabel}>Farm Type</Text>
+        <EditableField
+          value={farmDetails.farmType}
+          onSave={(value) => onUpdate({ farmType: value })}
+          placeholder="Select farm type"
+          type="select"
+          options={['Crop Farm', 'Dairy Farm', 'Poultry Farm', 'Mixed Farm', 'Organic Farm', 'Vineyard', 'Orchard']}
+        />
+      </View>
+
+      <View style={styles.formGroup}>
+        <Text style={styles.formLabel}>Main Crops</Text>
+        <Text style={styles.formHelp}>
+          Add crops in the Skills section above
+        </Text>
+      </View>
+    </View>
+  );
+};
+
+// LOCATION MANAGER WITH REAL-TIME UPDATES
+const LocationManager = ({ location, onUpdate, editing }) => {
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  const getCurrentLocation = async () => {
+    setGettingLocation(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Location permission required');
+        Alert.alert('Permission denied', 'Location permission is required');
         return;
       }
 
-      const location = await Location.getCurrentPositionAsync({});
-      const address = await Location.reverseGeocodeAsync({
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude
+      const locationData = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High
       });
 
-      const locationData = {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-        address: address[0] ? `${address[0].city}, ${address[0].region}` : 'Location set',
-        timestamp: new Date().toISOString()
-      };
+      const { latitude, longitude } = locationData.coords;
+      
+      const address = await Location.reverseGeocodeAsync({ latitude, longitude });
+      const readableAddress = address[0] 
+        ? `${address[0].name}, ${address[0].city}, ${address[0].region}`
+        : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
 
-      updateProfile({ location: locationData });
+      onUpdate({
+        latitude,
+        longitude,
+        address: readableAddress,
+        lastUpdated: new Date().toISOString()
+      });
+
+      Alert.alert('Success', 'Location updated successfully');
     } catch (error) {
-      console.warn('Location update failed:', error);
+      Alert.alert('Error', 'Failed to get location');
+    } finally {
+      setGettingLocation(false);
     }
   };
 
-  // Render active tab content
-  const renderTabContent = () => {
+  const handleManualLocation = () => {
+    Alert.prompt(
+      'Enter Location',
+      'Type your address or location:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Save', 
+          onPress: (address) => {
+            if (address) {
+              onUpdate({
+                address: address.trim(),
+                latitude: null,
+                longitude: null,
+                lastUpdated: new Date().toISOString()
+              });
+            }
+          }
+        }
+      ]
+    );
+  };
+
+  return (
+    <View style={styles.locationSection}>
+      <Text style={styles.sectionTitle}>Location</Text>
+      
+      {location ? (
+        <View style={styles.locationDisplay}>
+          <Icon name="location" size={20} color="#00f0a8" />
+          <View style={styles.locationInfo}>
+            <Text style={styles.locationAddress}>{location.address}</Text>
+            {location.latitude && (
+              <Text style={styles.locationCoords}>
+                {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+              </Text>
+            )}
+          </View>
+        </View>
+      ) : (
+        <Text style={styles.noLocation}>No location set</Text>
+      )}
+
+      {editing && (
+        <View style={styles.locationActions}>
+          <TouchableOpacity 
+            style={styles.locationButton}
+            onPress={getCurrentLocation}
+            disabled={gettingLocation}
+          >
+            {gettingLocation ? (
+              <ActivityIndicator color="#000" size="small" />
+            ) : (
+              <Icon name="navigate" size={18} color="#000" />
+            )}
+            <Text style={styles.locationButtonText}>
+              {gettingLocation ? 'Getting Location...' : 'Use Current Location'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.locationButton, styles.secondaryLocationButton]}
+            onPress={handleManualLocation}
+          >
+            <Icon name="create" size={18} color="#00f0a8" />
+            <Text style={styles.secondaryLocationButtonText}>Enter Manually</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+};
+
+// MAIN PROFILE COMPONENT
+export default function AdvancedProfessionalProfileScreen({ navigation }) {
+  const {
+    profile,
+    editing,
+    setEditing,
+    activeTab,
+    setActiveTab,
+    saving,
+    updateProfile,
+    updateFarmDetails,
+    updateClientDetails,
+    updateContactInfo,
+    addSkill,
+    removeSkill,
+    addPortfolioItem,
+    removePortfolioItem,
+    saveProfile
+  } = useRealTimeProfile();
+
+  const { globalUser, updateGlobalUser } = useContext(AppContext);
+
+  // Save profile when editing is turned off
+  useEffect(() => {
+    if (!editing && profile.lastUpdated) {
+      saveProfile();
+      // Update global app state
+      updateGlobalUser(profile);
+    }
+  }, [editing, profile.lastUpdated]);
+
+  const handleSave = async () => {
+    const success = await saveProfile();
+    if (success) {
+      setEditing(false);
+      Alert.alert('Success', 'Profile updated successfully');
+    } else {
+      Alert.alert('Error', 'Failed to save profile');
+    }
+  };
+
+  const ProfileHeader = () => (
+    <LinearGradient colors={['#000', '#1a1a1a']} style={styles.header}>
+      <View style={styles.headerContent}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity onPress={() => navigation.goBack()}>
+            <Icon name="chevron-back" size={28} color="#00f0a8" />
+          </TouchableOpacity>
+          
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={[styles.editToggle, editing && styles.editToggleActive]}
+              onPress={() => setEditing(!editing)}
+            >
+              <Icon 
+                name={editing ? "checkmark" : "create-outline"} 
+                size={20} 
+                color="#00f0a8" 
+              />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.profileMain}>
+          <TouchableOpacity style={styles.avatarContainer}>
+            <Image 
+              source={{ uri: profile.profileImage || 'https://via.placeholder.com/120' }}
+              style={styles.avatar}
+            />
+            {editing && (
+              <View style={styles.avatarOverlay}>
+                <Icon name="camera" size={24} color="#fff" />
+              </View>
+            )}
+          </TouchableOpacity>
+
+          <View style={styles.profileInfo}>
+            <View style={styles.nameSection}>
+              {editing ? (
+                <>
+                  <EditableField
+                    value={profile.firstName}
+                    onSave={(value) => updateProfile({ firstName: value })}
+                    placeholder="First Name"
+                    style={styles.nameInput}
+                  />
+                  <EditableField
+                    value={profile.lastName}
+                    onSave={(value) => updateProfile({ lastName: value })}
+                    placeholder="Last Name"
+                    style={styles.nameInput}
+                  />
+                </>
+              ) : (
+                <>
+                  <Text style={styles.userName}>{profile.displayName}</Text>
+                  <Text style={styles.profession}>{profile.profession}</Text>
+                </>
+              )}
+            </View>
+
+            <View style={styles.stats}>
+              <View style={styles.stat}>
+                <Text style={styles.statNumber}>{profile.experienceYears}</Text>
+                <Text style={styles.statLabel}>Years</Text>
+              </View>
+              <View style={styles.stat}>
+                <Text style={styles.statNumber}>{profile.rating}</Text>
+                <Text style={styles.statLabel}>Rating</Text>
+              </View>
+              <View style={styles.stat}>
+                <Text style={styles.statNumber}>{profile.completedProjects}+</Text>
+                <Text style={styles.statLabel}>Projects</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <UserTypeSelector
+          currentType={profile.userType}
+          onTypeChange={(type) => updateProfile({ userType: type })}
+          editing={editing}
+        />
+      </View>
+    </LinearGradient>
+  );
+
+  const TabContent = () => {
     switch (activeTab) {
       case 'about':
         return (
-          <View style={styles.tabContent}>
-            <Text style={styles.bioTitle}>About {profile.firstName} {profile.lastName}</Text>
-            <Text style={styles.bioText}>{profile.bio}</Text>
-            
-            <View style={styles.skillsSection}>
-              <Text style={styles.skillsTitle}>Skills & Expertise</Text>
-              <View style={styles.skillsGrid}>
-                {profile.skills.map((skill, index) => (
-                  <View key={index} style={styles.skillTag}>
-                    <Text style={styles.skillText}>{skill}</Text>
-                  </View>
-                ))}
-              </View>
+          <ScrollView style={styles.tabContent}>
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Professional Bio</Text>
+              <EditableField
+                value={profile.bio}
+                onSave={(value) => updateProfile({ bio: value })}
+                placeholder="Tell us about your professional background and expertise..."
+                multiline={true}
+                style={styles.bioField}
+              />
             </View>
 
-            <View style={styles.certificationsSection}>
-              <Text style={styles.certificationsTitle}>Certifications</Text>
-              {profile.certifications.map((cert, index) => (
-                <View key={index} style={styles.certificationItem}>
-                  <Icon name="shield-checkmark" size={16} color="#00f0a8" />
-                  <Text style={styles.certificationText}>{cert}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        );
+            <SkillManager
+              skills={profile.skills}
+              userType={profile.userType}
+              onAddSkill={addSkill}
+              onRemoveSkill={removeSkill}
+              editing={editing}
+            />
 
-      case 'availability':
-        return (
-          <View style={styles.tabContent}>
-            <View style={styles.availabilityHeader}>
-              <Text style={styles.availabilityTitle}>Current Availability</Text>
-              <View style={styles.availabilityStatus}>
-                <View style={[
-                  styles.statusIndicator,
-                  profile.isAvailable ? styles.statusAvailable : styles.statusBusy
-                ]} />
-                <Text style={styles.statusText}>
-                  {profile.isAvailable ? 'Available for Work' : 'Currently Busy'}
-                </Text>
-              </View>
-            </View>
+            {profile.userType === 'farmer' && (
+              <FarmerDetailsManager
+                farmDetails={profile.farmDetails}
+                onUpdate={updateFarmDetails}
+                editing={editing}
+              />
+            )}
 
-            <View style={styles.scheduleSection}>
-              {Object.entries(profile.availability).map(([day, schedule]) => (
-                <View key={day} style={styles.scheduleItem}>
-                  <Text style={styles.dayText}>
-                    {day.charAt(0).toUpperCase() + day.slice(1)}
-                  </Text>
-                  <Text style={[
-                    styles.scheduleText,
-                    !schedule.available && styles.scheduleUnavailable
-                  ]}>
-                    {schedule.hours}
-                  </Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        );
-
-      case 'experience':
-        return (
-          <View style={styles.tabContent}>
-            <View style={styles.experienceStats}>
-              <View style={styles.experienceStat}>
-                <Text style={styles.experienceStatNumber}>{profile.experienceYears}</Text>
-                <Text style={styles.experienceStatLabel}>Years Experience</Text>
-              </View>
-              <View style={styles.experienceStat}>
-                <Text style={styles.experienceStatNumber}>{profile.completedProjects}+</Text>
-                <Text style={styles.experienceStatLabel}>Projects Completed</Text>
-              </View>
-              <View style={styles.experienceStat}>
-                <Text style={styles.experienceStatNumber}>{profile.rating}</Text>
-                <Text style={styles.experienceStatLabel}>Client Rating</Text>
-              </View>
-            </View>
-
-            <View style={styles.serviceTiers}>
-              <Text style={styles.pricingTitle}>Service Pricing</Text>
-              <View style={styles.tiersGrid}>
-                <ServiceTier
-                  title="Hourly Service"
-                  duration="1 Hour"
-                  price={serviceTiers.hourly}
-                  description="Perfect for small repairs and consultations"
-                  onSelect={() => console.log('Hourly selected')}
-                />
-                <ServiceTier
-                  title="Half Day"
-                  duration="4 Hours"
-                  price={serviceTiers.halfDay}
-                  description="Ideal for medium-sized projects"
-                  isPopular={true}
-                  onSelect={() => console.log('Half day selected')}
-                />
-                <ServiceTier
-                  title="Full Day"
-                  duration="8 Hours"
-                  price={serviceTiers.fullDay}
-                  description="Complete project solutions"
-                  onSelect={() => console.log('Full day selected')}
-                />
-              </View>
-            </View>
-          </View>
+            <LocationManager
+              location={profile.location}
+              onUpdate={(location) => updateProfile({ location })}
+              editing={editing}
+            />
+          </ScrollView>
         );
 
       case 'portfolio':
         return (
           <View style={styles.tabContent}>
-            <PortfolioGallery
-              images={profile.portfolio}
-              onAddImage={() => handleUploadImage('portfolio')}
-              onRemoveImage={handleRemovePortfolioImage}
-              editable={editing}
-            />
-          </View>
-        );
-
-      case 'reviews':
-        return (
-          <View style={styles.tabContent}>
-            <View style={styles.ratingOverview}>
-              <Text style={styles.ratingNumber}>{profile.rating}</Text>
-              <View style={styles.ratingStars}>
-                {[1,2,3,4,5].map((star) => (
-                  <Icon 
-                    key={star}
-                    name={star <= Math.floor(profile.rating) ? "star" : "star-outline"} 
-                    size={20} 
-                    color="#FFD700" 
-                  />
-                ))}
-              </View>
-              <Text style={styles.ratingCount}>Based on {profile.completedProjects} projects</Text>
-            </View>
-            
-            <View style={styles.reviewsPlaceholder}>
-              <Icon name="chatbubble-ellipses" size={48} color="#666" />
-              <Text style={styles.reviewsPlaceholderText}>Customer reviews will appear here</Text>
-              <Text style={styles.reviewsPlaceholderSubtext}>
-                As you complete projects, clients can leave reviews and ratings
-              </Text>
-            </View>
+            <Text style={styles.sectionTitle}>Portfolio Gallery</Text>
+            {/* Portfolio implementation would go here */}
           </View>
         );
 
       default:
-        return null;
+        return (
+          <View style={styles.tabContent}>
+            <Text style={styles.sectionTitle}>{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)}</Text>
+            <Text style={styles.comingSoon}>More features coming soon...</Text>
+          </View>
+        );
     }
   };
 
@@ -758,50 +1039,33 @@ export default function ProfessionalProfileScreen({ navigation, route }) {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
       
-      {/* Professional Header */}
-      <ProfessionalHeader
-        profile={profile}
-        onEditPress={handleEditProfile}
-        onSharePress={handleShareProfile}
-        onMessagePress={handleMessage}
-        optimizationScore={optimizationScore}
-      />
+      <ProfileHeader />
+      
+      <View style={styles.tabs}>
+        {['about', 'portfolio', 'services', 'reviews'].map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            style={[styles.tab, activeTab === tab && styles.activeTab]}
+            onPress={() => setActiveTab(tab)}
+          >
+            <Text style={[styles.tabText, activeTab === tab && styles.activeTabText]}>
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-      {/* Tab Navigation */}
-      <ProfileTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-
-      {/* Main Content */}
-      <ScrollView 
-        style={styles.mainContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView 
+        style={styles.content} 
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
-        {renderTabContent()}
-        
-        {/* Improvement Tips */}
-        {improvementTips.length > 0 && optimizationScore < 80 && (
-          <View style={styles.improvementSection}>
-            <Text style={styles.improvementTitle}>Improve Your Profile</Text>
-            {improvementTips.slice(0, 2).map(tip => (
-              <View key={tip.id} style={styles.improvementTip}>
-                <Icon name="bulb" size={16} color="#00f0a8" />
-                <View style={styles.tipContent}>
-                  <Text style={styles.tipTitle}>{tip.title}</Text>
-                  <Text style={styles.tipDescription}>{tip.description}</Text>
-                </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </ScrollView>
+        <TabContent />
+      </KeyboardAvoidingView>
 
-      {/* Loading Overlay */}
-      {imageUploading && (
-        <View style={styles.loadingOverlay}>
+      {saving && (
+        <View style={styles.savingOverlay}>
           <ActivityIndicator size="large" color="#00f0a8" />
-          <Text style={styles.loadingText}>Processing Images...</Text>
+          <Text style={styles.savingText}>Saving Changes...</Text>
         </View>
       )}
     </SafeAreaView>
@@ -811,29 +1075,40 @@ export default function ProfessionalProfileScreen({ navigation, route }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
-  },
-  headerGradient: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    overflow: 'hidden',
+    backgroundColor: '#000',
   },
   header: {
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    paddingHorizontal: 20,
     paddingBottom: 20,
+  },
+  headerContent: {
+    paddingHorizontal: 20,
+  },
+  headerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  headerActions: {
+    flexDirection: 'row',
+  },
+  editToggle: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  editToggleActive: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
   },
   profileMain: {
     flexDirection: 'row',
-    marginBottom: 15,
-  },
-  avatarSection: {
     alignItems: 'center',
-    marginRight: 20,
+    marginBottom: 20,
   },
   avatarContainer: {
     position: 'relative',
-    marginBottom: 15,
+    marginRight: 20,
   },
   avatar: {
     width: 100,
@@ -842,59 +1117,15 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#00f0a8',
   },
-  onlineIndicator: {
-    position: 'absolute',
-    bottom: 5,
-    right: 5,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    backgroundColor: '#00f0a8',
-    borderWidth: 2,
-    borderColor: '#000',
-  },
-  verifiedBadge: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: '#00f0a8',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
+  avatarOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#000',
-  },
-  quickStats: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 15,
-    padding: 10,
-  },
-  statItem: {
-    alignItems: 'center',
-    paddingHorizontal: 8,
-  },
-  statNumber: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '800',
-    marginBottom: 2,
-  },
-  statLabel: {
-    color: '#666',
-    fontSize: 10,
-    fontWeight: '600',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginHorizontal: 5,
   },
   profileInfo: {
     flex: 1,
-    justifyContent: 'space-between',
   },
   nameSection: {
     marginBottom: 15,
@@ -909,97 +1140,125 @@ const styles = StyleSheet.create({
     color: '#00f0a8',
     fontSize: 16,
     fontWeight: '600',
+  },
+  nameInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
     marginBottom: 8,
   },
-  locationSection: {
+  stats: {
     flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  stat: {
     alignItems: 'center',
   },
-  locationText: {
-    color: '#666',
-    fontSize: 14,
-    marginLeft: 4,
+  statNumber: {
+    color: '#00f0a8',
+    fontSize: 18,
+    fontWeight: '800',
   },
-  actionButtons: {
+  statLabel: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  userTypeDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 15,
+    borderRadius: 12,
+  },
+  typeIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  typeTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  typeDescription: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  userTypeSelector: {
+    marginBottom: 20,
+  },
+  selectorTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 15,
+  },
+  typeOptions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  primaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#00f0a8',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
+  typeOption: {
     flex: 1,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 15,
     marginHorizontal: 5,
-    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: 'transparent',
+    position: 'relative',
   },
-  primaryButtonText: {
-    color: '#000',
+  typeOptionSelected: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  typeOptionIcon: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  typeOptionTitle: {
+    color: '#fff',
     fontSize: 14,
     fontWeight: '700',
-    marginLeft: 6,
+    textAlign: 'center',
+    marginBottom: 4,
   },
-  secondaryButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#00f0a8',
-    marginHorizontal: 5,
-    justifyContent: 'center',
+  typeOptionDescription: {
+    color: '#666',
+    fontSize: 10,
+    textAlign: 'center',
+    lineHeight: 12,
   },
-  secondaryButtonText: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  iconButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+  selectedBadge: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#00f0a8',
+    width: 20,
+    height: 20,
+    borderRadius: 10,
     alignItems: 'center',
     justifyContent: 'center',
-    marginHorizontal: 5,
-    borderWidth: 1,
-    borderColor: '#00f0a8',
   },
-  optimizationBanner: {
+  tabs: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    padding: 12,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-  },
-  optimizationText: {
-    color: '#00f0a8',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 8,
-    flex: 1,
-  },
-  tabsContainer: {
     backgroundColor: '#000',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
-  tabsScrollContent: {
-    paddingHorizontal: 20,
-  },
   tab: {
-    flexDirection: 'row',
+    flex: 1,
+    paddingVertical: 15,
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginRight: 10,
   },
   activeTab: {
     borderBottomWidth: 2,
@@ -1009,262 +1268,122 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
     fontWeight: '600',
-    marginLeft: 6,
   },
   activeTabText: {
     color: '#00f0a8',
   },
-  mainContent: {
+  content: {
     flex: 1,
-    padding: 20,
   },
   tabContent: {
-    marginBottom: 20,
-  },
-  bioTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  bioText: {
-    color: '#ccc',
-    fontSize: 14,
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  skillsSection: {
-    marginBottom: 20,
-  },
-  skillsTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  skillsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  skillTag: {
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    marginRight: 8,
-    marginBottom: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-  },
-  skillText: {
-    color: '#00f0a8',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  certificationsSection: {
-    marginBottom: 20,
-  },
-  certificationsTitle: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  certificationItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
-  },
-  certificationText: {
-    color: '#ccc',
-    fontSize: 14,
-    marginLeft: 8,
-  },
-  availabilityHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  availabilityTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-  },
-  availabilityStatus: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statusIndicator: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    marginRight: 6,
-  },
-  statusAvailable: {
-    backgroundColor: '#00f0a8',
-  },
-  statusBusy: {
-    backgroundColor: '#ff6b6b',
-  },
-  statusText: {
-    color: '#ccc',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  scheduleSection: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    padding: 15,
-  },
-  scheduleItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  dayText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  scheduleText: {
-    color: '#00f0a8',
-    fontSize: 14,
-  },
-  scheduleUnavailable: {
-    color: '#666',
-  },
-  experienceStats: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    padding: 20,
-    marginBottom: 20,
-  },
-  experienceStat: {
-    alignItems: 'center',
-  },
-  experienceStatNumber: {
-    color: '#00f0a8',
-    fontSize: 24,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  experienceStatLabel: {
-    color: '#ccc',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  serviceTiers: {
-    marginBottom: 20,
-  },
-  pricingTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 15,
-  },
-  tiersGrid: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  tierCard: {
     flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    padding: 15,
-    marginHorizontal: 5,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    padding: 20,
   },
-  popularTier: {
-    borderColor: '#00f0a8',
-    backgroundColor: 'rgba(0,240,168,0.05)',
-    transform: [{ scale: 1.05 }],
-  },
-  popularBadge: {
-    position: 'absolute',
-    top: -10,
-    backgroundColor: '#00f0a8',
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  popularBadgeText: {
-    color: '#000',
-    fontSize: 8,
-    fontWeight: '900',
-  },
-  tierTitle: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 5,
-  },
-  tierDuration: {
-    color: '#666',
-    fontSize: 12,
-    marginBottom: 10,
-  },
-  priceSection: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 10,
-  },
-  price: {
-    color: '#00f0a8',
-    fontSize: 24,
-    fontWeight: '800',
-    marginRight: 4,
-  },
-  priceUnit: {
-    color: '#666',
-    fontSize: 12,
-  },
-  tierDescription: {
-    color: '#ccc',
-    fontSize: 10,
-    textAlign: 'center',
-    marginBottom: 15,
-    lineHeight: 12,
-  },
-  selectButton: {
-    backgroundColor: '#00f0a8',
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    borderRadius: 15,
-    width: '100%',
-    alignItems: 'center',
-  },
-  selectButtonText: {
-    color: '#000',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  portfolioSection: {
-    marginBottom: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
+  section: {
+    marginBottom: 25,
   },
   sectionTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
+    marginBottom: 15,
   },
-  addButton: {
+  bioField: {
+    minHeight: 100,
+  },
+  viewField: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 15,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  viewFieldText: {
+    color: '#fff',
+    fontSize: 16,
+    flex: 1,
+  },
+  editFieldContainer: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+    overflow: 'hidden',
+  },
+  editField: {
+    color: '#fff',
+    fontSize: 16,
+    padding: 15,
+    minHeight: 50,
+  },
+  multilineField: {
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  optionsContainer: {
+    maxHeight: 200,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  optionItemSelected: {
+    backgroundColor: 'rgba(0,240,168,0.1)',
+  },
+  optionText: {
+    color: '#fff',
+    fontSize: 16,
+  },
+  editButtons: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  cancelButton: {
+    flex: 1,
+    padding: 15,
+    alignItems: 'center',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.1)',
+  },
+  cancelButtonText: {
+    color: '#ff6b6b',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButton: {
+    flex: 1,
+    padding: 15,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
+  },
+  saveButtonText: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  skillManager: {
+    marginBottom: 25,
+  },
+  skillHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  skillTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  addSkillButton: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,240,168,0.1)',
@@ -1274,138 +1393,324 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(0,240,168,0.3)',
   },
-  addButtonText: {
+  addSkillText: {
     color: '#00f0a8',
     fontSize: 12,
     fontWeight: '600',
     marginLeft: 4,
   },
-  portfolioList: {
-    paddingVertical: 5,
+  skillsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
   },
-  portfolioItem: {
-    marginRight: 15,
-    width: 120,
-  },
-  portfolioImage: {
-    width: 120,
-    height: 120,
-    borderRadius: 12,
-    marginBottom: 8,
-  },
-  removePortfolioButton: {
-    position: 'absolute',
-    top: -5,
-    right: -5,
-    backgroundColor: '#000',
-    borderRadius: 10,
-  },
-  portfolioDescription: {
-    color: '#ccc',
-    fontSize: 10,
-    lineHeight: 12,
-  },
-  emptyPortfolio: {
+  skillChip: {
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 40,
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 20,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(0,240,168,0.3)',
+    minWidth: 140,
   },
-  emptyPortfolioText: {
+  skillInfo: {
+    flex: 1,
+  },
+  skillName: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  skillMeta: {
+    color: '#666',
+    fontSize: 10,
+    marginTop: 2,
+  },
+  removeSkillButton: {
+    padding: 4,
+  },
+  noSkills: {
+    alignItems: 'center',
+    paddingVertical: 20,
+    width: '100%',
+  },
+  noSkillsText: {
     color: '#666',
     fontSize: 14,
     marginTop: 8,
     fontStyle: 'italic',
   },
-  emptyPortfolioSubtext: {
-    color: '#666',
-    fontSize: 12,
-    textAlign: 'center',
-    marginTop: 4,
-  },
-  ratingOverview: {
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
+  },
+  modalContent: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    width: '90%',
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  modalBody: {
+    maxHeight: 400,
+    padding: 20,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  formGroup: {
     marginBottom: 20,
   },
-  ratingNumber: {
-    color: '#00f0a8',
-    fontSize: 48,
-    fontWeight: '800',
-    marginBottom: 10,
-  },
-  ratingStars: {
-    flexDirection: 'row',
+  formLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: 8,
   },
-  ratingCount: {
-    color: '#666',
-    fontSize: 14,
+  formInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
-  reviewsPlaceholder: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  reviewsPlaceholderText: {
-    color: '#666',
-    fontSize: 16,
-    marginTop: 12,
-    fontStyle: 'italic',
-  },
-  reviewsPlaceholderSubtext: {
+  formHelp: {
     color: '#666',
     fontSize: 12,
-    textAlign: 'center',
-    marginTop: 8,
-    paddingHorizontal: 20,
+    fontStyle: 'italic',
   },
-  improvementSection: {
-    backgroundColor: 'rgba(0,240,168,0.05)',
-    borderRadius: 12,
-    padding: 15,
+  categoryChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
     borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.2)',
+    borderColor: 'rgba(255,255,255,0.2)',
   },
-  improvementTitle: {
-    color: '#00f0a8',
-    fontSize: 16,
-    fontWeight: '700',
-    marginBottom: 10,
+  categoryChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
   },
-  improvementTip: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  categoryChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  subcategoryChip: {
     backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 12,
-    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 12,
+    marginRight: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+  },
+  subcategoryChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    borderColor: '#00f0a8',
+  },
+  subcategoryChipText: {
+    color: '#fff',
+    fontSize: 10,
+  },
+  levelOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  levelChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
     marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
-  tipContent: {
-    flex: 1,
-    marginLeft: 10,
+  levelChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
   },
-  tipTitle: {
+  levelChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'capitalize',
+  },
+  yearsSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  yearChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    borderRadius: 20,
+    marginRight: 8,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  yearChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  yearChipText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
-    marginBottom: 2,
   },
-  tipDescription: {
-    color: '#ccc',
+  cancelModalButton: {
+    flex: 1,
+    padding: 15,
+    alignItems: 'center',
+    borderRightWidth: 1,
+    borderRightColor: 'rgba(255,255,255,0.1)',
+  },
+  cancelModalText: {
+    color: '#ff6b6b',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveModalButton: {
+    flex: 1,
+    padding: 15,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.2)',
+  },
+  saveModalText: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  detailsSection: {
+    marginBottom: 25,
+  },
+  detailsGrid: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 15,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  detailLabel: {
+    color: '#666',
+    fontSize: 14,
+  },
+  detailValue: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  locationSection: {
+    marginBottom: 25,
+  },
+  locationDisplay: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 15,
+    borderRadius: 12,
+    marginBottom: 15,
+  },
+  locationInfo: {
+    flex: 1,
+    marginLeft: 12,
+  },
+  locationAddress: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  locationCoords: {
+    color: '#666',
     fontSize: 12,
-    lineHeight: 14,
+    marginTop: 2,
   },
-  loadingOverlay: {
+  noLocation: {
+    color: '#666',
+    fontSize: 16,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    padding: 20,
+  },
+  locationActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  locationButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#00f0a8',
+    padding: 15,
+    borderRadius: 12,
+    marginHorizontal: 5,
+  },
+  locationButtonText: {
+    color: '#000',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  secondaryLocationButton: {
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: '#00f0a8',
+  },
+  secondaryLocationButtonText: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
+    marginLeft: 8,
+  },
+  comingSoon: {
+    color: '#666',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 20,
+    fontStyle: 'italic',
+  },
+  savingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.8)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
   },
-  loadingText: {
+  savingText: {
     color: '#00f0a8',
     fontSize: 16,
     marginTop: 10,
   },
 });
-
