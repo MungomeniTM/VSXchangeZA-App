@@ -489,6 +489,194 @@ const useAdvancedEnterpriseProfile = () => {
   };
 };
 
+// ADVANCED IMAGE MANAGEMENT SYSTEM
+const useImageManager = () => {
+  const [uploading, setUploading] = useState(false);
+
+  const pickImage = useCallback(async (options = {}) => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Required', 'Camera roll access is needed');
+        return null;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: options.allowsEditing ?? true,
+        allowsMultipleSelection: options.allowsMultipleSelection ?? false,
+        aspect: options.aspect || [1, 1],
+        quality: options.quality || 0.8,
+        exif: true
+      });
+
+      if (!result.canceled && result.assets) {
+        return result.assets;
+      }
+      return null;
+    } catch (error) {
+      console.error('Image pick failed:', error);
+      Alert.alert('Error', 'Failed to pick image');
+      return null;
+    }
+  }, []);
+
+  const captureImage = useCallback(async () => {
+    try {
+      const permission = await ImagePicker.requestCameraPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Required', 'Camera access is needed');
+        return null;
+      }
+
+      const result = await ImagePicker.launchCameraAsync({
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8
+      });
+
+      if (!result.canceled && result.assets) {
+        return result.assets[0];
+      }
+      return null;
+    } catch (error) {
+      console.error('Camera capture failed:', error);
+      Alert.alert('Error', 'Failed to capture image');
+      return null;
+    }
+  }, []);
+
+  const optimizeImage = useCallback(async (uri) => {
+    try {
+      // In a real app, you'd compress and optimize the image
+      // For now, we return the original URI
+      return uri;
+    } catch (error) {
+      console.error('Image optimization failed:', error);
+      return uri;
+    }
+  }, []);
+
+  return {
+    uploading,
+    setUploading,
+    pickImage,
+    captureImage,
+    optimizeImage
+  };
+};
+
+// PROFILE IMAGE EDITOR COMPONENT - FIXED VERSION
+const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
+  const { pickImage, captureImage, uploading, setUploading } = useImageManager();
+  const [showImageOptions, setShowImageOptions] = useState(false);
+
+  const handleImageSelect = async (source) => {
+    setShowImageOptions(false);
+    setUploading(true);
+
+    try {
+      let imageAsset;
+      
+      if (source === 'camera') {
+        imageAsset = await captureImage();
+      } else {
+        const assets = await pickImage({ allowsEditing: true, aspect: [1, 1] });
+        imageAsset = assets?.[0];
+      }
+
+      if (imageAsset) {
+        const success = await onImageUpdate(imageAsset.uri);
+        if (success) {
+          Alert.alert('Success', 'Profile picture updated successfully');
+        }
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to update profile picture');
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <View style={styles.profileImageSection}>
+      <TouchableOpacity 
+        style={styles.avatarContainer}
+        onPress={() => editing && setShowImageOptions(true)}
+        disabled={!editing || uploading}
+      >
+        <View style={styles.avatarWrapper}>
+          {profileImage ? (
+            <Image source={{ uri: profileImage }} style={styles.avatar} />
+          ) : (
+            <View style={styles.avatarPlaceholder}>
+              <Icon name="person" size={40} color="#666" />
+            </View>
+          )}
+          
+          {uploading && (
+            <View style={styles.uploadOverlay}>
+              <ActivityIndicator size="large" color="#00f0a8" />
+            </View>
+          )}
+          
+          {editing && !uploading && (
+            <View style={styles.editBadge}>
+              <Icon name="camera" size={16} color="#000" />
+            </View>
+          )}
+        </View>
+      </TouchableOpacity>
+
+      <Modal visible={showImageOptions} transparent animationType="slide">
+        <View style={styles.imageOptionsOverlay}>
+          <View style={styles.imageOptionsContent}>
+            <Text style={styles.imageOptionsTitle}>Update Profile Picture</Text>
+            
+            <TouchableOpacity 
+              style={styles.imageOption}
+              onPress={() => handleImageSelect('camera')}
+            >
+              <Icon name="camera" size={24} color="#00f0a8" />
+              <Text style={styles.imageOptionText}>Take Photo</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.imageOption}
+              onPress={() => handleImageSelect('gallery')}
+            >
+              <Icon name="images" size={24} color="#00f0a8" />
+              <Text style={styles.imageOptionText}>Choose from Gallery</Text>
+            </TouchableOpacity>
+            
+            {profileImage && (
+              <TouchableOpacity 
+                style={[styles.imageOption, styles.removeOption]}
+                onPress={() => {
+                  onImageUpdate(null);
+                  setShowImageOptions(false);
+                }}
+              >
+                <Icon name="trash" size={24} color="#ff6b6b" />
+                <Text style={[styles.imageOptionText, styles.removeOptionText]}>
+                  Remove Photo
+                </Text>
+              </TouchableOpacity>
+            )}
+            
+            <TouchableOpacity 
+              style={styles.cancelOption}
+              onPress={() => setShowImageOptions(false)}
+            >
+              <Text style={styles.cancelOptionText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+};
+
 // ENHANCED CATEGORY SYSTEM WITH MORE OPTIONS
 const useAdvancedCategorySystem = (userType) => {
   const categories = {
@@ -529,6 +717,501 @@ const useAdvancedCategorySystem = (userType) => {
     getSubcategories,
     categories
   };
+};
+
+// REAL-TIME EDITING COMPONENTS
+const EditableField = ({ 
+  value, 
+  onSave, 
+  placeholder, 
+  multiline = false, 
+  style,
+  type = 'text',
+  options = [],
+  label,
+  required = false
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempValue, setTempValue] = useState(value || '');
+  const [error, setError] = useState('');
+
+  const validateInput = (input) => {
+    if (required && !input.trim()) {
+      return 'This field is required';
+    }
+    if (type === 'email' && input) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(input)) return 'Please enter a valid email';
+    }
+    if (type === 'phone' && input) {
+      const phoneRegex = /^\+?[\d\s-()]+$/;
+      if (!phoneRegex.test(input)) return 'Please enter a valid phone number';
+    }
+    return '';
+  };
+
+  const handleSave = () => {
+    const validationError = validateInput(tempValue);
+    if (validationError) {
+      setError(validationError);
+      return;
+    }
+    
+    setError('');
+    onSave(tempValue);
+    setIsEditing(false);
+  };
+
+  const handleCancel = () => {
+    setTempValue(value || '');
+    setError('');
+    setIsEditing(false);
+  };
+
+  if (!isEditing) {
+    return (
+      <TouchableOpacity 
+        style={[styles.viewField, style]}
+        onPress={() => setIsEditing(true)}
+      >
+        <View style={styles.viewFieldContent}>
+          {label && <Text style={styles.fieldLabel}>{label}</Text>}
+          <Text style={[
+            styles.viewFieldText,
+            !value && styles.placeholderText
+          ]}>
+            {value || placeholder}
+          </Text>
+        </View>
+        <Icon name="create-outline" size={16} color="#00f0a8" />
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={[styles.editFieldContainer, style]}>
+      {label && <Text style={styles.fieldLabel}>{label}</Text>}
+      
+      {type === 'select' ? (
+        <ScrollView style={styles.optionsContainer} nestedScrollEnabled>
+          {options.map((option, index) => (
+            <TouchableOpacity
+              key={index}
+              style={[
+                styles.optionItem,
+                tempValue === option && styles.optionItemSelected
+              ]}
+              onPress={() => setTempValue(option)}
+            >
+              <Text style={styles.optionText}>{option}</Text>
+              {tempValue === option && (
+                <Icon name="checkmark" size={16} color="#00f0a8" />
+              )}
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      ) : (
+        <TextInput
+          style={[
+            styles.editField, 
+            multiline && styles.multilineField,
+            error && styles.fieldError
+          ]}
+          value={tempValue}
+          onChangeText={(text) => {
+            setTempValue(text);
+            if (error) setError('');
+          }}
+          placeholder={placeholder}
+          multiline={multiline}
+          numberOfLines={multiline ? 4 : 1}
+          keyboardType={
+            type === 'email' ? 'email-address' :
+            type === 'phone' ? 'phone-pad' :
+            type === 'number' ? 'numeric' : 'default'
+          }
+        />
+      )}
+      
+      {error ? (
+        <View style={styles.errorContainer}>
+          <Icon name="warning" size={12} color="#ff6b6b" />
+          <Text style={styles.errorText}>{error}</Text>
+        </View>
+      ) : null}
+      
+      <View style={styles.editButtons}>
+        <TouchableOpacity style={styles.cancelButton} onPress={handleCancel}>
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Text style={styles.saveButtonText}>Save</Text>
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
+// USER TYPE SELECTOR
+const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
+  const userTypes = [
+    {
+      type: 'skilled',
+      icon: 'construct',
+      title: 'Skilled Professional',
+      description: 'Offer vocational services and expertise',
+      color: '#00f0a8',
+      examples: ['Electrician', 'Plumber', 'Carpenter', 'Mechanic']
+    },
+    {
+      type: 'farmer',
+      icon: 'leaf',
+      title: 'Farmer',
+      description: 'Agricultural services and farm management',
+      color: '#4CD964',
+      examples: ['Crop Farmer', 'Livestock Farmer', 'Dairy Farmer']
+    },
+    {
+      type: 'client',
+      icon: 'business',
+      title: 'Client',
+      description: 'Find and hire skilled professionals',
+      color: '#007AFF',
+      examples: ['Homeowner', 'Business Owner', 'Project Manager']
+    }
+  ];
+
+  if (!editing) {
+    const current = userTypes.find(t => t.type === currentType);
+    return (
+      <View style={styles.userTypeDisplay}>
+        <View style={[styles.typeIcon, { backgroundColor: current.color }]}>
+          <Icon name={current.icon} size={20} color="#000" />
+        </View>
+        <View style={styles.typeInfo}>
+          <Text style={styles.typeTitle}>{current.title}</Text>
+          <Text style={styles.typeDescription}>{current.description}</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.userTypeSelector}>
+      <Text style={styles.selectorTitle}>Select Your Role</Text>
+      <Text style={styles.selectorSubtitle}>
+        Choose how you want to use the platform
+      </Text>
+      
+      <View style={styles.typeOptions}>
+        {userTypes.map((userType) => (
+          <TouchableOpacity
+            key={userType.type}
+            style={[
+              styles.typeOption,
+              currentType === userType.type && styles.typeOptionSelected,
+              { borderColor: userType.color }
+            ]}
+            onPress={() => onTypeChange(userType.type)}
+          >
+            <View style={styles.typeOptionHeader}>
+              <View style={[styles.typeOptionIcon, { backgroundColor: userType.color }]}>
+                <Icon name={userType.icon} size={24} color="#000" />
+              </View>
+              <View style={styles.typeOptionTexts}>
+                <Text style={styles.typeOptionTitle}>{userType.title}</Text>
+                <Text style={styles.typeOptionDescription}>{userType.description}</Text>
+              </View>
+              {currentType === userType.type && (
+                <View style={[styles.selectedBadge, { backgroundColor: userType.color }]}>
+                  <Icon name="checkmark" size={16} color="#000" />
+                </View>
+              )}
+            </View>
+            
+            <View style={styles.examplesContainer}>
+              <Text style={styles.examplesLabel}>Examples:</Text>
+              <View style={styles.examplesList}>
+                {userType.examples.map((example, index) => (
+                  <Text key={index} style={styles.exampleText}>{example}</Text>
+                ))}
+              </View>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
+  );
+};
+
+// SKILL MANAGER COMPONENT
+const SkillManager = ({ 
+  skills, 
+  userType, 
+  onAddSkill, 
+  onRemoveSkill, 
+  editing 
+}) => {
+  const { getCategories, getSubcategories } = useAdvancedCategorySystem(userType);
+  const [showAddSkill, setShowAddSkill] = useState(false);
+  const [newSkill, setNewSkill] = useState({
+    name: '',
+    category: '',
+    subcategory: '',
+    level: 'intermediate',
+    years: 1,
+    certified: false
+  });
+
+  const categories = getCategories();
+  const subcategories = newSkill.category ? getSubcategories(newSkill.category) : [];
+
+  const handleAddSkill = () => {
+    if (!newSkill.name.trim()) {
+      Alert.alert('Error', 'Please enter a skill name');
+      return;
+    }
+    if (!newSkill.category) {
+      Alert.alert('Error', 'Please select a category');
+      return;
+    }
+
+    onAddSkill(newSkill);
+    setNewSkill({ name: '', category: '', subcategory: '', level: 'intermediate', years: 1, certified: false });
+    setShowAddSkill(false);
+  };
+
+  const SkillChip = ({ skill, onRemove }) => (
+    <View style={styles.skillChip}>
+      <View style={styles.skillInfo}>
+        <Text style={styles.skillName}>{skill.name}</Text>
+        <View style={styles.skillMeta}>
+          <Text style={styles.skillCategory}>{skill.category}</Text>
+          {skill.subcategory && (
+            <Text style={styles.skillSubcategory}>• {skill.subcategory}</Text>
+          )}
+          <Text style={styles.skillLevel}>• {skill.level}</Text>
+          <Text style={styles.skillYears}>• {skill.years} year{skill.years !== 1 ? 's' : ''}</Text>
+          {skill.certified && (
+            <View style={styles.certifiedBadge}>
+              <Icon name="shield-checkmark" size={10} color="#000" />
+            </View>
+          )}
+        </View>
+      </View>
+      {editing && (
+        <TouchableOpacity onPress={onRemove} style={styles.removeSkillButton}>
+          <Icon name="close" size={16} color="#ff6b6b" />
+        </TouchableOpacity>
+      )}
+    </View>
+  );
+
+  return (
+    <View style={styles.skillManager}>
+      <View style={styles.skillHeader}>
+        <View>
+          <Text style={styles.skillTitle}>
+            {userType === 'skilled' && 'Skills & Expertise'}
+            {userType === 'farmer' && 'Farm Specialties & Equipment'}
+            {userType === 'client' && 'Service Interests'}
+          </Text>
+          <Text style={styles.skillSubtitle}>
+            {skills.length} {skills.length === 1 ? 'skill' : 'skills'} added
+          </Text>
+        </View>
+        {editing && (
+          <TouchableOpacity 
+            style={styles.addSkillButton}
+            onPress={() => setShowAddSkill(true)}
+          >
+            <Icon name="add" size={20} color="#00f0a8" />
+            <Text style={styles.addSkillText}>Add Skill</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
+      <View style={styles.skillsGrid}>
+        {skills.map((skill) => (
+          <SkillChip 
+            key={skill.id} 
+            skill={skill} 
+            onRemove={() => onRemoveSkill(skill.id)} 
+          />
+        ))}
+        
+        {skills.length === 0 && (
+          <View style={styles.noSkills}>
+            <Icon name="construct-outline" size={48} color="#666" />
+            <Text style={styles.noSkillsText}>No skills added yet</Text>
+            <Text style={styles.noSkillsSubtext}>
+              Add your skills to showcase your expertise
+            </Text>
+            {editing && (
+              <TouchableOpacity 
+                style={styles.addFirstSkillButton}
+                onPress={() => setShowAddSkill(true)}
+              >
+                <Text style={styles.addFirstSkillText}>Add Your First Skill</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+      </View>
+
+      {/* Add Skill Modal */}
+      <Modal visible={showAddSkill} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add New Skill</Text>
+              <TouchableOpacity onPress={() => setShowAddSkill(false)}>
+                <Icon name="close" size={24} color="#00f0a8" />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView style={styles.modalBody}>
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Skill Name *</Text>
+                <TextInput
+                  style={styles.formInput}
+                  value={newSkill.name}
+                  onChangeText={(text) => setNewSkill(prev => ({ ...prev, name: text }))}
+                  placeholder="e.g., Electrical Wiring, Crop Management"
+                />
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Category *</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {Object.keys(categories).map((category) => (
+                    <TouchableOpacity
+                      key={category}
+                      style={[
+                        styles.categoryChip,
+                        newSkill.category === category && styles.categoryChipSelected
+                      ]}
+                      onPress={() => setNewSkill(prev => ({ ...prev, category, subcategory: '' }))}
+                    >
+                      <Text style={styles.categoryChipText}>
+                        {category.charAt(0).toUpperCase() + category.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {newSkill.category && (
+                <View style={styles.formGroup}>
+                  <Text style={styles.formLabel}>Specialization</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                    {subcategories.map((subcat) => (
+                      <TouchableOpacity
+                        key={subcat}
+                        style={[
+                          styles.subcategoryChip,
+                          newSkill.subcategory === subcat && styles.subcategoryChipSelected
+                        ]}
+                        onPress={() => setNewSkill(prev => ({ ...prev, subcategory: subcat }))}
+                      >
+                        <Text style={styles.subcategoryChipText}>{subcat}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Experience Level</Text>
+                <View style={styles.levelOptions}>
+                  {[
+                    { value: 'beginner', label: 'Beginner' },
+                    { value: 'intermediate', label: 'Intermediate' },
+                    { value: 'advanced', label: 'Advanced' },
+                    { value: 'expert', label: 'Expert' }
+                  ].map((level) => (
+                    <TouchableOpacity
+                      key={level.value}
+                      style={[
+                        styles.levelChip,
+                        newSkill.level === level.value && styles.levelChipSelected
+                      ]}
+                      onPress={() => setNewSkill(prev => ({ ...prev, level: level.value }))}
+                    >
+                      <Text style={styles.levelChipText}>{level.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Years of Experience</Text>
+                <View style={styles.yearsSelector}>
+                  {[1,2,3,5,8,10,15,20].map((years) => (
+                    <TouchableOpacity
+                      key={years}
+                      style={[
+                        styles.yearChip,
+                        newSkill.years === years && styles.yearChipSelected
+                      ]}
+                      onPress={() => setNewSkill(prev => ({ ...prev, years }))}
+                    >
+                      <Text style={styles.yearChipText}>{years}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <TouchableOpacity
+                  style={[
+                    styles.certifiedToggle,
+                    newSkill.certified && styles.certifiedToggleActive
+                  ]}
+                  onPress={() => setNewSkill(prev => ({ ...prev, certified: !prev.certified }))}
+                >
+                  <View style={styles.certifiedToggleContent}>
+                    <View style={[
+                      styles.certifiedToggleSwitch,
+                      newSkill.certified && styles.certifiedToggleSwitchActive
+                    ]}>
+                      <Icon 
+                        name={newSkill.certified ? "checkmark" : "close"} 
+                        size={12} 
+                        color="#000" 
+                      />
+                    </View>
+                    <Text style={styles.certifiedToggleText}>
+                      Certified in this skill
+                    </Text>
+                  </View>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+
+            <View style={styles.modalFooter}>
+              <TouchableOpacity 
+                style={styles.cancelModalButton}
+                onPress={() => setShowAddSkill(false)}
+              >
+                <Text style={styles.cancelModalText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[
+                  styles.saveModalButton,
+                  (!newSkill.name || !newSkill.category) && styles.saveModalButtonDisabled
+                ]}
+                onPress={handleAddSkill}
+                disabled={!newSkill.name || !newSkill.category}
+              >
+                <Text style={styles.saveModalText}>Add Skill</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
 };
 
 // ENHANCED FARMER PROFILE COMPONENT
@@ -1056,6 +1739,149 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
   );
 };
 
+// LOCATION MANAGER
+const LocationManager = ({ location, onUpdate, editing }) => {
+  const [gettingLocation, setGettingLocation] = useState(false);
+
+  const getCurrentLocation = async () => {
+    setGettingLocation(true);
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Denied', 'Location permission is required for accurate service matching');
+        return;
+      }
+
+      const locationData = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+        timeout: 15000
+      });
+
+      const { latitude, longitude } = locationData.coords;
+      
+      const address = await Location.reverseGeocodeAsync({ latitude, longitude });
+      const readableAddress = address[0] 
+        ? `${address[0].name || ''} ${address[0].city || ''} ${address[0].region || ''} ${address[0].country || ''}`.trim()
+        : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
+
+      onUpdate({
+        latitude,
+        longitude,
+        address: readableAddress,
+        accuracy: locationData.coords.accuracy,
+        lastUpdated: new Date().toISOString(),
+        verified: true
+      });
+
+      Alert.alert('Success', 'Location updated with high accuracy');
+    } catch (error) {
+      console.error('Location error:', error);
+      Alert.alert('Error', 'Failed to get current location. Please try manual entry.');
+    } finally {
+      setGettingLocation(false);
+    }
+  };
+
+  const handleManualLocation = () => {
+    Alert.prompt(
+      'Enter Your Location',
+      'Type your full address for better service matching:',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Save Location', 
+          onPress: (address) => {
+            if (address && address.trim()) {
+              onUpdate({
+                address: address.trim(),
+                latitude: null,
+                longitude: null,
+                lastUpdated: new Date().toISOString(),
+                verified: false
+              });
+            }
+          }
+        }
+      ],
+      'plain-text',
+      location?.address || 'e.g., 123 Main Street, City, State'
+    );
+  };
+
+  return (
+    <View style={styles.locationSection}>
+      <Text style={styles.sectionTitle}>Service Location</Text>
+      <Text style={styles.sectionSubtitle}>
+        Set your location for local job matching and service areas
+      </Text>
+      
+      {location ? (
+        <View style={styles.locationDisplay}>
+          <View style={styles.locationIconContainer}>
+            <Icon name="location" size={20} color="#00f0a8" />
+            {location.verified && (
+              <View style={styles.verifiedBadge}>
+                <Icon name="checkmark" size={10} color="#000" />
+              </View>
+            )}
+          </View>
+          <View style={styles.locationInfo}>
+            <Text style={styles.locationAddress}>{location.address}</Text>
+            {location.latitude && (
+              <View style={styles.locationDetails}>
+                <Text style={styles.locationCoords}>
+                  {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                </Text>
+                <Text style={styles.locationAccuracy}>
+                  Accuracy: {location.accuracy?.toFixed(0)} meters
+                </Text>
+              </View>
+            )}
+            <Text style={styles.locationTimestamp}>
+              Updated {new Date(location.lastUpdated).toLocaleDateString()}
+            </Text>
+          </View>
+        </View>
+      ) : (
+        <View style={styles.noLocation}>
+          <Icon name="location-outline" size={48} color="#666" />
+          <Text style={styles.noLocationText}>No location set</Text>
+          <Text style={styles.noLocationSubtext}>
+            Add your location to find local opportunities
+          </Text>
+        </View>
+      )}
+
+      {editing && (
+        <View style={styles.locationActions}>
+          <TouchableOpacity 
+            style={styles.locationButton}
+            onPress={getCurrentLocation}
+            disabled={gettingLocation}
+          >
+            {gettingLocation ? (
+              <ActivityIndicator color="#000" size="small" />
+            ) : (
+              <Icon name="navigate" size={18} color="#000" />
+            )}
+            <Text style={styles.locationButtonText}>
+              {gettingLocation ? 'Getting Location...' : 'Use Current Location'}
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.locationButton, styles.secondaryLocationButton]}
+            onPress={handleManualLocation}
+          >
+            <Icon name="create" size={18} color="#00f0a8" />
+            <Text style={styles.secondaryLocationButtonText}>Enter Address</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+};
+
 // ADVANCED BOTTOM NAVIGATION WITH VECTOR ICONS
 const AdvancedBottomNavigation = ({ activeTab, onTabChange }) => {
   const tabs = [
@@ -1550,7 +2376,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   );
 }
 
-// COMPREHENSIVE ENTERPRISE-LEVEL STYLES
+// COMPLETE ENTERPRISE-LEVEL STYLES
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -1833,405 +2659,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#00f0a8',
   },
-  // ... (include all other styles from previous implementation)
-  bottomNavigation: {
-    flexDirection: 'row',
-    backgroundColor: '#000',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-    paddingTop: 10,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  navItemActive: {
-    transform: [{ translateY: -2 }],
-  },
-  navLabel: {
-    color: '#666',
-    fontSize: 10,
-    marginTop: 4,
-    fontWeight: '600',
-  },
-  navLabelActive: {
-    color: '#00f0a8',
-  },
-  farmSection: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginLeft: 8,
-  },
-  editSectionButton: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  farmDetailsGrid: {
-    gap: 12,
-  },
-  farmDetailItem: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 8,
-    padding: 12,
-  },
-  farmDetailLabel: {
-    color: '#666',
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  farmDetailValue: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  cropsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  cropChip: {
-    backgroundColor: 'rgba(76,217,100,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  cropText: {
-    color: '#4CD964',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  equipmentList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  equipmentChip: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  equipmentText: {
-    color: '#00f0a8',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  noFarmDetails: {
-    alignItems: 'center',
-    paddingVertical: 30,
-  },
-  noFarmText: {
-    color: '#666',
-    fontSize: 16,
-    marginBottom: 4,
-    fontStyle: 'italic',
-  },
-  noFarmSubtext: {
-    color: '#666',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#000',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: '#00f0a8',
-    fontSize: 16,
-    marginTop: 16,
-  },
-  header: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    overflow: 'hidden',
-  },
-  headerContent: {
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-  },
-  headerTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  backButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  headerTitle: {
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 10,
-  },
-  headerTitleText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '800',
-  },
-  savingIndicator: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  savingText: {
-    color: '#00f0a8',
-    fontSize: 10,
-    marginLeft: 4,
-  },
-  headerActions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  shareButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginRight: 8,
-  },
-  editButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    marginRight: 8,
-  },
-  editButtonActive: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-    transform: [{ scale: 1.1 }],
-  },
-  menuButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  profileMain: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 20,
-  },
-  profileImageSection: {
-    marginRight: 20,
-  },
-  avatarContainer: {
-    position: 'relative',
-  },
-  avatarWrapper: {
-    position: 'relative',
-  },
-  avatar: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    borderWidth: 3,
-    borderColor: '#00f0a8',
-  },
-  avatarPlaceholder: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 3,
-    borderColor: '#00f0a8',
-  },
-  uploadOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.7)',
-    borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  editBadge: {
-    position: 'absolute',
-    bottom: 5,
-    right: 5,
-    backgroundColor: '#00f0a8',
-    width: 24,
-    height: 24,
-    borderRadius: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 2,
-    borderColor: '#000',
-  },
-  profileInfo: {
-    flex: 1,
-  },
-  nameSection: {
-    marginBottom: 15,
-  },
-  nameEditor: {
-    gap: 8,
-  },
-  userName: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  profession: {
-    color: '#00f0a8',
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-  tagline: {
-    color: '#666',
-    fontSize: 14,
-    fontStyle: 'italic',
-  },
-  nameInput: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    padding: 12,
-    color: '#fff',
-    fontSize: 16,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 15,
-    padding: 15,
-    marginBottom: 15,
-  },
-  statItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  statNumber: {
-    color: '#00f0a8',
-    fontSize: 20,
-    fontWeight: '800',
-    marginBottom: 4,
-  },
-  statLabel: {
-    color: '#666',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  statDivider: {
-    width: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  completenessSection: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 12,
-    padding: 15,
-    marginBottom: 15,
-  },
-  completenessHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  completenessTitle: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  completenessPercentage: {
-    color: '#00f0a8',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  completenessBar: {
-    height: 6,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 3,
-    overflow: 'hidden',
-  },
-  completenessFill: {
-    height: '100%',
-    backgroundColor: '#00f0a8',
-    borderRadius: 3,
-  },
-  completenessHint: {
-    color: '#666',
-    fontSize: 10,
-    marginTop: 6,
-    fontStyle: 'italic',
-  },
-  actionButtons: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  contactButton: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 25,
-    borderWidth: 1,
-    borderColor: '#00f0a8',
-  },
-  contactButtonText: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 6,
-  },
-  hireButton: {
-    flex: 2,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#00f0a8',
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    borderRadius: 25,
-  },
-  hireButtonText: {
-    color: '#000',
-    fontSize: 14,
-    fontWeight: '700',
-    marginLeft: 6,
-  },
-  callButton: {
-    width: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#00f0a8',
-  },
-
-  // User Type Selector Styles
   userTypeDisplay: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -2355,8 +2782,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginLeft: 4,
   },
-
-  // Tab Navigation Styles
   tabsContainer: {
     backgroundColor: '#000',
     borderBottomWidth: 1,
@@ -2391,8 +2816,6 @@ const styles = StyleSheet.create({
   tabContent: {
     flex: 1,
   },
-
-  // Section Styles
   section: {
     padding: 20,
     borderBottomWidth: 1,
@@ -2412,8 +2835,6 @@ const styles = StyleSheet.create({
   bioField: {
     minHeight: 120,
   },
-
-  // Editable Field Styles
   viewField: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -2520,8 +2941,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-
-  // Skill Manager Styles
   skillManager: {
     padding: 20,
     borderBottomWidth: 1,
@@ -2647,8 +3066,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-
-  // Farm Section Styles
   farmSection: {
     padding: 20,
     borderBottomWidth: 1,
@@ -2663,12 +3080,6 @@ const styles = StyleSheet.create({
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
-  sectionTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    marginLeft: 8,
   },
   editSectionButton: {
     padding: 8,
@@ -2743,8 +3154,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
   },
-
-  // Client Section Styles
   clientSection: {
     padding: 20,
     borderBottomWidth: 1,
@@ -2801,8 +3210,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
   },
-
-  // Modal Styles
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
@@ -2838,8 +3245,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
   },
-
-  // Form Styles
   formGroup: {
     marginBottom: 20,
   },
@@ -2857,8 +3262,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-
-  // Farm Modal Specific Styles
   farmTypeChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
@@ -3004,8 +3407,6 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
   },
-
-  // Client Modal Specific Styles
   industryChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
@@ -3092,8 +3493,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-
-  // Modal Action Buttons
   cancelModalButton: {
     flex: 1,
     padding: 15,
@@ -3121,8 +3520,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-
-  // Location Manager Styles
   locationSection: {
     padding: 20,
     borderBottomWidth: 1,
@@ -3226,8 +3623,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginLeft: 8,
   },
-
-  // Bottom Navigation Styles
   bottomNavigation: {
     flexDirection: 'row',
     backgroundColor: '#000',
@@ -3253,8 +3648,6 @@ const styles = StyleSheet.create({
   navLabelActive: {
     color: '#00f0a8',
   },
-
-  // Coming Soon/Placeholder Styles
   comingSoonSection: {
     alignItems: 'center',
     paddingVertical: 60,
@@ -3287,8 +3680,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '600',
   },
-
-  // Rating Styles
   ratingOverview: {
     alignItems: 'center',
     padding: 40,
@@ -3307,8 +3698,6 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 14,
   },
-
-  // Saving Overlay Styles
   savingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.8)',
@@ -3327,8 +3716,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginTop: 10,
   },
-
-  // Image Options Styles
   imageOptionsOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
