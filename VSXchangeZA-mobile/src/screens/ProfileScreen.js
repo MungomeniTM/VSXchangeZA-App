@@ -1953,13 +1953,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: 'center',
   },
-  // ... (include all other specialized styles for farm, client, etc.)
-  // COMPLETE SPECIALIZED STYLES FOR FARM, CLIENT AND ALL COMPONENTS
-
-  container: {
-    flex: 1,
-    backgroundColor: '#000000',
-  },
   loadingContainer: {
     flex: 1,
     backgroundColor: '#000',
