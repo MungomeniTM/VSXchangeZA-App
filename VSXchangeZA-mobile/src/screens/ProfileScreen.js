@@ -1955,7 +1955,7 @@ const styles = StyleSheet.create({
   },
   // ... (include all other specialized styles for farm, client, etc.)
   // COMPLETE SPECIALIZED STYLES FOR FARM, CLIENT AND ALL COMPONENTS
-const styles = StyleSheet.create({
+
   container: {
     flex: 1,
     backgroundColor: '#000000',
