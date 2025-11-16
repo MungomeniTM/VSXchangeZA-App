@@ -1105,7 +1105,7 @@ const SkillManager = ({
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={styles.modalBody} nestedScrollEnabled={true}>
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Skill Name *</Text>
                 <TextInput
@@ -1391,7 +1391,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={styles.modalBody} nestedScrollEnabled={true}>
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Farm Name *</Text>
                 <TextInput
@@ -1692,7 +1692,7 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={styles.modalBody} nestedScrollEnabled={true}>
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Company Name *</Text>
                 <TextInput
@@ -2009,7 +2009,7 @@ const AdvancedBottomNavigation = ({ activeTab, onTabChange }) => {
   );
 };
 
-// MAIN ENHANCED ENTERPRISE PLATFORM - FIXED SCROLLING AND ADAPTIVE ISSUES
+// MAIN ENHANCED ENTERPRISE PLATFORM - FIXED ALL BUGS
 export default function AdvancedEnterprisePlatform({ navigation }) {
   const {
     profile,
@@ -2034,8 +2034,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
 
   const [refreshing, setRefreshing] = useState(false);
   const [bottomNavTab, setBottomNavTab] = useState('profile');
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const mainScrollRef = useRef(null);
+  const scrollViewRef = useRef(null);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -2055,18 +2054,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
     }
   };
 
-  // Animated header styles
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, -50],
-    extrapolate: 'clamp',
-  });
-
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
+  // REMOVED ProfileCompletenessBar as requested
 
   if (loading || !profile) {
     return (
@@ -2078,209 +2066,195 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   }
 
   const ProfileHeader = () => (
-    <Animated.View 
-      style={[
-        styles.header,
-        {
-          transform: [{ translateY: headerTranslateY }],
-          opacity: headerOpacity
-        }
-      ]}
-    >
-      <LinearGradient colors={['#000000', '#1a1a1a']} style={styles.headerGradient}>
-        <View style={styles.headerContent}>
-          {/* Enhanced Top Bar */}
-          <View style={styles.headerTop}>
+    <LinearGradient colors={['#000000', '#1a1a1a']} style={styles.header}>
+      <View style={styles.headerContent}>
+        {/* Enhanced Top Bar */}
+        <View style={styles.headerTop}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Icon name="chevron-back" size={28} color="#00f0a8" />
+          </TouchableOpacity>
+          
+          <View style={styles.headerTitle}>
+            <Text style={styles.headerTitleText}>VSXchange Pro</Text>
+            {saving && (
+              <View style={styles.savingIndicator}>
+                <ActivityIndicator size="small" color="#00f0a8" />
+                <Text style={styles.savingText}>Auto-saving...</Text>
+              </View>
+            )}
+          </View>
+          
+          <View style={styles.headerActions}>
             <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
+              style={styles.shareButton}
+              onPress={handleShareProfile}
               activeOpacity={0.7}
             >
-              <Icon name="chevron-back" size={28} color="#00f0a8" />
+              <Icon name="share-social" size={20} color="#00f0a8" />
             </TouchableOpacity>
             
-            <View style={styles.headerTitle}>
-              <Text style={styles.headerTitleText}>VSXchange Pro</Text>
-              {saving && (
-                <View style={styles.savingIndicator}>
-                  <ActivityIndicator size="small" color="#00f0a8" />
-                  <Text style={styles.savingText}>Auto-saving...</Text>
-                </View>
-              )}
-            </View>
-            
-            <View style={styles.headerActions}>
-              <TouchableOpacity 
-                style={styles.shareButton}
-                onPress={handleShareProfile}
-                activeOpacity={0.7}
-              >
-                <Icon name="share-social" size={20} color="#00f0a8" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.editButton, editing && styles.editButtonActive]}
-                onPress={() => setEditing(!editing)}
-                activeOpacity={0.7}
-              >
-                <Icon 
-                  name={editing ? "checkmark" : "create-outline"} 
-                  size={20} 
-                  color="#00f0a8" 
-                />
-              </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.editButton, editing && styles.editButtonActive]}
+              onPress={() => setEditing(!editing)}
+              activeOpacity={0.7}
+            >
+              <Icon 
+                name={editing ? "checkmark" : "create-outline"} 
+                size={20} 
+                color="#00f0a8" 
+              />
+            </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.menuButton}
-                onPress={() => {
-                  Alert.alert(
-                    'Profile Options',
-                    'Choose an action:',
-                    [
-                      { text: 'Reset Profile', onPress: resetProfile, style: 'destructive' },
-                      { text: 'Export Data', onPress: () => console.log('Export') },
-                      { text: 'Cancel', style: 'cancel' }
-                    ]
-                  );
-                }}
-                activeOpacity={0.7}
-              >
-                <Icon name="ellipsis-vertical" size={20} color="#00f0a8" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity 
+              style={styles.menuButton}
+              onPress={() => {
+                Alert.alert(
+                  'Profile Options',
+                  'Choose an action:',
+                  [
+                    { text: 'Reset Profile', onPress: resetProfile, style: 'destructive' },
+                    { text: 'Export Data', onPress: () => console.log('Export') },
+                    { text: 'Cancel', style: 'cancel' }
+                  ]
+                );
+              }}
+              activeOpacity={0.7}
+            >
+              <Icon name="ellipsis-vertical" size={20} color="#00f0a8" />
+            </TouchableOpacity>
           </View>
+        </View>
 
-          {/* Enhanced Profile Main Section */}
-          <View style={styles.profileMain}>
-            <ProfileImageEditor
-              profileImage={profile.profileImage}
-              onImageUpdate={updateProfileImage}
-              editing={editing}
-            />
-
-            <View style={styles.profileInfo}>
-              <View style={styles.nameSection}>
-                {editing ? (
-                  <View style={styles.nameEditor}>
-                    <EditableField
-                      value={profile.firstName}
-                      onSave={(value) => updateProfile({ firstName: value })}
-                      placeholder="First Name"
-                      style={styles.nameInput}
-                      required
-                    />
-                    <EditableField
-                      value={profile.lastName}
-                      onSave={(value) => updateProfile({ lastName: value })}
-                      placeholder="Last Name"
-                      style={styles.nameInput}
-                      required
-                    />
-                  </View>
-                ) : (
-                  <>
-                    <Text style={styles.userName}>{profile.displayName}</Text>
-                    <Text style={styles.profession}>{profile.profession}</Text>
-                    <Text style={styles.tagline}>{profile.tagline}</Text>
-                  </>
-                )}
-              </View>
-
-              {/* Enhanced Professional Stats */}
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profile.experienceYears}</Text>
-                  <Text style={styles.statLabel}>Years</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profile.rating}</Text>
-                  <View style={styles.ratingContainer}>
-                    <Icon name="star" size={12} color="#FFD700" />
-                    <Text style={styles.statLabel}>Rating</Text>
-                  </View>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profile.completedProjects}+</Text>
-                  <Text style={styles.statLabel}>Projects</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>${profile.hourlyRate}</Text>
-                  <Text style={styles.statLabel}>/hr</Text>
-                </View>
-              </View>
-
-              {/* Enhanced Action Buttons */}
-              <View style={styles.actionButtons}>
-                <TouchableOpacity 
-                  style={styles.contactButton}
-                  onPress={() => navigation.navigate('Messages', { user: profile })}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="chatbubble-ellipses" size={18} color="#000" />
-                  <Text style={styles.contactButtonText}>Message</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.hireButton}
-                  onPress={() => navigation.navigate('Booking', { professional: profile })}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="calendar" size={18} color="#000" />
-                  <Text style={styles.hireButtonText}>Hire Now</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={styles.callButton}
-                  onPress={() => console.log('Call:', profile.contactInfo.phone)}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="call" size={18} color="#00f0a8" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          {/* Enhanced User Type Selector */}
-          <UserTypeSelector
-            currentType={profile.userType}
-            onTypeChange={(type) => updateProfile({ userType: type })}
+        {/* Enhanced Profile Main Section */}
+        <View style={styles.profileMain}>
+          <ProfileImageEditor
+            profileImage={profile.profileImage}
+            onImageUpdate={updateProfileImage}
             editing={editing}
           />
 
-          {/* Enhanced Save Status */}
-          {lastSave && (
-            <View style={styles.saveStatus}>
-              <Icon name="checkmark-circle" size={12} color="#00f0a8" />
-              <Text style={styles.saveStatusText}>
-                Auto-saved {new Date(lastSave).toLocaleTimeString()}
-              </Text>
+          <View style={styles.profileInfo}>
+            <View style={styles.nameSection}>
+              {editing ? (
+                <View style={styles.nameEditor}>
+                  <EditableField
+                    value={profile.firstName}
+                    onSave={(value) => updateProfile({ firstName: value })}
+                    placeholder="First Name"
+                    style={styles.nameInput}
+                    required
+                  />
+                  <EditableField
+                    value={profile.lastName}
+                    onSave={(value) => updateProfile({ lastName: value })}
+                    placeholder="Last Name"
+                    style={styles.nameInput}
+                    required
+                  />
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.userName}>{profile.displayName}</Text>
+                  <Text style={styles.profession}>{profile.profession}</Text>
+                  <Text style={styles.tagline}>{profile.tagline}</Text>
+                </>
+              )}
             </View>
-          )}
+
+            {/* Enhanced Professional Stats */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{profile.experienceYears}</Text>
+                <Text style={styles.statLabel}>Years</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{profile.rating}</Text>
+                <View style={styles.ratingContainer}>
+                  <Icon name="star" size={12} color="#FFD700" />
+                  <Text style={styles.statLabel}>Rating</Text>
+                </View>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{profile.completedProjects}+</Text>
+                <Text style={styles.statLabel}>Projects</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>${profile.hourlyRate}</Text>
+                <Text style={styles.statLabel}>/hr</Text>
+              </View>
+            </View>
+
+            {/* Enhanced Action Buttons */}
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={styles.contactButton}
+                onPress={() => navigation.navigate('Messages', { user: profile })}
+                activeOpacity={0.7}
+              >
+                <Icon name="chatbubble-ellipses" size={18} color="#000" />
+                <Text style={styles.contactButtonText}>Message</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.hireButton}
+                onPress={() => navigation.navigate('Booking', { professional: profile })}
+                activeOpacity={0.7}
+              >
+                <Icon name="calendar" size={18} color="#000" />
+                <Text style={styles.hireButtonText}>Hire Now</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.callButton}
+                onPress={() => console.log('Call:', profile.contactInfo.phone)}
+                activeOpacity={0.7}
+              >
+                <Icon name="call" size={18} color="#00f0a8" />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </LinearGradient>
-    </Animated.View>
+
+        {/* Enhanced User Type Selector */}
+        <UserTypeSelector
+          currentType={profile.userType}
+          onTypeChange={(type) => updateProfile({ userType: type })}
+          editing={editing}
+        />
+
+        {/* Enhanced Save Status */}
+        {lastSave && (
+          <View style={styles.saveStatus}>
+            <Icon name="checkmark-circle" size={12} color="#00f0a8" />
+            <Text style={styles.saveStatusText}>
+              Auto-saved {new Date(lastSave).toLocaleTimeString()}
+            </Text>
+          </View>
+        )}
+      </View>
+    </LinearGradient>
   );
 
   const TabContent = () => {
     switch (activeTab) {
       case 'about':
         return (
-          <Animated.ScrollView 
-            ref={mainScrollRef}
+          <ScrollView 
+            ref={scrollViewRef}
             style={styles.tabContent}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            scrollEventThrottle={16}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true }
-            )}
+            nestedScrollEnabled={true}
             contentContainerStyle={styles.scrollContent}
           >
             {/* Professional Bio */}
@@ -2347,12 +2321,16 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 type="email"
               />
             </View>
-          </Animated.ScrollView>
+          </ScrollView>
         );
 
       case 'portfolio':
         return (
-          <View style={styles.tabContent}>
+          <ScrollView 
+            style={styles.tabContent}
+            contentContainerStyle={styles.scrollContent}
+            nestedScrollEnabled={true}
+          >
             <Text style={styles.sectionTitle}>Portfolio Gallery</Text>
             <View style={styles.comingSoonSection}>
               <Icon name="images" size={64} color="#666" />
@@ -2369,12 +2347,16 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 </TouchableOpacity>
               )}
             </View>
-          </View>
+          </ScrollView>
         );
 
       case 'services':
         return (
-          <View style={styles.tabContent}>
+          <ScrollView 
+            style={styles.tabContent}
+            contentContainerStyle={styles.scrollContent}
+            nestedScrollEnabled={true}
+          >
             <Text style={styles.sectionTitle}>Services & Pricing</Text>
             <View style={styles.comingSoonSection}>
               <Icon name="construct" size={64} color="#666" />
@@ -2383,12 +2365,16 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 Manage your service offerings, dynamic pricing, and availability calendar
               </Text>
             </View>
-          </View>
+          </ScrollView>
         );
 
       case 'reviews':
         return (
-          <View style={styles.tabContent}>
+          <ScrollView 
+            style={styles.tabContent}
+            contentContainerStyle={styles.scrollContent}
+            nestedScrollEnabled={true}
+          >
             <Text style={styles.sectionTitle}>Reviews & Ratings</Text>
             <View style={styles.ratingOverview}>
               <Text style={styles.ratingNumber}>{profile.rating}</Text>
@@ -2407,7 +2393,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 Based on {profile.completedProjects} completed projects
               </Text>
             </View>
-          </View>
+          </ScrollView>
         );
 
       default:
@@ -2487,7 +2473,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   );
 }
 
-// COMPLETE ENTERPRISE-LEVEL STYLES - OPTIMIZED FOR SCROLLING
+// COMPLETE ENTERPRISE-LEVEL STYLES - OPTIMIZED
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -2505,18 +2491,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     overflow: 'hidden',
-  },
-  headerGradient: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
   },
   headerContent: {
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
@@ -2867,7 +2844,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
-    marginTop: Platform.OS === 'ios' ? 100 : 80,
   },
   tabsScrollContent: {
     paddingHorizontal: 20,
@@ -2899,8 +2875,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 20,
-    paddingBottom: 100,
+    flexGrow: 1,
   },
   section: {
     padding: 20,
