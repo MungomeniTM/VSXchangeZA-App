@@ -37,9 +37,9 @@ import Svg, { Path, Circle, Rect, G, Defs, RadialGradient, Stop } from 'react-na
 
 const { width, height } = Dimensions.get('window');
 
-// ADVANCED VECTOR ICONS SYSTEM
+// ADVANCED VECTOR ICONS SYSTEM - MATCHING DASHBOARD
 const VectorIcons = {
-  // Bottom Navigation Icons - Enhanced to match DashboardScreen
+  // Bottom Navigation Icons - Matching DashboardScreen
   home: (color = '#00f0a8', size = 28) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" 
@@ -726,7 +726,7 @@ const useAdvancedCategorySystem = (userType) => {
   };
 };
 
-// REAL-TIME EDITING COMPONENTS - FIXED PERFORMANCE WITH SCROLLING
+// REAL-TIME EDITING COMPONENTS - FIXED PERFORMANCE
 const EditableField = ({ 
   value, 
   onSave, 
@@ -803,9 +803,8 @@ const EditableField = ({
       {type === 'select' ? (
         <ScrollView 
           style={styles.optionsContainer} 
-          nestedScrollEnabled={true}
+          nestedScrollEnabled
           showsVerticalScrollIndicator={true}
-          keyboardShouldPersistTaps="handled"
         >
           {options.map((option, index) => (
             <TouchableOpacity
@@ -877,7 +876,7 @@ const EditableField = ({
   );
 };
 
-// USER TYPE SELECTOR - FIXED PERFORMANCE WITH SCROLLING
+// USER TYPE SELECTOR - FIXED PERFORMANCE
 const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
   const userTypes = [
     {
@@ -931,7 +930,6 @@ const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
       <ScrollView 
         style={styles.typeOptionsContainer}
         showsVerticalScrollIndicator={false}
-        nestedScrollEnabled={true}
       >
         {userTypes.map((userType) => (
           <TouchableOpacity
@@ -961,17 +959,11 @@ const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
             
             <View style={styles.examplesContainer}>
               <Text style={styles.examplesLabel}>Examples:</Text>
-              <ScrollView 
-                horizontal 
-                showsHorizontalScrollIndicator={false}
-                style={styles.examplesScrollView}
-              >
-                <View style={styles.examplesList}>
-                  {userType.examples.map((example, index) => (
-                    <Text key={index} style={styles.exampleText}>{example}</Text>
-                  ))}
-                </View>
-              </ScrollView>
+              <View style={styles.examplesList}>
+                {userType.examples.map((example, index) => (
+                  <Text key={index} style={styles.exampleText}>{example}</Text>
+                ))}
+              </View>
             </View>
           </TouchableOpacity>
         ))}
@@ -980,7 +972,7 @@ const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
   );
 };
 
-// SKILL MANAGER COMPONENT - FIXED PERFORMANCE WITH SCROLLING
+// SKILL MANAGER COMPONENT - FIXED PERFORMANCE
 const SkillManager = ({ 
   skills, 
   userType, 
@@ -1075,7 +1067,7 @@ const SkillManager = ({
       <ScrollView 
         style={styles.skillsGrid}
         showsVerticalScrollIndicator={false}
-        nestedScrollEnabled={true}
+        nestedScrollEnabled
       >
         {skills.map((skill) => (
           <SkillChip 
@@ -1127,8 +1119,7 @@ const SkillManager = ({
             <ScrollView 
               style={styles.modalBody}
               showsVerticalScrollIndicator={true}
-              nestedScrollEnabled={true}
-              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
             >
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Skill Name *</Text>
@@ -1297,7 +1288,7 @@ const SkillManager = ({
   );
 };
 
-// ENHANCED FARMER PROFILE COMPONENT - FIXED PERFORMANCE WITH SCROLLING
+// ENHANCED FARMER PROFILE COMPONENT - FIXED PERFORMANCE
 const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
   const [showFarmEditor, setShowFarmEditor] = useState(false);
   const [tempFarmDetails, setTempFarmDetails] = useState(farmDetails);
@@ -1368,7 +1359,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
         <ScrollView 
           style={styles.farmDetailsGrid}
           showsVerticalScrollIndicator={false}
-          nestedScrollEnabled={true}
+          nestedScrollEnabled
         >
           <View style={styles.farmDetailItem}>
             <Text style={styles.farmDetailLabel}>Farm Name</Text>
@@ -1446,8 +1437,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
             <ScrollView 
               style={styles.modalBody}
               showsVerticalScrollIndicator={true}
-              nestedScrollEnabled={true}
-              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
             >
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Farm Name *</Text>
@@ -1660,7 +1650,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
   );
 };
 
-// ENHANCED CLIENT PROFILE COMPONENT - FIXED PERFORMANCE WITH SCROLLING
+// ENHANCED CLIENT PROFILE COMPONENT - FIXED PERFORMANCE
 const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
   const [showClientEditor, setShowClientEditor] = useState(false);
   const [tempClientDetails, setTempClientDetails] = useState(clientDetails);
@@ -1714,7 +1704,7 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
         <ScrollView 
           style={styles.clientDetailsGrid}
           showsVerticalScrollIndicator={false}
-          nestedScrollEnabled={true}
+          nestedScrollEnabled
         >
           <View style={styles.clientDetailItem}>
             <Text style={styles.clientDetailLabel}>Company</Text>
@@ -1780,8 +1770,7 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
             <ScrollView 
               style={styles.modalBody}
               showsVerticalScrollIndicator={true}
-              nestedScrollEnabled={true}
-              keyboardShouldPersistTaps="handled"
+              nestedScrollEnabled
             >
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Company Name *</Text>
@@ -2967,9 +2956,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     marginBottom: 4,
-  },
-  examplesScrollView: {
-    marginTop: 4,
   },
   examplesList: {
     flexDirection: 'row',
