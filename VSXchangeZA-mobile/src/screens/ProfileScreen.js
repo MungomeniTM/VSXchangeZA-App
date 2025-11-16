@@ -21,89 +21,18 @@ import {
   FlatList,
   Share,
   KeyboardAvoidingView,
-  RefreshControl,
-  PanResponder
+  RefreshControl
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
-import * as FileSystem from 'expo-file-system';
 import { AppContext } from '../context/AppContext';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Circle, Rect, G, Defs, RadialGradient, Stop } from 'react-native-svg';
 
 const { width, height } = Dimensions.get('window');
 
-// ADVANCED VECTOR ICONS SYSTEM
-const VectorIcons = {
-  // Bottom Navigation Icons
-  home: (color = '#00f0a8', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M9 22V12H15V22" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-  
-  search: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx="11" cy="11" r="8" stroke={color} strokeWidth="2"/>
-      <Path d="M21 21L16.65 16.65" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-  
-  marketplace: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.1 15.9 4.5 17 5.4 17H17M17 17C16.4696 17 15.9609 17.2107 15.5858 17.5858C15.2107 17.9609 15 18.4696 15 19C15 19.5304 15.2107 20.0391 15.5858 20.4142C15.9609 20.7893 16.4696 21 17 21C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19C19 18.4696 18.7893 17.9609 18.4142 17.5858C17.9609 17.2107 17.5304 17 17 17ZM9 19C9 19.5304 8.78929 20.0391 8.41421 20.4142C8.03914 20.7893 7.53043 21 7 21C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19C5 18.4696 5.21071 17.9609 5.58579 17.5858C5.96086 17.2107 6.46957 17 7 17C7.53043 17 8.03914 17.2107 8.41421 17.5858C8.78929 17.9609 9 18.4696 9 19Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-  
-  profile: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  // Professional Category Icons
-  electrician: (color = '#00f0a8', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M13 22L20 13L27 22L24 24L25 28L15 28L16 24L13 22Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M20 13V7" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M20 31V28" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  farmer: (color = '#4CD964', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M12 28L15 25L18 28L22 24L25 27L28 24" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M8 16C8 16 10 14 12 16C14 18 16 16 16 16C16 16 18 14 20 16C22 18 24 16 24 16C24 16 26 14 28 16C30 18 32 16 32 16V28C32 28.5304 31.7893 29.0391 31.4142 29.4142C31.0391 29.7893 30.5304 30 30 30H10C9.46957 30 8.96086 29.7893 8.58579 29.4142C8.21071 29.0391 8 28.5304 8 28V16Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M8 20H32" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  client: (color = '#007AFF', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M28 12H12C10.8954 12 10 12.8954 10 14V26C10 27.1046 10.8954 28 12 28H28C29.1046 28 30 27.1046 30 26V14C30 12.8954 29.1046 12 28 12Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M22 12V10C22 8.89543 21.1046 8 20 8C18.8954 8 18 8.89543 18 10V12" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M15 18H25" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M15 22H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  )
-};
-
-// ENHANCED ENTERPRISE STATE MANAGEMENT
+// ENHANCED STATE MANAGEMENT
 const useAdvancedEnterpriseProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -113,7 +42,6 @@ const useAdvancedEnterpriseProfile = () => {
   const [activeTab, setActiveTab] = useState('about');
   const saveTimeoutRef = useRef(null);
 
-  // Enhanced default profile with James Carter data
   const defaultProfile = {
     id: 'user_001',
     firstName: 'James',
@@ -183,7 +111,6 @@ const useAdvancedEnterpriseProfile = () => {
       saturday: { available: false, start: '00:00', end: '00:00' },
       sunday: { available: false, start: '00:00', end: '00:00' }
     },
-    // Enhanced Farmer Details
     farmDetails: {
       farmName: '',
       farmSize: 0,
@@ -202,7 +129,6 @@ const useAdvancedEnterpriseProfile = () => {
       organicCertified: false,
       harvestSeasons: []
     },
-    // Enhanced Client Details
     clientDetails: {
       companyName: '',
       industry: '',
@@ -216,7 +142,6 @@ const useAdvancedEnterpriseProfile = () => {
     },
     isAvailable: true,
     lastUpdated: new Date().toISOString(),
-    profileCompleteness: 85,
     metadata: {
       created: new Date().toISOString(),
       version: '2.0.0',
@@ -224,7 +149,6 @@ const useAdvancedEnterpriseProfile = () => {
     }
   };
 
-  // Enhanced load profile with backup systems
   const loadProfile = useCallback(async () => {
     try {
       setLoading(true);
@@ -238,14 +162,12 @@ const useAdvancedEnterpriseProfile = () => {
       }
     } catch (error) {
       console.error('Load failed:', error);
-      // Fallback to default
       setProfile(defaultProfile);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Enhanced real-time save with backup (Vibration removed)
   const saveProfile = useCallback(async (newProfile) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -257,7 +179,6 @@ const useAdvancedEnterpriseProfile = () => {
         const profileToSave = newProfile || profile;
         const timestamp = new Date().toISOString();
         
-        // Enhanced save with backup
         await AsyncStorage.setItem('advanced_enterprise_profile', JSON.stringify({
           ...profileToSave,
           lastUpdated: timestamp,
@@ -267,27 +188,15 @@ const useAdvancedEnterpriseProfile = () => {
           }
         }));
 
-        // Create backup
-        await AsyncStorage.setItem('advanced_enterprise_profile_backup', JSON.stringify(profileToSave));
-        
         setLastSave(timestamp);
-        
-        console.log('Profile saved with backup');
       } catch (error) {
         console.error('Save error:', error);
-        // Try backup save
-        try {
-          await AsyncStorage.setItem('advanced_enterprise_profile_emergency', JSON.stringify(profile));
-        } catch (e) {
-          console.error('Emergency save failed:', e);
-        }
       } finally {
         setSaving(false);
       }
-    }, 800); // Reduced debounce for better real-time feel
+    }, 800);
   }, [profile]);
 
-  // Enhanced update with analytics
   const updateProfile = useCallback((updates) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     
@@ -296,8 +205,7 @@ const useAdvancedEnterpriseProfile = () => {
         ...prev,
         ...updates,
         lastUpdated: new Date().toISOString(),
-        displayName: `${updates.firstName || prev.firstName} ${updates.lastName || prev.lastName}`.trim(),
-        profileCompleteness: calculateProfileCompleteness({ ...prev, ...updates })
+        displayName: `${updates.firstName || prev.firstName} ${updates.lastName || prev.lastName}`.trim()
       };
       
       saveProfile(newProfile);
@@ -305,60 +213,30 @@ const useAdvancedEnterpriseProfile = () => {
     });
   }, [saveProfile]);
 
-  // Calculate profile completeness
-  const calculateProfileCompleteness = (profileData) => {
-    let completeness = 0;
-    const fields = [
-      profileData.firstName,
-      profileData.lastName,
-      profileData.profession,
-      profileData.bio,
-      profileData.profileImage,
-      profileData.location,
-      profileData.skills.length > 0
-    ];
-
-    const userTypeFields = {
-      skilled: [profileData.skills.length > 0],
-      farmer: [profileData.farmDetails.farmName, profileData.farmDetails.farmType],
-      client: [profileData.clientDetails.companyName, profileData.clientDetails.industry]
-    };
-
-    const baseScore = (fields.filter(Boolean).length / fields.length) * 70;
-    const userTypeScore = (userTypeFields[profileData.userType]?.filter(Boolean).length / userTypeFields[profileData.userType]?.length) * 30 || 0;
-
-    return Math.min(baseScore + userTypeScore, 100);
-  };
-
-  // Enhanced farm details update
   const updateFarmDetails = useCallback((updates) => {
     setProfile(prev => {
       const newProfile = {
         ...prev,
         farmDetails: { ...prev.farmDetails, ...updates },
-        lastUpdated: new Date().toISOString(),
-        profileCompleteness: calculateProfileCompleteness({ ...prev, farmDetails: { ...prev.farmDetails, ...updates } })
+        lastUpdated: new Date().toISOString()
       };
       saveProfile(newProfile);
       return newProfile;
     });
   }, [saveProfile]);
 
-  // Enhanced client details update
   const updateClientDetails = useCallback((updates) => {
     setProfile(prev => {
       const newProfile = {
         ...prev,
         clientDetails: { ...prev.clientDetails, ...updates },
-        lastUpdated: new Date().toISOString(),
-        profileCompleteness: calculateProfileCompleteness({ ...prev, clientDetails: { ...prev.clientDetails, ...updates } })
+        lastUpdated: new Date().toISOString()
       };
       saveProfile(newProfile);
       return newProfile;
     });
   }, [saveProfile]);
 
-  // Enhanced skill management
   const addSkill = useCallback((skill) => {
     const newSkill = {
       id: `skill_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -370,8 +248,7 @@ const useAdvancedEnterpriseProfile = () => {
       const newProfile = {
         ...prev,
         skills: [...prev.skills, newSkill],
-        lastUpdated: new Date().toISOString(),
-        profileCompleteness: calculateProfileCompleteness({ ...prev, skills: [...prev.skills, newSkill] })
+        lastUpdated: new Date().toISOString()
       };
       saveProfile(newProfile);
       return newProfile;
@@ -383,53 +260,20 @@ const useAdvancedEnterpriseProfile = () => {
       const newProfile = {
         ...prev,
         skills: prev.skills.filter(skill => skill.id !== skillId),
-        lastUpdated: new Date().toISOString(),
-        profileCompleteness: calculateProfileCompleteness({ ...prev, skills: prev.skills.filter(skill => skill.id !== skillId) })
+        lastUpdated: new Date().toISOString()
       };
       saveProfile(newProfile);
       return newProfile;
     });
   }, [saveProfile]);
 
-  // Enhanced portfolio management
-  const addPortfolioItem = useCallback(async (imageAsset) => {
-    try {
-      const portfolioItem = {
-        id: `portfolio_${Date.now()}`,
-        uri: imageAsset.uri,
-        filename: imageAsset.fileName || `portfolio_${Date.now()}.jpg`,
-        description: '',
-        uploaded: new Date().toISOString(),
-        size: imageAsset.fileSize,
-        dimensions: { width: imageAsset.width, height: imageAsset.height }
-      };
-
-      setProfile(prev => {
-        const newProfile = {
-          ...prev,
-          portfolio: [...prev.portfolio, portfolioItem],
-          lastUpdated: new Date().toISOString()
-        };
-        saveProfile(newProfile);
-        return newProfile;
-      });
-
-      return true;
-    } catch (error) {
-      console.error('Portfolio add failed:', error);
-      return false;
-    }
-  }, [saveProfile]);
-
-  // Enhanced profile image management
   const updateProfileImage = useCallback(async (imageUri) => {
     try {
       setProfile(prev => {
         const newProfile = {
           ...prev,
           profileImage: imageUri,
-          lastUpdated: new Date().toISOString(),
-          profileCompleteness: calculateProfileCompleteness({ ...prev, profileImage: imageUri })
+          lastUpdated: new Date().toISOString()
         };
         saveProfile(newProfile);
         return newProfile;
@@ -441,7 +285,6 @@ const useAdvancedEnterpriseProfile = () => {
     }
   }, [saveProfile]);
 
-  // Reset profile to defaults
   const resetProfile = useCallback(async () => {
     Alert.alert(
       'Reset Profile',
@@ -478,16 +321,14 @@ const useAdvancedEnterpriseProfile = () => {
     updateClientDetails,
     addSkill,
     removeSkill,
-    addPortfolioItem,
     updateProfileImage,
     saveProfile,
     loadProfile,
-    resetProfile,
-    calculateProfileCompleteness
+    resetProfile
   };
 };
 
-// ADVANCED IMAGE MANAGEMENT SYSTEM
+// SIMPLIFIED IMAGE MANAGEMENT
 const useImageManager = () => {
   const [uploading, setUploading] = useState(false);
 
@@ -519,69 +360,25 @@ const useImageManager = () => {
     }
   }, []);
 
-  const captureImage = useCallback(async () => {
-    try {
-      const permission = await ImagePicker.requestCameraPermissionsAsync();
-      if (!permission.granted) {
-        Alert.alert('Permission Required', 'Camera access is needed');
-        return null;
-      }
-
-      const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8
-      });
-
-      if (!result.canceled && result.assets) {
-        return result.assets[0];
-      }
-      return null;
-    } catch (error) {
-      console.error('Camera capture failed:', error);
-      Alert.alert('Error', 'Failed to capture image');
-      return null;
-    }
-  }, []);
-
-  const optimizeImage = useCallback(async (uri) => {
-    try {
-      // In a real app, you'd compress and optimize the image
-      // For now, we return the original URI
-      return uri;
-    } catch (error) {
-      console.error('Image optimization failed:', error);
-      return uri;
-    }
-  }, []);
-
   return {
     uploading,
     setUploading,
-    pickImage,
-    captureImage,
-    optimizeImage
+    pickImage
   };
 };
 
-// PROFILE IMAGE EDITOR COMPONENT - FIXED VERSION
+// PROFILE IMAGE EDITOR - SIMPLIFIED
 const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
-  const { pickImage, captureImage, uploading, setUploading } = useImageManager();
+  const { pickImage, uploading, setUploading } = useImageManager();
   const [showImageOptions, setShowImageOptions] = useState(false);
 
-  const handleImageSelect = async (source) => {
+  const handleImageSelect = async () => {
     setShowImageOptions(false);
     setUploading(true);
 
     try {
-      let imageAsset;
-      
-      if (source === 'camera') {
-        imageAsset = await captureImage();
-      } else {
-        const assets = await pickImage({ allowsEditing: true, aspect: [1, 1] });
-        imageAsset = assets?.[0];
-      }
+      const assets = await pickImage({ allowsEditing: true, aspect: [1, 1] });
+      const imageAsset = assets?.[0];
 
       if (imageAsset) {
         const success = await onImageUpdate(imageAsset.uri);
@@ -642,15 +439,7 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
             
             <TouchableOpacity 
               style={styles.imageOption}
-              onPress={() => handleImageSelect('camera')}
-            >
-              <Icon name="camera" size={24} color="#00f0a8" />
-              <Text style={styles.imageOptionText}>Take Photo</Text>
-            </TouchableOpacity>
-            
-            <TouchableOpacity 
-              style={styles.imageOption}
-              onPress={() => handleImageSelect('gallery')}
+              onPress={handleImageSelect}
             >
               <Icon name="images" size={24} color="#00f0a8" />
               <Text style={styles.imageOptionText}>Choose from Gallery</Text>
@@ -684,30 +473,30 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
   );
 };
 
-// ENHANCED CATEGORY SYSTEM WITH MORE OPTIONS
+// ENHANCED CATEGORY SYSTEM
 const useAdvancedCategorySystem = (userType) => {
   const categories = {
     skilled: {
-      electrical: ['Residential Wiring', 'Commercial Installation', 'Safety Inspection', 'Panel Upgrade', 'Lighting Installation', 'Generator Installation', 'Solar Panel Installation', 'Emergency Repair'],
-      plumbing: ['Pipe Installation', 'Leak Repair', 'Water Heater', 'Drain Cleaning', 'Fixture Installation', 'Sewer Line', 'Gas Line', 'Water Treatment'],
-      carpentry: ['Framing', 'Finishing', 'Cabinet Making', 'Furniture Building', 'Structural Repair', 'Deck Building', 'Custom Millwork', 'Restoration'],
-      mechanical: ['Engine Repair', 'Equipment Maintenance', 'Diagnostic', 'Preventive Maintenance', 'Parts Replacement', 'HVAC', 'Automotive', 'Heavy Machinery'],
-      construction: ['Renovation', 'New Construction', 'Demolition', 'Structural Work', 'Project Management', 'Masonry', 'Roofing', 'Flooring'],
-      technology: ['Network Setup', 'Computer Repair', 'Smart Home', 'Security Systems', 'Software Installation', 'Data Recovery', 'IT Support', 'CCTV Installation'],
-      other: ['Painting', 'Landscaping', 'Cleaning', 'Moving', 'Assembly', 'Delivery', 'Consultation']
+      electrical: ['Residential Wiring', 'Commercial Installation', 'Safety Inspection', 'Panel Upgrade', 'Lighting Installation'],
+      plumbing: ['Pipe Installation', 'Leak Repair', 'Water Heater', 'Drain Cleaning', 'Fixture Installation'],
+      carpentry: ['Framing', 'Finishing', 'Cabinet Making', 'Furniture Building', 'Structural Repair'],
+      mechanical: ['Engine Repair', 'Equipment Maintenance', 'Diagnostic', 'Preventive Maintenance', 'Parts Replacement'],
+      construction: ['Renovation', 'New Construction', 'Demolition', 'Structural Work', 'Project Management'],
+      technology: ['Network Setup', 'Computer Repair', 'Smart Home', 'Security Systems', 'Software Installation'],
+      other: ['Painting', 'Landscaping', 'Cleaning', 'Moving', 'Assembly']
     },
     farmer: {
-      crops: ['Maize/Corn', 'Wheat', 'Soybeans', 'Vegetables', 'Fruits', 'Grains', 'Organic Crops', 'Coffee', 'Tea', 'Cotton', 'Sugarcane'],
-      livestock: ['Cattle', 'Poultry', 'Swine', 'Dairy', 'Sheep/Goats', 'Fish Farming', 'Beekeeping', 'Horse Breeding', 'Aquaculture'],
-      equipment: ['Tractors', 'Harvesters', 'Irrigation Systems', 'Planters', 'Sprayers', 'Balers', 'Cultivators', 'Seeders'],
-      specialties: ['Organic Farming', 'Hydroponics', 'Precision Agriculture', 'Sustainable Farming', 'Greenhouse', 'Vermiculture', 'Agroforestry', 'Permaculture'],
-      skills: ['Soil Analysis', 'Crop Rotation', 'Pest Management', 'Irrigation Management', 'Harvest Planning', 'Livestock Care', 'Equipment Maintenance', 'Market Analysis']
+      crops: ['Maize/Corn', 'Wheat', 'Soybeans', 'Vegetables', 'Fruits', 'Grains', 'Organic Crops'],
+      livestock: ['Cattle', 'Poultry', 'Swine', 'Dairy', 'Sheep/Goats', 'Fish Farming', 'Beekeeping'],
+      equipment: ['Tractors', 'Harvesters', 'Irrigation Systems', 'Planters', 'Sprayers', 'Balers'],
+      specialties: ['Organic Farming', 'Hydroponics', 'Precision Agriculture', 'Sustainable Farming', 'Greenhouse'],
+      skills: ['Soil Analysis', 'Crop Rotation', 'Pest Management', 'Irrigation Management', 'Harvest Planning']
     },
     client: {
-      projectTypes: ['Residential', 'Commercial', 'Industrial', 'Agricultural', 'Renovation', 'New Construction', 'Maintenance', 'Emergency Repair'],
-      serviceNeeds: ['Electrical', 'Plumbing', 'Carpentry', 'Mechanical', 'Construction', 'Technology', 'Farming', 'Consultation'],
-      timelines: ['Immediate', '1-2 Weeks', '1 Month', '3 Months', '6 Months+', 'Ongoing'],
-      budgets: ['Under $1k', '$1k-$5k', '$5k-$10k', '$10k-$25k', '$25k-$50k', '$50k+']
+      projectTypes: ['Residential', 'Commercial', 'Industrial', 'Agricultural', 'Renovation', 'New Construction'],
+      serviceNeeds: ['Electrical', 'Plumbing', 'Carpentry', 'Mechanical', 'Construction', 'Technology', 'Farming'],
+      timelines: ['Immediate', '1-2 Weeks', '1 Month', '3 Months', '6 Months+'],
+      budgets: ['Under $1k', '$1k-$5k', '$5k-$10k', '$10k-$25k', '$25k+']
     }
   };
 
@@ -726,7 +515,7 @@ const useAdvancedCategorySystem = (userType) => {
   };
 };
 
-// REAL-TIME EDITING COMPONENTS - FIXED PERFORMANCE
+// REAL-TIME EDITING COMPONENTS - FIXED SCROLLING
 const EditableField = ({ 
   value, 
   onSave, 
@@ -801,7 +590,7 @@ const EditableField = ({
       {label && <Text style={styles.fieldLabel}>{label}</Text>}
       
       {type === 'select' ? (
-        <ScrollView style={styles.optionsContainer} nestedScrollEnabled>
+        <View style={styles.optionsContainer}>
           {options.map((option, index) => (
             <TouchableOpacity
               key={index}
@@ -818,7 +607,7 @@ const EditableField = ({
               )}
             </TouchableOpacity>
           ))}
-        </ScrollView>
+        </View>
       ) : (
         <TextInput
           style={[
@@ -872,7 +661,7 @@ const EditableField = ({
   );
 };
 
-// USER TYPE SELECTOR - FIXED PERFORMANCE
+// USER TYPE SELECTOR - FIXED SCROLLING
 const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
   const userTypes = [
     {
@@ -965,7 +754,7 @@ const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
   );
 };
 
-// SKILL MANAGER COMPONENT - FIXED PERFORMANCE
+// SKILL MANAGER COMPONENT - FIXED SCROLLING
 const SkillManager = ({ 
   skills, 
   userType, 
@@ -1105,7 +894,7 @@ const SkillManager = ({
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={styles.modalBody} nestedScrollEnabled={true}>
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Skill Name *</Text>
                 <TextInput
@@ -1119,7 +908,7 @@ const SkillManager = ({
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Category *</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.categoriesContainer}>
                   {Object.keys(categories).map((category) => (
                     <TouchableOpacity
                       key={category}
@@ -1135,13 +924,13 @@ const SkillManager = ({
                       </Text>
                     </TouchableOpacity>
                   ))}
-                </ScrollView>
+                </View>
               </View>
 
               {newSkill.category && (
                 <View style={styles.formGroup}>
                   <Text style={styles.formLabel}>Specialization</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <View style={styles.subcategoriesContainer}>
                     {subcategories.map((subcat) => (
                       <TouchableOpacity
                         key={subcat}
@@ -1155,7 +944,7 @@ const SkillManager = ({
                         <Text style={styles.subcategoryChipText}>{subcat}</Text>
                       </TouchableOpacity>
                     ))}
-                  </ScrollView>
+                  </View>
                 </View>
               )}
 
@@ -1186,7 +975,7 @@ const SkillManager = ({
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Years of Experience</Text>
                 <View style={styles.yearsSelector}>
-                  {[1,2,3,5,8,10,15,20].map((years) => (
+                  {[1,2,3,5,8,10].map((years) => (
                     <TouchableOpacity
                       key={years}
                       style={[
@@ -1257,14 +1046,14 @@ const SkillManager = ({
   );
 };
 
-// ENHANCED FARMER PROFILE COMPONENT - FIXED PERFORMANCE
+// FARMER PROFILE COMPONENT - FIXED SCROLLING
 const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
   const [showFarmEditor, setShowFarmEditor] = useState(false);
   const [tempFarmDetails, setTempFarmDetails] = useState(farmDetails);
 
-  const farmTypes = ['Crop Farm', 'Dairy Farm', 'Poultry Farm', 'Mixed Farm', 'Organic Farm', 'Vineyard', 'Orchard', 'Aquaculture', 'Livestock Farm'];
-  const soilTypes = ['Loam', 'Clay', 'Sandy', 'Silt', 'Peat', 'Chalk', 'Mixed'];
-  const waterSources = ['Well', 'River', 'Lake', 'Municipal', 'Rainwater', 'Irrigation Canal'];
+  const farmTypes = ['Crop Farm', 'Dairy Farm', 'Poultry Farm', 'Mixed Farm', 'Organic Farm', 'Vineyard', 'Orchard'];
+  const soilTypes = ['Loam', 'Clay', 'Sandy', 'Silt', 'Peat', 'Chalk'];
+  const waterSources = ['Well', 'River', 'Lake', 'Municipal', 'Rainwater'];
 
   const handleSaveFarmDetails = () => {
     onUpdate(tempFarmDetails);
@@ -1307,7 +1096,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
     <View style={styles.farmSection}>
       <View style={styles.sectionHeader}>
         <View style={styles.sectionTitleRow}>
-          {VectorIcons.farmer('#4CD964', 24)}
+          <Icon name="leaf" size={24} color="#4CD964" />
           <Text style={styles.sectionTitle}>Farm Details</Text>
         </View>
         {editing && (
@@ -1350,18 +1139,6 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
               </View>
             </View>
           )}
-          {farmDetails.equipment.length > 0 && (
-            <View style={styles.farmDetailItem}>
-              <Text style={styles.farmDetailLabel}>Equipment</Text>
-              <View style={styles.equipmentList}>
-                {farmDetails.equipment.map((item, index) => (
-                  <View key={index} style={styles.equipmentChip}>
-                    <Text style={styles.equipmentText}>{item}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
         </View>
       ) : (
         <View style={styles.noFarmDetails}>
@@ -1391,7 +1168,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={styles.modalBody} nestedScrollEnabled={true}>
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Farm Name *</Text>
                 <TextInput
@@ -1405,7 +1182,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Farm Type *</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.farmTypesContainer}>
                   {farmTypes.map((type) => (
                     <TouchableOpacity
                       key={type}
@@ -1419,7 +1196,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                       <Text style={styles.farmTypeText}>{type}</Text>
                     </TouchableOpacity>
                   ))}
-                </ScrollView>
+                </View>
               </View>
 
               <View style={styles.formGroup}>
@@ -1443,7 +1220,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                     placeholderTextColor="#666"
                     onSubmitEditing={(e) => {
                       addCrop(e.nativeEvent.text);
-                      e.nativeEvent.text = '';
+                      e.target.clear();
                     }}
                   />
                 </View>
@@ -1471,7 +1248,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                     placeholderTextColor="#666"
                     onSubmitEditing={(e) => {
                       addEquipment(e.nativeEvent.text);
-                      e.nativeEvent.text = '';
+                      e.target.clear();
                     }}
                   />
                 </View>
@@ -1488,71 +1265,6 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                     </View>
                   ))}
                 </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Soil Type</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {soilTypes.map((soil) => (
-                    <TouchableOpacity
-                      key={soil}
-                      style={[
-                        styles.soilTypeChip,
-                        tempFarmDetails.soilType === soil && styles.soilTypeChipSelected
-                      ]}
-                      onPress={() => setTempFarmDetails(prev => ({ ...prev, soilType: soil }))}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.soilTypeText}>{soil}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Water Source</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {waterSources.map((source) => (
-                    <TouchableOpacity
-                      key={source}
-                      style={[
-                        styles.waterSourceChip,
-                        tempFarmDetails.waterSource === source && styles.waterSourceChipSelected
-                      ]}
-                      onPress={() => setTempFarmDetails(prev => ({ ...prev, waterSource: source }))}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.waterSourceText}>{source}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-
-              <View style={styles.formGroup}>
-                <TouchableOpacity
-                  style={[
-                    styles.organicToggle,
-                    tempFarmDetails.organicCertified && styles.organicToggleActive
-                  ]}
-                  onPress={() => setTempFarmDetails(prev => ({ ...prev, organicCertified: !prev.organicCertified }))}
-                  activeOpacity={0.7}
-                >
-                  <View style={styles.organicToggleContent}>
-                    <View style={[
-                      styles.organicToggleSwitch,
-                      tempFarmDetails.organicCertified && styles.organicToggleSwitchActive
-                    ]}>
-                      <Icon 
-                        name={tempFarmDetails.organicCertified ? "checkmark" : "close"} 
-                        size={12} 
-                        color="#000" 
-                      />
-                    </View>
-                    <Text style={styles.organicToggleText}>
-                      Organically Certified
-                    </Text>
-                  </View>
-                </TouchableOpacity>
               </View>
             </ScrollView>
 
@@ -1583,251 +1295,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
   );
 };
 
-// ENHANCED CLIENT PROFILE COMPONENT - FIXED PERFORMANCE
-const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
-  const [showClientEditor, setShowClientEditor] = useState(false);
-  const [tempClientDetails, setTempClientDetails] = useState(clientDetails);
-
-  const industries = ['Residential', 'Commercial', 'Industrial', 'Agricultural', 'Construction', 'Technology', 'Healthcare', 'Education', 'Hospitality'];
-  const projectSizes = ['Small (<$5k)', 'Medium ($5k-$25k)', 'Large ($25k-$100k)', 'Enterprise ($100k+)'];
-
-  const handleSaveClientDetails = () => {
-    onUpdate(tempClientDetails);
-    setShowClientEditor(false);
-  };
-
-  const addProjectType = (type) => {
-    if (type && !tempClientDetails.projectTypes.includes(type)) {
-      setTempClientDetails(prev => ({
-        ...prev,
-        projectTypes: [...prev.projectTypes, type]
-      }));
-    }
-  };
-
-  const removeProjectType = (type) => {
-    setTempClientDetails(prev => ({
-      ...prev,
-      projectTypes: prev.projectTypes.filter(t => t !== type)
-    }));
-  };
-
-  return (
-    <View style={styles.clientSection}>
-      <View style={styles.sectionHeader}>
-        <View style={styles.sectionTitleRow}>
-          {VectorIcons.client('#007AFF', 24)}
-          <Text style={styles.sectionTitle}>Client Information</Text>
-        </View>
-        {editing && (
-          <TouchableOpacity 
-            style={styles.editSectionButton}
-            onPress={() => {
-              setTempClientDetails(clientDetails);
-              setShowClientEditor(true);
-            }}
-            activeOpacity={0.7}
-          >
-            <Icon name="create-outline" size={20} color="#00f0a8" />
-          </TouchableOpacity>
-        )}
-      </View>
-
-      {clientDetails.companyName ? (
-        <View style={styles.clientDetailsGrid}>
-          <View style={styles.clientDetailItem}>
-            <Text style={styles.clientDetailLabel}>Company</Text>
-            <Text style={styles.clientDetailValue}>{clientDetails.companyName}</Text>
-          </View>
-          <View style={styles.clientDetailItem}>
-            <Text style={styles.clientDetailLabel}>Industry</Text>
-            <Text style={styles.clientDetailValue}>{clientDetails.industry}</Text>
-          </View>
-          {clientDetails.projectTypes.length > 0 && (
-            <View style={styles.clientDetailItem}>
-              <Text style={styles.clientDetailLabel}>Project Types</Text>
-              <View style={styles.projectTypesList}>
-                {clientDetails.projectTypes.map((type, index) => (
-                  <View key={index} style={styles.projectTypeChip}>
-                    <Text style={styles.projectTypeText}>{type}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-          {clientDetails.budgetRange.min > 0 && (
-            <View style={styles.clientDetailItem}>
-              <Text style={styles.clientDetailLabel}>Budget Range</Text>
-              <Text style={styles.clientDetailValue}>
-                ${clientDetails.budgetRange.min} - ${clientDetails.budgetRange.max}
-              </Text>
-            </View>
-          )}
-        </View>
-      ) : (
-        <View style={styles.noClientDetails}>
-          <Text style={styles.noClientText}>No client information added</Text>
-          <Text style={styles.noClientSubtext}>
-            Add your company details to find skilled professionals
-          </Text>
-        </View>
-      )}
-
-      {/* Client Editor Modal */}
-      <Modal 
-        visible={showClientEditor} 
-        animationType="slide" 
-        transparent
-        onRequestClose={() => setShowClientEditor(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Client Details</Text>
-              <TouchableOpacity 
-                onPress={() => setShowClientEditor(false)}
-                activeOpacity={0.7}
-              >
-                <Icon name="close" size={24} color="#00f0a8" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView style={styles.modalBody}>
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Company Name *</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={tempClientDetails.companyName}
-                  onChangeText={(text) => setTempClientDetails(prev => ({ ...prev, companyName: text }))}
-                  placeholder="Enter company name"
-                  placeholderTextColor="#666"
-                />
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Industry *</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {industries.map((industry) => (
-                    <TouchableOpacity
-                      key={industry}
-                      style={[
-                        styles.industryChip,
-                        tempClientDetails.industry === industry && styles.industryChipSelected
-                      ]}
-                      onPress={() => setTempClientDetails(prev => ({ ...prev, industry }))}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.industryText}>{industry}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Project Types</Text>
-                <View style={styles.projectInputContainer}>
-                  <TextInput
-                    style={styles.projectInput}
-                    placeholder="Add project type"
-                    placeholderTextColor="#666"
-                    onSubmitEditing={(e) => {
-                      addProjectType(e.nativeEvent.text);
-                      e.nativeEvent.text = '';
-                    }}
-                  />
-                </View>
-                <View style={styles.selectedProjects}>
-                  {tempClientDetails.projectTypes.map((type, index) => (
-                    <View key={index} style={styles.selectedProject}>
-                      <Text style={styles.selectedProjectText}>{type}</Text>
-                      <TouchableOpacity 
-                        onPress={() => removeProjectType(type)}
-                        activeOpacity={0.7}
-                      >
-                        <Icon name="close" size={16} color="#ff6b6b" />
-                      </TouchableOpacity>
-                    </View>
-                  ))}
-                </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Budget Range</Text>
-                <View style={styles.budgetRangeContainer}>
-                  <TextInput
-                    style={styles.budgetInput}
-                    value={tempClientDetails.budgetRange.min?.toString()}
-                    onChangeText={(text) => setTempClientDetails(prev => ({
-                      ...prev,
-                      budgetRange: { ...prev.budgetRange, min: parseFloat(text) || 0 }
-                    }))}
-                    placeholder="Min"
-                    placeholderTextColor="#666"
-                    keyboardType="numeric"
-                  />
-                  <Text style={styles.budgetSeparator}>-</Text>
-                  <TextInput
-                    style={styles.budgetInput}
-                    value={tempClientDetails.budgetRange.max?.toString()}
-                    onChangeText={(text) => setTempClientDetails(prev => ({
-                      ...prev,
-                      budgetRange: { ...prev.budgetRange, max: parseFloat(text) || 0 }
-                    }))}
-                    placeholder="Max"
-                    placeholderTextColor="#666"
-                    keyboardType="numeric"
-                  />
-                </View>
-              </View>
-
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Project Size</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {projectSizes.map((size) => (
-                    <TouchableOpacity
-                      key={size}
-                      style={[
-                        styles.projectSizeChip,
-                        tempClientDetails.projectSize === size && styles.projectSizeChipSelected
-                      ]}
-                      onPress={() => setTempClientDetails(prev => ({ ...prev, projectSize: size }))}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.projectSizeText}>{size}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </ScrollView>
-              </View>
-            </ScrollView>
-
-            <View style={styles.modalFooter}>
-              <TouchableOpacity 
-                style={styles.cancelModalButton}
-                onPress={() => setShowClientEditor(false)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.cancelModalText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[
-                  styles.saveModalButton,
-                  (!tempClientDetails.companyName || !tempClientDetails.industry) && styles.saveModalButtonDisabled
-                ]}
-                onPress={handleSaveClientDetails}
-                disabled={!tempClientDetails.companyName || !tempClientDetails.industry}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.saveModalText}>Save Client Details</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
-  );
-};
-
-// LOCATION MANAGER - FIXED PERFORMANCE
+// LOCATION MANAGER - FIXED
 const LocationManager = ({ location, onUpdate, editing }) => {
   const [gettingLocation, setGettingLocation] = useState(false);
 
@@ -1861,7 +1329,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
         verified: true
       });
 
-      Alert.alert('Success', 'Location updated with high accuracy');
+      Alert.alert('Success', 'Location updated successfully');
     } catch (error) {
       console.error('Location error:', error);
       Alert.alert('Error', 'Failed to get current location. Please try manual entry.');
@@ -1915,16 +1383,6 @@ const LocationManager = ({ location, onUpdate, editing }) => {
           </View>
           <View style={styles.locationInfo}>
             <Text style={styles.locationAddress}>{location.address}</Text>
-            {location.latitude && (
-              <View style={styles.locationDetails}>
-                <Text style={styles.locationCoords}>
-                  {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-                </Text>
-                <Text style={styles.locationAccuracy}>
-                  Accuracy: {location.accuracy?.toFixed(0)} meters
-                </Text>
-              </View>
-            )}
             <Text style={styles.locationTimestamp}>
               Updated {new Date(location.lastUpdated).toLocaleDateString()}
             </Text>
@@ -1972,13 +1430,13 @@ const LocationManager = ({ location, onUpdate, editing }) => {
   );
 };
 
-// ADVANCED BOTTOM NAVIGATION WITH VECTOR ICONS - FIXED PERFORMANCE
-const AdvancedBottomNavigation = ({ activeTab, onTabChange }) => {
+// BOTTOM NAVIGATION - MATCHING DASHBOARD
+const BottomNavigation = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { key: 'home', label: 'Home', icon: VectorIcons.home },
-    { key: 'search', label: 'Discover', icon: VectorIcons.search },
-    { key: 'marketplace', label: 'Market', icon: VectorIcons.marketplace },
-    { key: 'profile', label: 'Profile', icon: VectorIcons.profile }
+    { key: 'home', label: 'Home', icon: 'home' },
+    { key: 'search', label: 'Discover', icon: 'search' },
+    { key: 'market', label: 'Market', icon: 'cart' },
+    { key: 'profile', label: 'Profile', icon: 'person' }
   ];
 
   return (
@@ -1993,10 +1451,11 @@ const AdvancedBottomNavigation = ({ activeTab, onTabChange }) => {
           onPress={() => onTabChange(tab.key)}
           activeOpacity={0.7}
         >
-          {tab.icon(
-            activeTab === tab.key ? '#00f0a8' : '#666',
-            24
-          )}
+          <Icon
+            name={activeTab === tab.key ? tab.icon : `${tab.icon}-outline`}
+            size={24}
+            color={activeTab === tab.key ? '#00f0a8' : '#666'}
+          />
           <Text style={[
             styles.navLabel,
             activeTab === tab.key && styles.navLabelActive
@@ -2009,7 +1468,7 @@ const AdvancedBottomNavigation = ({ activeTab, onTabChange }) => {
   );
 };
 
-// MAIN ENHANCED ENTERPRISE PLATFORM - FIXED SCROLLING AND ADAPTIVE ISSUES
+// MAIN COMPONENT - FIXED SCROLLING AND RESPONSIVENESS
 export default function AdvancedEnterprisePlatform({ navigation }) {
   const {
     profile,
@@ -2025,7 +1484,6 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
     updateClientDetails,
     addSkill,
     removeSkill,
-    addPortfolioItem,
     updateProfileImage,
     saveProfile,
     loadProfile,
@@ -2034,8 +1492,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
 
   const [refreshing, setRefreshing] = useState(false);
   const [bottomNavTab, setBottomNavTab] = useState('profile');
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const mainScrollRef = useRef(null);
+  const scrollViewRef = useRef(null);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -2047,26 +1504,12 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
     try {
       await Share.share({
         message: `Check out ${profile.displayName}'s professional profile on VSXchange Platform!`,
-        title: `${profile.displayName}'s Professional Profile`,
-        url: 'https://vsxchangeza.com/profiles/' + profile.id
+        title: `${profile.displayName}'s Professional Profile`
       });
     } catch (error) {
       console.log('Share failed:', error);
     }
   };
-
-  // Animated header styles
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, -50],
-    extrapolate: 'clamp',
-  });
-
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
 
   if (loading || !profile) {
     return (
@@ -2078,212 +1521,159 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   }
 
   const ProfileHeader = () => (
-    <Animated.View 
-      style={[
-        styles.header,
-        {
-          transform: [{ translateY: headerTranslateY }],
-          opacity: headerOpacity
-        }
-      ]}
-    >
-      <LinearGradient colors={['#000000', '#1a1a1a']} style={styles.headerGradient}>
-        <View style={styles.headerContent}>
-          {/* Enhanced Top Bar */}
-          <View style={styles.headerTop}>
+    <LinearGradient colors={['#000000', '#1a1a1a']} style={styles.header}>
+      <View style={styles.headerContent}>
+        <View style={styles.headerTop}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Icon name="chevron-back" size={28} color="#00f0a8" />
+          </TouchableOpacity>
+          
+          <View style={styles.headerTitle}>
+            <Text style={styles.headerTitleText}>VSXchange Pro</Text>
+            {saving && (
+              <View style={styles.savingIndicator}>
+                <ActivityIndicator size="small" color="#00f0a8" />
+                <Text style={styles.savingText}>Auto-saving...</Text>
+              </View>
+            )}
+          </View>
+          
+          <View style={styles.headerActions}>
             <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
+              style={styles.shareButton}
+              onPress={handleShareProfile}
               activeOpacity={0.7}
             >
-              <Icon name="chevron-back" size={28} color="#00f0a8" />
+              <Icon name="share-social" size={20} color="#00f0a8" />
             </TouchableOpacity>
             
-            <View style={styles.headerTitle}>
-              <Text style={styles.headerTitleText}>VSXchange Pro</Text>
-              {saving && (
-                <View style={styles.savingIndicator}>
-                  <ActivityIndicator size="small" color="#00f0a8" />
-                  <Text style={styles.savingText}>Auto-saving...</Text>
-                </View>
-              )}
-            </View>
-            
-            <View style={styles.headerActions}>
-              <TouchableOpacity 
-                style={styles.shareButton}
-                onPress={handleShareProfile}
-                activeOpacity={0.7}
-              >
-                <Icon name="share-social" size={20} color="#00f0a8" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.editButton, editing && styles.editButtonActive]}
-                onPress={() => setEditing(!editing)}
-                activeOpacity={0.7}
-              >
-                <Icon 
-                  name={editing ? "checkmark" : "create-outline"} 
-                  size={20} 
-                  color="#00f0a8" 
-                />
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={styles.menuButton}
-                onPress={() => {
-                  Alert.alert(
-                    'Profile Options',
-                    'Choose an action:',
-                    [
-                      { text: 'Reset Profile', onPress: resetProfile, style: 'destructive' },
-                      { text: 'Export Data', onPress: () => console.log('Export') },
-                      { text: 'Cancel', style: 'cancel' }
-                    ]
-                  );
-                }}
-                activeOpacity={0.7}
-              >
-                <Icon name="ellipsis-vertical" size={20} color="#00f0a8" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity 
+              style={[styles.editButton, editing && styles.editButtonActive]}
+              onPress={() => setEditing(!editing)}
+              activeOpacity={0.7}
+            >
+              <Icon 
+                name={editing ? "checkmark" : "create-outline"} 
+                size={20} 
+                color="#00f0a8" 
+              />
+            </TouchableOpacity>
           </View>
+        </View>
 
-          {/* Enhanced Profile Main Section */}
-          <View style={styles.profileMain}>
-            <ProfileImageEditor
-              profileImage={profile.profileImage}
-              onImageUpdate={updateProfileImage}
-              editing={editing}
-            />
-
-            <View style={styles.profileInfo}>
-              <View style={styles.nameSection}>
-                {editing ? (
-                  <View style={styles.nameEditor}>
-                    <EditableField
-                      value={profile.firstName}
-                      onSave={(value) => updateProfile({ firstName: value })}
-                      placeholder="First Name"
-                      style={styles.nameInput}
-                      required
-                    />
-                    <EditableField
-                      value={profile.lastName}
-                      onSave={(value) => updateProfile({ lastName: value })}
-                      placeholder="Last Name"
-                      style={styles.nameInput}
-                      required
-                    />
-                  </View>
-                ) : (
-                  <>
-                    <Text style={styles.userName}>{profile.displayName}</Text>
-                    <Text style={styles.profession}>{profile.profession}</Text>
-                    <Text style={styles.tagline}>{profile.tagline}</Text>
-                  </>
-                )}
-              </View>
-
-              {/* Enhanced Professional Stats */}
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profile.experienceYears}</Text>
-                  <Text style={styles.statLabel}>Years</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profile.rating}</Text>
-                  <View style={styles.ratingContainer}>
-                    <Icon name="star" size={12} color="#FFD700" />
-                    <Text style={styles.statLabel}>Rating</Text>
-                  </View>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profile.completedProjects}+</Text>
-                  <Text style={styles.statLabel}>Projects</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>${profile.hourlyRate}</Text>
-                  <Text style={styles.statLabel}>/hr</Text>
-                </View>
-              </View>
-
-              {/* Enhanced Action Buttons */}
-              <View style={styles.actionButtons}>
-                <TouchableOpacity 
-                  style={styles.contactButton}
-                  onPress={() => navigation.navigate('Messages', { user: profile })}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="chatbubble-ellipses" size={18} color="#000" />
-                  <Text style={styles.contactButtonText}>Message</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.hireButton}
-                  onPress={() => navigation.navigate('Booking', { professional: profile })}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="calendar" size={18} color="#000" />
-                  <Text style={styles.hireButtonText}>Hire Now</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={styles.callButton}
-                  onPress={() => console.log('Call:', profile.contactInfo.phone)}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="call" size={18} color="#00f0a8" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          {/* Enhanced User Type Selector */}
-          <UserTypeSelector
-            currentType={profile.userType}
-            onTypeChange={(type) => updateProfile({ userType: type })}
+        <View style={styles.profileMain}>
+          <ProfileImageEditor
+            profileImage={profile.profileImage}
+            onImageUpdate={updateProfileImage}
             editing={editing}
           />
 
-          {/* Enhanced Save Status */}
-          {lastSave && (
-            <View style={styles.saveStatus}>
-              <Icon name="checkmark-circle" size={12} color="#00f0a8" />
-              <Text style={styles.saveStatusText}>
-                Auto-saved {new Date(lastSave).toLocaleTimeString()}
-              </Text>
+          <View style={styles.profileInfo}>
+            <View style={styles.nameSection}>
+              {editing ? (
+                <View style={styles.nameEditor}>
+                  <EditableField
+                    value={profile.firstName}
+                    onSave={(value) => updateProfile({ firstName: value })}
+                    placeholder="First Name"
+                    style={styles.nameInput}
+                    required
+                  />
+                  <EditableField
+                    value={profile.lastName}
+                    onSave={(value) => updateProfile({ lastName: value })}
+                    placeholder="Last Name"
+                    style={styles.nameInput}
+                    required
+                  />
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.userName}>{profile.displayName}</Text>
+                  <Text style={styles.profession}>{profile.profession}</Text>
+                  <Text style={styles.tagline}>{profile.tagline}</Text>
+                </>
+              )}
             </View>
-          )}
+
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{profile.experienceYears}</Text>
+                <Text style={styles.statLabel}>Years</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{profile.rating}</Text>
+                <View style={styles.ratingContainer}>
+                  <Icon name="star" size={12} color="#FFD700" />
+                  <Text style={styles.statLabel}>Rating</Text>
+                </View>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{profile.completedProjects}+</Text>
+                <Text style={styles.statLabel}>Projects</Text>
+              </View>
+            </View>
+
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={styles.contactButton}
+                onPress={() => navigation.navigate('Messages', { user: profile })}
+                activeOpacity={0.7}
+              >
+                <Icon name="chatbubble-ellipses" size={18} color="#000" />
+                <Text style={styles.contactButtonText}>Message</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.hireButton}
+                onPress={() => navigation.navigate('Booking', { professional: profile })}
+                activeOpacity={0.7}
+              >
+                <Icon name="calendar" size={18} color="#000" />
+                <Text style={styles.hireButtonText}>Hire Now</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </LinearGradient>
-    </Animated.View>
+
+        <UserTypeSelector
+          currentType={profile.userType}
+          onTypeChange={(type) => updateProfile({ userType: type })}
+          editing={editing}
+        />
+
+        {lastSave && (
+          <View style={styles.saveStatus}>
+            <Icon name="checkmark-circle" size={12} color="#00f0a8" />
+            <Text style={styles.saveStatusText}>
+              Auto-saved {new Date(lastSave).toLocaleTimeString()}
+            </Text>
+          </View>
+        )}
+      </View>
+    </LinearGradient>
   );
 
   const TabContent = () => {
     switch (activeTab) {
       case 'about':
         return (
-          <Animated.ScrollView 
-            ref={mainScrollRef}
+          <ScrollView 
+            ref={scrollViewRef}
             style={styles.tabContent}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
             showsVerticalScrollIndicator={false}
+            nestedScrollEnabled={true}
             keyboardShouldPersistTaps="handled"
-            scrollEventThrottle={16}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true }
-            )}
-            contentContainerStyle={styles.scrollContent}
           >
-            {/* Professional Bio */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Professional Bio</Text>
               <EditableField
@@ -2296,7 +1686,6 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               />
             </View>
 
-            {/* Skills & Expertise */}
             <SkillManager
               skills={profile.skills}
               userType={profile.userType}
@@ -2305,7 +1694,6 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               editing={editing}
             />
 
-            {/* User Type Specific Sections */}
             {profile.userType === 'farmer' && (
               <FarmerProfileManager
                 farmDetails={profile.farmDetails}
@@ -2314,22 +1702,12 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               />
             )}
 
-            {profile.userType === 'client' && (
-              <ClientProfileManager
-                clientDetails={profile.clientDetails}
-                onUpdate={updateClientDetails}
-                editing={editing}
-              />
-            )}
-
-            {/* Enhanced Location */}
             <LocationManager
               location={profile.location}
               onUpdate={(location) => updateProfile({ location })}
               editing={editing}
             />
 
-            {/* Enhanced Contact Information */}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Contact Information</Text>
               <EditableField
@@ -2347,7 +1725,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 type="email"
               />
             </View>
-          </Animated.ScrollView>
+          </ScrollView>
         );
 
       case 'portfolio':
@@ -2356,18 +1734,10 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
             <Text style={styles.sectionTitle}>Portfolio Gallery</Text>
             <View style={styles.comingSoonSection}>
               <Icon name="images" size={64} color="#666" />
-              <Text style={styles.comingSoonTitle}>Advanced Portfolio</Text>
+              <Text style={styles.comingSoonTitle}>Portfolio</Text>
               <Text style={styles.comingSoonText}>
-                Showcase your work with high-resolution images, project descriptions, and client testimonials
+                Showcase your work with images and project descriptions
               </Text>
-              {editing && (
-                <TouchableOpacity 
-                  style={styles.comingSoonButton}
-                  activeOpacity={0.7}
-                >
-                  <Text style={styles.comingSoonButtonText}>Upload Portfolio Items</Text>
-                </TouchableOpacity>
-              )}
             </View>
           </View>
         );
@@ -2378,33 +1748,9 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
             <Text style={styles.sectionTitle}>Services & Pricing</Text>
             <View style={styles.comingSoonSection}>
               <Icon name="construct" size={64} color="#666" />
-              <Text style={styles.comingSoonTitle}>Service Management</Text>
+              <Text style={styles.comingSoonTitle}>Services</Text>
               <Text style={styles.comingSoonText}>
-                Manage your service offerings, dynamic pricing, and availability calendar
-              </Text>
-            </View>
-          </View>
-        );
-
-      case 'reviews':
-        return (
-          <View style={styles.tabContent}>
-            <Text style={styles.sectionTitle}>Reviews & Ratings</Text>
-            <View style={styles.ratingOverview}>
-              <Text style={styles.ratingNumber}>{profile.rating}</Text>
-              <View style={styles.ratingStars}>
-                {[1,2,3,4,5].map((star) => (
-                  <Icon 
-                    key={star}
-                    name={star <= Math.floor(profile.rating) ? "star" : 
-                          star === Math.ceil(profile.rating) && !Number.isInteger(profile.rating) ? "star-half" : "star-outline"} 
-                    size={24} 
-                    color="#FFD700" 
-                  />
-                ))}
-              </View>
-              <Text style={styles.ratingCount}>
-                Based on {profile.completedProjects} completed projects
+                Manage your service offerings and pricing
               </Text>
             </View>
           </View>
@@ -2421,14 +1767,13 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
       
       <ProfileHeader />
       
-      {/* Enhanced Tab Navigation */}
       <View style={styles.tabsContainer}>
         <ScrollView 
           horizontal 
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.tabsScrollContent}
         >
-          {['about', 'portfolio', 'services', 'reviews'].map((tab) => (
+          {['about', 'portfolio', 'services'].map((tab) => (
             <TouchableOpacity
               key={tab}
               style={[
@@ -2442,8 +1787,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 name={
                   tab === 'about' ? 'person' :
                   tab === 'portfolio' ? 'images' :
-                  tab === 'services' ? 'construct' :
-                  'star'
+                  'construct'
                 }
                 size={16}
                 color={activeTab === tab ? '#00f0a8' : '#666'}
@@ -2459,7 +1803,6 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
         </ScrollView>
       </View>
 
-      {/* Enhanced Main Content */}
       <KeyboardAvoidingView 
         style={styles.contentContainer}
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -2468,13 +1811,11 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
         <TabContent />
       </KeyboardAvoidingView>
 
-      {/* Advanced Bottom Navigation */}
-      <AdvancedBottomNavigation 
+      <BottomNavigation 
         activeTab={bottomNavTab}
         onTabChange={setBottomNavTab}
       />
 
-      {/* Enhanced Saving Overlay */}
       {saving && (
         <View style={styles.savingOverlay}>
           <View style={styles.savingContent}>
@@ -2487,7 +1828,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   );
 }
 
-// COMPLETE ENTERPRISE-LEVEL STYLES - OPTIMIZED FOR SCROLLING
+// OPTIMIZED STYLES
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -2505,18 +1846,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     overflow: 'hidden',
-  },
-  headerGradient: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
   },
   headerContent: {
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
@@ -2568,16 +1900,9 @@ const styles = StyleSheet.create({
     padding: 8,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    marginRight: 8,
   },
   editButtonActive: {
     backgroundColor: 'rgba(0,240,168,0.2)',
-    transform: [{ scale: 1.1 }],
-  },
-  menuButton: {
-    padding: 8,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   profileMain: {
     flexDirection: 'row',
@@ -2698,7 +2023,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   contactButton: {
-    flex: 2,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2716,7 +2041,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   hireButton: {
-    flex: 2,
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -2730,15 +2055,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '700',
     marginLeft: 6,
-  },
-  callButton: {
-    width: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: '#00f0a8',
   },
   userTypeDisplay: {
     flexDirection: 'row',
@@ -2792,7 +2108,6 @@ const styles = StyleSheet.create({
     padding: 15,
     borderWidth: 2,
     borderColor: 'transparent',
-    position: 'relative',
   },
   typeOptionSelected: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -2867,7 +2182,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
-    marginTop: Platform.OS === 'ios' ? 100 : 80,
   },
   tabsScrollContent: {
     paddingHorizontal: 20,
@@ -2897,10 +2211,6 @@ const styles = StyleSheet.create({
   },
   tabContent: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 20,
-    paddingBottom: 100,
   },
   section: {
     padding: 20,
@@ -3208,23 +2518,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  equipmentList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  equipmentChip: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  equipmentText: {
-    color: '#00f0a8',
-    fontSize: 12,
-    fontWeight: '600',
-  },
   noFarmDetails: {
     alignItems: 'center',
     paddingVertical: 30,
@@ -3236,62 +2529,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   noFarmSubtext: {
-    color: '#666',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  clientSection: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  clientDetailsGrid: {
-    gap: 12,
-  },
-  clientDetailItem: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 8,
-    padding: 12,
-  },
-  clientDetailLabel: {
-    color: '#666',
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  clientDetailValue: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  projectTypesList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  projectTypeChip: {
-    backgroundColor: 'rgba(0,122,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  projectTypeText: {
-    color: '#007AFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  noClientDetails: {
-    alignItems: 'center',
-    paddingVertical: 30,
-  },
-  noClientText: {
-    color: '#666',
-    fontSize: 16,
-    marginBottom: 4,
-    fontStyle: 'italic',
-  },
-  noClientSubtext: {
     color: '#666',
     fontSize: 12,
     textAlign: 'center',
@@ -3348,12 +2585,135 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
+  categoriesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  categoryChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  categoryChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  categoryChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  subcategoriesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  subcategoryChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  subcategoryChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  subcategoryChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  levelOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  levelChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  levelChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  levelChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  yearsSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  yearChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  yearChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  yearChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  certifiedToggle: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  certifiedToggleActive: {
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    borderColor: '#00f0a8',
+  },
+  certifiedToggleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  certifiedToggleSwitch: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  certifiedToggleSwitchActive: {
+    backgroundColor: '#00f0a8',
+  },
+  certifiedToggleText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  farmTypesContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
   farmTypeChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 15,
-    marginRight: 8,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
@@ -3426,159 +2786,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  soilTypeChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  soilTypeChipSelected: {
-    backgroundColor: 'rgba(139,69,19,0.3)',
-    borderColor: '#8B4513',
-  },
-  soilTypeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  waterSourceChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  waterSourceChipSelected: {
-    backgroundColor: 'rgba(0,122,255,0.2)',
-    borderColor: '#007AFF',
-  },
-  waterSourceText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  organicToggle: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    padding: 12,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  organicToggleActive: {
-    backgroundColor: 'rgba(76,217,100,0.1)',
-    borderColor: '#4CD964',
-  },
-  organicToggleContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  organicToggleSwitch: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  organicToggleSwitchActive: {
-    backgroundColor: '#4CD964',
-  },
-  organicToggleText: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  industryChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  industryChipSelected: {
-    backgroundColor: 'rgba(0,122,255,0.2)',
-    borderColor: '#007AFF',
-  },
-  industryText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  projectInputContainer: {
-    marginBottom: 8,
-  },
-  projectInput: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    padding: 12,
-    color: '#fff',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  selectedProjects: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-  },
-  selectedProject: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,122,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
-  },
-  selectedProjectText: {
-    color: '#007AFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  budgetRangeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-  },
-  budgetInput: {
-    flex: 1,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    padding: 12,
-    color: '#fff',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-    textAlign: 'center',
-  },
-  budgetSeparator: {
-    color: '#666',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  projectSizeChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  projectSizeChipSelected: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-    borderColor: '#00f0a8',
-  },
-  projectSizeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
   cancelModalButton: {
     flex: 1,
     padding: 15,
@@ -3644,20 +2851,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 4,
-  },
-  locationDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 4,
-  },
-  locationCoords: {
-    color: '#666',
-    fontSize: 12,
-  },
-  locationAccuracy: {
-    color: '#666',
-    fontSize: 12,
   },
   locationTimestamp: {
     color: '#666',
@@ -3751,38 +2944,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 20,
-    marginBottom: 20,
-  },
-  comingSoonButton: {
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-  },
-  comingSoonButtonText: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  ratingOverview: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  ratingNumber: {
-    color: '#00f0a8',
-    fontSize: 48,
-    fontWeight: '800',
-    marginBottom: 10,
-  },
-  ratingStars: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  ratingCount: {
-    color: '#666',
-    fontSize: 14,
   },
   savingOverlay: {
     ...StyleSheet.absoluteFillObject,
