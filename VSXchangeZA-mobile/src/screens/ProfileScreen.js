@@ -22,7 +22,8 @@ import {
   Share,
   KeyboardAvoidingView,
   RefreshControl,
-  PanResponder
+  PanResponder,
+  Pressable
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
 import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
@@ -101,6 +102,44 @@ const VectorIcons = {
       <Path d="M15 22H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
     </Svg>
   )
+};
+
+// ADVANCED BOTTOM NAVIGATION COMPONENT - FIXED MISSING COMPONENT
+const AdvancedBottomNavigation = ({ activeTab, onTabChange }) => {
+  const tabs = [
+    { id: 'home', icon: 'home', label: 'Home' },
+    { id: 'search', icon: 'search', label: 'Discover' },
+    { id: 'marketplace', icon: 'business', label: 'Market' },
+    { id: 'profile', icon: 'person', label: 'Profile' }
+  ];
+
+  return (
+    <View style={styles.bottomNavigation}>
+      {tabs.map((tab) => (
+        <TouchableOpacity
+          key={tab.id}
+          style={[
+            styles.navItem,
+            activeTab === tab.id && styles.navItemActive
+          ]}
+          onPress={() => onTabChange(tab.id)}
+          activeOpacity={0.7}
+        >
+          <Icon
+            name={activeTab === tab.id ? tab.icon : `${tab.icon}-outline`}
+            size={24}
+            color={activeTab === tab.id ? '#00f0a8' : '#666'}
+          />
+          <Text style={[
+            styles.navLabel,
+            activeTab === tab.id && styles.navLabelActive
+          ]}>
+            {tab.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
 };
 
 // ENHANCED ENTERPRISE STATE MANAGEMENT
@@ -1971,96 +2010,6 @@ const LocationManager = ({ location, onUpdate, editing }) => {
     </View>
   );
 };
-
-// ADVANCED BOTTOM NAVIGATION WITH VECTOR ICONS - FIXED PERFORMANCE
-// Enhanced Navigation Tabs
-  const NavigationTabs = () => (
-    <View style={styles.navTabs}>
-      {[
-        { id: 'feed', icon: 'home', label: 'Home' },
-        { id: 'explore', icon: 'search', label: 'Discover' },
-        { id: 'create', icon: 'add', label: 'Create' },
-        { id: 'messages', icon: 'chatbubble', label: 'Inbox' },
-        { id: 'profile', icon: 'person', label: 'Profile' },
-      ].map((tab) => (
-        <TouchableOpacity 
-          key={`tab-${tab.id}`} 
-          style={[styles.navTab, activeTab === tab.id && styles.navTabActive]} 
-          onPress={() => handleNavigation(tab.id)}
-        >
-          <Icon 
-            name={activeTab === tab.id ? tab.icon : `${tab.icon}-outline`} 
-            size={24} 
-            color={activeTab === tab.id ? '#00f0a8' : '#666'} 
-          />
-          <Text style={[styles.navTabText, activeTab === tab.id && styles.navTabTextActive]}>{tab.label}</Text>
-          {tab.id === 'messages' && unreadMessages > 0 && (
-            <View style={styles.messageBadge}>
-              <Text style={styles.messageBadgeText}>{unreadMessages}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-
-  // Enhanced Explore Sheet
-  const ExploreSheet = () => (
-    <Modal visible={exploreOpen} transparent animationType="none" onRequestClose={() => setExploreOpen(false)}>
-      <View style={styles.sheetOverlay}>
-        <Pressable style={styles.overlayTouchable} onPress={() => setExploreOpen(false)} />
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetAnim }] }]}>
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Advanced Search</Text>
-            <TouchableOpacity onPress={() => setExploreOpen(false)}>
-              <Icon name="close" size={24} color="#00f0a8" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.sheetContent}>
-            <Text style={styles.sheetSubtitle}>Find skills and connect with experts</Text>
-
-            <View style={styles.searchContainer}>
-              <Icon name="search" size={18} color="#666" style={styles.searchIcon} />
-              <TextInput 
-                style={styles.searchInput} 
-                placeholder="Search skills, services, or users..." 
-                placeholderTextColor="#666" 
-                value={searchQuery} 
-                onChangeText={setSearchQuery} 
-              />
-            </View>
-
-            <View style={styles.skillsGrid}>
-              {['Carpentry', 'Electrical', 'Plumbing', 'Farming', 'Tech', 'Design', 'Marketing', 'Consulting', 'Mechanical', 'Construction'].map((skill) => {
-                const active = activeFilters.has(skill);
-                return (
-                  <TouchableOpacity
-                    key={`skill-${skill}`}
-                    style={[styles.skillChip, active && styles.skillChipActive]}
-                    onPress={() => {
-                      setActiveFilters(prev => {
-                        const next = new Set(prev);
-                        if (next.has(skill)) next.delete(skill);
-                        else next.add(skill);
-                        return next;
-                      });
-                    }}
-                  >
-                    <Text style={[styles.skillText, active && styles.skillTextActive]}>{skill}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <TouchableOpacity style={styles.exploreButton} onPress={() => setExploreOpen(false)}>
-              <Text style={styles.exploreButtonText}>Apply Filters</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
 
 // MAIN ENHANCED ENTERPRISE PLATFORM - FIXED SCROLLING AND ADAPTIVE ISSUES
 export default function AdvancedEnterprisePlatform({ navigation }) {
