@@ -37,9 +37,9 @@ import Svg, { Path, Circle, Rect, G, Defs, RadialGradient, Stop } from 'react-na
 
 const { width, height } = Dimensions.get('window');
 
-// ADVANCED VECTOR ICONS SYSTEM
+// ADVANCED VECTOR ICONS SYSTEM - MATCHING DASHBOARD
 const VectorIcons = {
-  // Bottom Navigation Icons
+  // Bottom Navigation Icons - Matching DashboardScreen
   home: (color = '#00f0a8', size = 28) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" 
@@ -801,7 +801,11 @@ const EditableField = ({
       {label && <Text style={styles.fieldLabel}>{label}</Text>}
       
       {type === 'select' ? (
-        <ScrollView style={styles.optionsContainer} nestedScrollEnabled>
+        <ScrollView 
+          style={styles.optionsContainer} 
+          nestedScrollEnabled
+          showsVerticalScrollIndicator={true}
+        >
           {options.map((option, index) => (
             <TouchableOpacity
               key={index}
@@ -923,7 +927,10 @@ const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
         Choose how you want to use the platform
       </Text>
       
-      <View style={styles.typeOptions}>
+      <ScrollView 
+        style={styles.typeOptionsContainer}
+        showsVerticalScrollIndicator={false}
+      >
         {userTypes.map((userType) => (
           <TouchableOpacity
             key={userType.type}
@@ -960,7 +967,7 @@ const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
             </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
     </View>
   );
 };
@@ -1057,7 +1064,11 @@ const SkillManager = ({
         )}
       </View>
 
-      <View style={styles.skillsGrid}>
+      <ScrollView 
+        style={styles.skillsGrid}
+        showsVerticalScrollIndicator={false}
+        nestedScrollEnabled
+      >
         {skills.map((skill) => (
           <SkillChip 
             key={skill.id} 
@@ -1084,7 +1095,7 @@ const SkillManager = ({
             )}
           </View>
         )}
-      </View>
+      </ScrollView>
 
       {/* Add Skill Modal */}
       <Modal 
@@ -1094,7 +1105,7 @@ const SkillManager = ({
         onRequestClose={() => setShowAddSkill(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, styles.largeModalContent]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Add New Skill</Text>
               <TouchableOpacity 
@@ -1105,7 +1116,11 @@ const SkillManager = ({
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView 
+              style={styles.modalBody}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled
+            >
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Skill Name *</Text>
                 <TextInput
@@ -1119,7 +1134,11 @@ const SkillManager = ({
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Category *</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.categoryScrollView}
+                >
                   {Object.keys(categories).map((category) => (
                     <TouchableOpacity
                       key={category}
@@ -1141,7 +1160,11 @@ const SkillManager = ({
               {newSkill.category && (
                 <View style={styles.formGroup}>
                   <Text style={styles.formLabel}>Specialization</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.subcategoryScrollView}
+                  >
                     {subcategories.map((subcat) => (
                       <TouchableOpacity
                         key={subcat}
@@ -1161,7 +1184,11 @@ const SkillManager = ({
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Experience Level</Text>
-                <View style={styles.levelOptions}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.levelScrollView}
+                >
                   {[
                     { value: 'beginner', label: 'Beginner' },
                     { value: 'intermediate', label: 'Intermediate' },
@@ -1180,12 +1207,16 @@ const SkillManager = ({
                       <Text style={styles.levelChipText}>{level.label}</Text>
                     </TouchableOpacity>
                   ))}
-                </View>
+                </ScrollView>
               </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Years of Experience</Text>
-                <View style={styles.yearsSelector}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.yearsScrollView}
+                >
                   {[1,2,3,5,8,10,15,20].map((years) => (
                     <TouchableOpacity
                       key={years}
@@ -1199,7 +1230,7 @@ const SkillManager = ({
                       <Text style={styles.yearChipText}>{years}</Text>
                     </TouchableOpacity>
                   ))}
-                </View>
+                </ScrollView>
               </View>
 
               <View style={styles.formGroup}>
@@ -1325,7 +1356,11 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
       </View>
 
       {farmDetails.farmName ? (
-        <View style={styles.farmDetailsGrid}>
+        <ScrollView 
+          style={styles.farmDetailsGrid}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
+        >
           <View style={styles.farmDetailItem}>
             <Text style={styles.farmDetailLabel}>Farm Name</Text>
             <Text style={styles.farmDetailValue}>{farmDetails.farmName}</Text>
@@ -1341,28 +1376,36 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
           {farmDetails.mainCrops.length > 0 && (
             <View style={styles.farmDetailItem}>
               <Text style={styles.farmDetailLabel}>Main Crops</Text>
-              <View style={styles.cropsList}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.cropsScrollView}
+              >
                 {farmDetails.mainCrops.map((crop, index) => (
                   <View key={index} style={styles.cropChip}>
                     <Text style={styles.cropText}>{crop}</Text>
                   </View>
                 ))}
-              </View>
+              </ScrollView>
             </View>
           )}
           {farmDetails.equipment.length > 0 && (
             <View style={styles.farmDetailItem}>
               <Text style={styles.farmDetailLabel}>Equipment</Text>
-              <View style={styles.equipmentList}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.equipmentScrollView}
+              >
                 {farmDetails.equipment.map((item, index) => (
                   <View key={index} style={styles.equipmentChip}>
                     <Text style={styles.equipmentText}>{item}</Text>
                   </View>
                 ))}
-              </View>
+              </ScrollView>
             </View>
           )}
-        </View>
+        </ScrollView>
       ) : (
         <View style={styles.noFarmDetails}>
           <Text style={styles.noFarmText}>No farm details added</Text>
@@ -1380,7 +1423,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
         onRequestClose={() => setShowFarmEditor(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, styles.largeModalContent]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Farm Details</Text>
               <TouchableOpacity 
@@ -1391,7 +1434,11 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView 
+              style={styles.modalBody}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled
+            >
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Farm Name *</Text>
                 <TextInput
@@ -1405,7 +1452,11 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Farm Type *</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.farmTypeScrollView}
+                >
                   {farmTypes.map((type) => (
                     <TouchableOpacity
                       key={type}
@@ -1447,7 +1498,11 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                     }}
                   />
                 </View>
-                <View style={styles.selectedCrops}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.selectedCropsScrollView}
+                >
                   {tempFarmDetails.mainCrops.map((crop, index) => (
                     <View key={index} style={styles.selectedCrop}>
                       <Text style={styles.selectedCropText}>{crop}</Text>
@@ -1459,7 +1514,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                       </TouchableOpacity>
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               </View>
 
               <View style={styles.formGroup}>
@@ -1475,7 +1530,11 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                     }}
                   />
                 </View>
-                <View style={styles.selectedEquipment}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.selectedEquipmentScrollView}
+                >
                   {tempFarmDetails.equipment.map((item, index) => (
                     <View key={index} style={styles.selectedEquipmentItem}>
                       <Text style={styles.selectedEquipmentText}>{item}</Text>
@@ -1487,12 +1546,16 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                       </TouchableOpacity>
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Soil Type</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.soilTypeScrollView}
+                >
                   {soilTypes.map((soil) => (
                     <TouchableOpacity
                       key={soil}
@@ -1511,7 +1574,11 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Water Source</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.waterSourceScrollView}
+                >
                   {waterSources.map((source) => (
                     <TouchableOpacity
                       key={source}
@@ -1634,7 +1701,11 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
       </View>
 
       {clientDetails.companyName ? (
-        <View style={styles.clientDetailsGrid}>
+        <ScrollView 
+          style={styles.clientDetailsGrid}
+          showsVerticalScrollIndicator={false}
+          nestedScrollEnabled
+        >
           <View style={styles.clientDetailItem}>
             <Text style={styles.clientDetailLabel}>Company</Text>
             <Text style={styles.clientDetailValue}>{clientDetails.companyName}</Text>
@@ -1646,13 +1717,17 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
           {clientDetails.projectTypes.length > 0 && (
             <View style={styles.clientDetailItem}>
               <Text style={styles.clientDetailLabel}>Project Types</Text>
-              <View style={styles.projectTypesList}>
+              <ScrollView 
+                horizontal 
+                showsHorizontalScrollIndicator={false}
+                style={styles.projectTypesScrollView}
+              >
                 {clientDetails.projectTypes.map((type, index) => (
                   <View key={index} style={styles.projectTypeChip}>
                     <Text style={styles.projectTypeText}>{type}</Text>
                   </View>
                 ))}
-              </View>
+              </ScrollView>
             </View>
           )}
           {clientDetails.budgetRange.min > 0 && (
@@ -1663,7 +1738,7 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
               </Text>
             </View>
           )}
-        </View>
+        </ScrollView>
       ) : (
         <View style={styles.noClientDetails}>
           <Text style={styles.noClientText}>No client information added</Text>
@@ -1681,7 +1756,7 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
         onRequestClose={() => setShowClientEditor(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, styles.largeModalContent]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Client Details</Text>
               <TouchableOpacity 
@@ -1692,7 +1767,11 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView 
+              style={styles.modalBody}
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled
+            >
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Company Name *</Text>
                 <TextInput
@@ -1706,7 +1785,11 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Industry *</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.industryScrollView}
+                >
                   {industries.map((industry) => (
                     <TouchableOpacity
                       key={industry}
@@ -1736,7 +1819,11 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
                     }}
                   />
                 </View>
-                <View style={styles.selectedProjects}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.selectedProjectsScrollView}
+                >
                   {tempClientDetails.projectTypes.map((type, index) => (
                     <View key={index} style={styles.selectedProject}>
                       <Text style={styles.selectedProjectText}>{type}</Text>
@@ -1748,7 +1835,7 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
                       </TouchableOpacity>
                     </View>
                   ))}
-                </View>
+                </ScrollView>
               </View>
 
               <View style={styles.formGroup}>
@@ -1782,7 +1869,11 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Project Size</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <ScrollView 
+                  horizontal 
+                  showsHorizontalScrollIndicator={false}
+                  style={styles.projectSizeScrollView}
+                >
                   {projectSizes.map((size) => (
                     <TouchableOpacity
                       key={size}
@@ -2009,7 +2100,7 @@ const AdvancedBottomNavigation = ({ activeTab, onTabChange }) => {
   );
 };
 
-// MAIN ENHANCED ENTERPRISE PLATFORM - FIXED SCROLLING AND ADAPTIVE ISSUES
+// MAIN ENHANCED ENTERPRISE PLATFORM - FIXED ALL BUGS
 export default function AdvancedEnterprisePlatform({ navigation }) {
   const {
     profile,
@@ -2034,8 +2125,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
 
   const [refreshing, setRefreshing] = useState(false);
   const [bottomNavTab, setBottomNavTab] = useState('profile');
-  const scrollY = useRef(new Animated.Value(0)).current;
-  const mainScrollRef = useRef(null);
+  const scrollViewRef = useRef(null);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -2055,18 +2145,27 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
     }
   };
 
-  // Animated header styles
-  const headerTranslateY = scrollY.interpolate({
-    inputRange: [0, 100],
-    outputRange: [0, -50],
-    extrapolate: 'clamp',
-  });
-
-  const headerOpacity = scrollY.interpolate({
-    inputRange: [0, 80],
-    outputRange: [1, 0],
-    extrapolate: 'clamp',
-  });
+  const ProfileCompletenessBar = ({ completeness }) => (
+    <View style={styles.completenessSection}>
+      <View style={styles.completenessHeader}>
+        <Text style={styles.completenessTitle}>Profile Completeness</Text>
+        <Text style={styles.completenessPercentage}>{completeness}%</Text>
+      </View>
+      <View style={styles.completenessBar}>
+        <View 
+          style={[
+            styles.completenessFill,
+            { width: `${completeness}%` }
+          ]} 
+        />
+      </View>
+      <Text style={styles.completenessHint}>
+        {completeness < 50 ? 'Add more details to improve your profile' :
+         completeness < 80 ? 'Great start! Keep adding details' :
+         'Excellent! Your profile is nearly complete'}
+      </Text>
+    </View>
+  );
 
   if (loading || !profile) {
     return (
@@ -2078,210 +2177,198 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   }
 
   const ProfileHeader = () => (
-    <Animated.View 
-      style={[
-        styles.header,
-        {
-          transform: [{ translateY: headerTranslateY }],
-          opacity: headerOpacity
-        }
-      ]}
-    >
-      <LinearGradient colors={['#000000', '#1a1a1a']} style={styles.headerGradient}>
-        <View style={styles.headerContent}>
-          {/* Enhanced Top Bar */}
-          <View style={styles.headerTop}>
+    <LinearGradient colors={['#000000', '#1a1a1a']} style={styles.header}>
+      <View style={styles.headerContent}>
+        {/* Enhanced Top Bar */}
+        <View style={styles.headerTop}>
+          <TouchableOpacity 
+            style={styles.backButton}
+            onPress={() => navigation.goBack()}
+            activeOpacity={0.7}
+          >
+            <Icon name="chevron-back" size={28} color="#00f0a8" />
+          </TouchableOpacity>
+          
+          <View style={styles.headerTitle}>
+            <Text style={styles.headerTitleText}>VSXchange Pro</Text>
+            {saving && (
+              <View style={styles.savingIndicator}>
+                <ActivityIndicator size="small" color="#00f0a8" />
+                <Text style={styles.savingText}>Auto-saving...</Text>
+              </View>
+            )}
+          </View>
+          
+          <View style={styles.headerActions}>
             <TouchableOpacity 
-              style={styles.backButton}
-              onPress={() => navigation.goBack()}
+              style={styles.shareButton}
+              onPress={handleShareProfile}
               activeOpacity={0.7}
             >
-              <Icon name="chevron-back" size={28} color="#00f0a8" />
+              <Icon name="share-social" size={20} color="#00f0a8" />
             </TouchableOpacity>
             
-            <View style={styles.headerTitle}>
-              <Text style={styles.headerTitleText}>VSXchange Pro</Text>
-              {saving && (
-                <View style={styles.savingIndicator}>
-                  <ActivityIndicator size="small" color="#00f0a8" />
-                  <Text style={styles.savingText}>Auto-saving...</Text>
-                </View>
-              )}
-            </View>
-            
-            <View style={styles.headerActions}>
-              <TouchableOpacity 
-                style={styles.shareButton}
-                onPress={handleShareProfile}
-                activeOpacity={0.7}
-              >
-                <Icon name="share-social" size={20} color="#00f0a8" />
-              </TouchableOpacity>
-              
-              <TouchableOpacity 
-                style={[styles.editButton, editing && styles.editButtonActive]}
-                onPress={() => setEditing(!editing)}
-                activeOpacity={0.7}
-              >
-                <Icon 
-                  name={editing ? "checkmark" : "create-outline"} 
-                  size={20} 
-                  color="#00f0a8" 
-                />
-              </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.editButton, editing && styles.editButtonActive]}
+              onPress={() => setEditing(!editing)}
+              activeOpacity={0.7}
+            >
+              <Icon 
+                name={editing ? "checkmark" : "create-outline"} 
+                size={20} 
+                color="#00f0a8" 
+              />
+            </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.menuButton}
-                onPress={() => {
-                  Alert.alert(
-                    'Profile Options',
-                    'Choose an action:',
-                    [
-                      { text: 'Reset Profile', onPress: resetProfile, style: 'destructive' },
-                      { text: 'Export Data', onPress: () => console.log('Export') },
-                      { text: 'Cancel', style: 'cancel' }
-                    ]
-                  );
-                }}
-                activeOpacity={0.7}
-              >
-                <Icon name="ellipsis-vertical" size={20} color="#00f0a8" />
-              </TouchableOpacity>
-            </View>
+            <TouchableOpacity 
+              style={styles.menuButton}
+              onPress={() => {
+                Alert.alert(
+                  'Profile Options',
+                  'Choose an action:',
+                  [
+                    { text: 'Reset Profile', onPress: resetProfile, style: 'destructive' },
+                    { text: 'Export Data', onPress: () => console.log('Export') },
+                    { text: 'Cancel', style: 'cancel' }
+                  ]
+                );
+              }}
+              activeOpacity={0.7}
+            >
+              <Icon name="ellipsis-vertical" size={20} color="#00f0a8" />
+            </TouchableOpacity>
           </View>
+        </View>
 
-          {/* Enhanced Profile Main Section */}
-          <View style={styles.profileMain}>
-            <ProfileImageEditor
-              profileImage={profile.profileImage}
-              onImageUpdate={updateProfileImage}
-              editing={editing}
-            />
-
-            <View style={styles.profileInfo}>
-              <View style={styles.nameSection}>
-                {editing ? (
-                  <View style={styles.nameEditor}>
-                    <EditableField
-                      value={profile.firstName}
-                      onSave={(value) => updateProfile({ firstName: value })}
-                      placeholder="First Name"
-                      style={styles.nameInput}
-                      required
-                    />
-                    <EditableField
-                      value={profile.lastName}
-                      onSave={(value) => updateProfile({ lastName: value })}
-                      placeholder="Last Name"
-                      style={styles.nameInput}
-                      required
-                    />
-                  </View>
-                ) : (
-                  <>
-                    <Text style={styles.userName}>{profile.displayName}</Text>
-                    <Text style={styles.profession}>{profile.profession}</Text>
-                    <Text style={styles.tagline}>{profile.tagline}</Text>
-                  </>
-                )}
-              </View>
-
-              {/* Enhanced Professional Stats */}
-              <View style={styles.statsContainer}>
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profile.experienceYears}</Text>
-                  <Text style={styles.statLabel}>Years</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profile.rating}</Text>
-                  <View style={styles.ratingContainer}>
-                    <Icon name="star" size={12} color="#FFD700" />
-                    <Text style={styles.statLabel}>Rating</Text>
-                  </View>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>{profile.completedProjects}+</Text>
-                  <Text style={styles.statLabel}>Projects</Text>
-                </View>
-                <View style={styles.statDivider} />
-                <View style={styles.statItem}>
-                  <Text style={styles.statNumber}>${profile.hourlyRate}</Text>
-                  <Text style={styles.statLabel}>/hr</Text>
-                </View>
-              </View>
-
-              {/* Enhanced Action Buttons */}
-              <View style={styles.actionButtons}>
-                <TouchableOpacity 
-                  style={styles.contactButton}
-                  onPress={() => navigation.navigate('Messages', { user: profile })}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="chatbubble-ellipses" size={18} color="#000" />
-                  <Text style={styles.contactButtonText}>Message</Text>
-                </TouchableOpacity>
-                
-                <TouchableOpacity 
-                  style={styles.hireButton}
-                  onPress={() => navigation.navigate('Booking', { professional: profile })}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="calendar" size={18} color="#000" />
-                  <Text style={styles.hireButtonText}>Hire Now</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={styles.callButton}
-                  onPress={() => console.log('Call:', profile.contactInfo.phone)}
-                  activeOpacity={0.7}
-                >
-                  <Icon name="call" size={18} color="#00f0a8" />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-
-          {/* Enhanced User Type Selector */}
-          <UserTypeSelector
-            currentType={profile.userType}
-            onTypeChange={(type) => updateProfile({ userType: type })}
+        {/* Enhanced Profile Main Section */}
+        <View style={styles.profileMain}>
+          <ProfileImageEditor
+            profileImage={profile.profileImage}
+            onImageUpdate={updateProfileImage}
             editing={editing}
           />
 
-          {/* Enhanced Save Status */}
-          {lastSave && (
-            <View style={styles.saveStatus}>
-              <Icon name="checkmark-circle" size={12} color="#00f0a8" />
-              <Text style={styles.saveStatusText}>
-                Auto-saved {new Date(lastSave).toLocaleTimeString()}
-              </Text>
+          <View style={styles.profileInfo}>
+            <View style={styles.nameSection}>
+              {editing ? (
+                <View style={styles.nameEditor}>
+                  <EditableField
+                    value={profile.firstName}
+                    onSave={(value) => updateProfile({ firstName: value })}
+                    placeholder="First Name"
+                    style={styles.nameInput}
+                    required
+                  />
+                  <EditableField
+                    value={profile.lastName}
+                    onSave={(value) => updateProfile({ lastName: value })}
+                    placeholder="Last Name"
+                    style={styles.nameInput}
+                    required
+                  />
+                </View>
+              ) : (
+                <>
+                  <Text style={styles.userName}>{profile.displayName}</Text>
+                  <Text style={styles.profession}>{profile.profession}</Text>
+                  <Text style={styles.tagline}>{profile.tagline}</Text>
+                </>
+              )}
             </View>
-          )}
+
+            {/* Enhanced Professional Stats */}
+            <View style={styles.statsContainer}>
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{profile.experienceYears}</Text>
+                <Text style={styles.statLabel}>Years</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{profile.rating}</Text>
+                <View style={styles.ratingContainer}>
+                  <Icon name="star" size={12} color="#FFD700" />
+                  <Text style={styles.statLabel}>Rating</Text>
+                </View>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>{profile.completedProjects}+</Text>
+                <Text style={styles.statLabel}>Projects</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statNumber}>${profile.hourlyRate}</Text>
+                <Text style={styles.statLabel}>/hr</Text>
+              </View>
+            </View>
+
+            {/* Profile Completeness */}
+            <ProfileCompletenessBar completeness={profile.profileCompleteness} />
+
+            {/* Enhanced Action Buttons */}
+            <View style={styles.actionButtons}>
+              <TouchableOpacity 
+                style={styles.contactButton}
+                onPress={() => navigation.navigate('Messages', { user: profile })}
+                activeOpacity={0.7}
+              >
+                <Icon name="chatbubble-ellipses" size={18} color="#000" />
+                <Text style={styles.contactButtonText}>Message</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity 
+                style={styles.hireButton}
+                onPress={() => navigation.navigate('Booking', { professional: profile })}
+                activeOpacity={0.7}
+              >
+                <Icon name="calendar" size={18} color="#000" />
+                <Text style={styles.hireButtonText}>Hire Now</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={styles.callButton}
+                onPress={() => console.log('Call:', profile.contactInfo.phone)}
+                activeOpacity={0.7}
+              >
+                <Icon name="call" size={18} color="#00f0a8" />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </LinearGradient>
-    </Animated.View>
+
+        {/* Enhanced User Type Selector */}
+        <UserTypeSelector
+          currentType={profile.userType}
+          onTypeChange={(type) => updateProfile({ userType: type })}
+          editing={editing}
+        />
+
+        {/* Enhanced Save Status */}
+        {lastSave && (
+          <View style={styles.saveStatus}>
+            <Icon name="checkmark-circle" size={12} color="#00f0a8" />
+            <Text style={styles.saveStatusText}>
+              Auto-saved {new Date(lastSave).toLocaleTimeString()}
+            </Text>
+          </View>
+        )}
+      </View>
+    </LinearGradient>
   );
 
   const TabContent = () => {
     switch (activeTab) {
       case 'about':
         return (
-          <Animated.ScrollView 
-            ref={mainScrollRef}
+          <ScrollView 
+            ref={scrollViewRef}
             style={styles.tabContent}
             refreshControl={
               <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
             }
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
-            scrollEventThrottle={16}
-            onScroll={Animated.event(
-              [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-              { useNativeDriver: true }
-            )}
-            contentContainerStyle={styles.scrollContent}
+            nestedScrollEnabled={true}
           >
             {/* Professional Bio */}
             <View style={styles.section}>
@@ -2347,12 +2434,12 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 type="email"
               />
             </View>
-          </Animated.ScrollView>
+          </ScrollView>
         );
 
       case 'portfolio':
         return (
-          <View style={styles.tabContent}>
+          <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
             <Text style={styles.sectionTitle}>Portfolio Gallery</Text>
             <View style={styles.comingSoonSection}>
               <Icon name="images" size={64} color="#666" />
@@ -2369,12 +2456,12 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 </TouchableOpacity>
               )}
             </View>
-          </View>
+          </ScrollView>
         );
 
       case 'services':
         return (
-          <View style={styles.tabContent}>
+          <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
             <Text style={styles.sectionTitle}>Services & Pricing</Text>
             <View style={styles.comingSoonSection}>
               <Icon name="construct" size={64} color="#666" />
@@ -2383,12 +2470,12 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 Manage your service offerings, dynamic pricing, and availability calendar
               </Text>
             </View>
-          </View>
+          </ScrollView>
         );
 
       case 'reviews':
         return (
-          <View style={styles.tabContent}>
+          <ScrollView style={styles.tabContent} showsVerticalScrollIndicator={false}>
             <Text style={styles.sectionTitle}>Reviews & Ratings</Text>
             <View style={styles.ratingOverview}>
               <Text style={styles.ratingNumber}>{profile.rating}</Text>
@@ -2407,7 +2494,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 Based on {profile.completedProjects} completed projects
               </Text>
             </View>
-          </View>
+          </ScrollView>
         );
 
       default:
@@ -2487,7 +2574,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   );
 }
 
-// COMPLETE ENTERPRISE-LEVEL STYLES - OPTIMIZED FOR SCROLLING
+// COMPLETE ENTERPRISE-LEVEL STYLES - OPTIMIZED
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -2505,18 +2592,9 @@ const styles = StyleSheet.create({
     marginTop: 16,
   },
   header: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    zIndex: 1000,
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
     overflow: 'hidden',
-  },
-  headerGradient: {
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
   },
   headerContent: {
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
@@ -2693,6 +2771,45 @@ const styles = StyleSheet.create({
     width: 1,
     backgroundColor: 'rgba(255,255,255,0.1)',
   },
+  completenessSection: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 15,
+  },
+  completenessHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  completenessTitle: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  completenessPercentage: {
+    color: '#00f0a8',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  completenessBar: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  completenessFill: {
+    height: '100%',
+    backgroundColor: '#00f0a8',
+    borderRadius: 3,
+  },
+  completenessHint: {
+    color: '#666',
+    fontSize: 10,
+    marginTop: 6,
+    fontStyle: 'italic',
+  },
   actionButtons: {
     flexDirection: 'row',
     gap: 10,
@@ -2783,8 +2900,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
     marginBottom: 15,
   },
-  typeOptions: {
-    gap: 10,
+  typeOptionsContainer: {
+    maxHeight: 300,
   },
   typeOption: {
     backgroundColor: 'rgba(255,255,255,0.05)',
@@ -2793,6 +2910,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: 'transparent',
     position: 'relative',
+    marginBottom: 10,
   },
   typeOptionSelected: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -2867,7 +2985,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#000',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
-    marginTop: Platform.OS === 'ios' ? 100 : 80,
   },
   tabsScrollContent: {
     paddingHorizontal: 20,
@@ -2897,10 +3014,6 @@ const styles = StyleSheet.create({
   },
   tabContent: {
     flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 20,
-    paddingBottom: 100,
   },
   section: {
     padding: 20,
@@ -3065,7 +3178,7 @@ const styles = StyleSheet.create({
     marginLeft: 4,
   },
   skillsGrid: {
-    gap: 8,
+    maxHeight: 300,
   },
   skillChip: {
     flexDirection: 'row',
@@ -3076,6 +3189,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: 'rgba(0,240,168,0.3)',
+    marginBottom: 8,
   },
   skillInfo: {
     flex: 1,
@@ -3173,12 +3287,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
   },
   farmDetailsGrid: {
-    gap: 12,
+    maxHeight: 300,
   },
   farmDetailItem: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 8,
     padding: 12,
+    marginBottom: 12,
   },
   farmDetailLabel: {
     color: '#666',
@@ -3191,10 +3306,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  cropsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  cropsScrollView: {
     marginTop: 4,
   },
   cropChip: {
@@ -3202,16 +3314,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    marginRight: 6,
   },
   cropText: {
     color: '#4CD964',
     fontSize: 12,
     fontWeight: '600',
   },
-  equipmentList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  equipmentScrollView: {
     marginTop: 4,
   },
   equipmentChip: {
@@ -3219,6 +3329,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    marginRight: 6,
   },
   equipmentText: {
     color: '#00f0a8',
@@ -3246,12 +3357,13 @@ const styles = StyleSheet.create({
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
   clientDetailsGrid: {
-    gap: 12,
+    maxHeight: 300,
   },
   clientDetailItem: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 8,
     padding: 12,
+    marginBottom: 12,
   },
   clientDetailLabel: {
     color: '#666',
@@ -3264,10 +3376,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  projectTypesList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  projectTypesScrollView: {
     marginTop: 4,
   },
   projectTypeChip: {
@@ -3275,6 +3384,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
+    marginRight: 6,
   },
   projectTypeText: {
     color: '#007AFF',
@@ -3308,6 +3418,10 @@ const styles = StyleSheet.create({
     width: '90%',
     maxHeight: '80%',
     overflow: 'hidden',
+  },
+  largeModalContent: {
+    maxHeight: '85%',
+    width: '95%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -3348,6 +3462,124 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
+  categoryScrollView: {
+    marginBottom: 8,
+  },
+  categoryChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  categoryChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  categoryChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  subcategoryScrollView: {
+    marginBottom: 8,
+  },
+  subcategoryChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  subcategoryChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  subcategoryChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  levelScrollView: {
+    marginBottom: 8,
+  },
+  levelChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  levelChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  levelChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  yearsScrollView: {
+    marginBottom: 8,
+  },
+  yearChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  yearChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  yearChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  certifiedToggle: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    padding: 12,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  certifiedToggleActive: {
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    borderColor: '#00f0a8',
+  },
+  certifiedToggleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  certifiedToggleSwitch: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 8,
+  },
+  certifiedToggleSwitchActive: {
+    backgroundColor: '#00f0a8',
+  },
+  certifiedToggleText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  farmTypeScrollView: {
+    marginBottom: 8,
+  },
   farmTypeChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
@@ -3377,10 +3609,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  selectedCrops: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  selectedCropsScrollView: {
+    marginTop: 8,
   },
   selectedCrop: {
     flexDirection: 'row',
@@ -3390,6 +3620,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4,
+    marginRight: 6,
   },
   selectedCropText: {
     color: '#4CD964',
@@ -3407,10 +3638,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  selectedEquipment: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  selectedEquipmentScrollView: {
+    marginTop: 8,
   },
   selectedEquipmentItem: {
     flexDirection: 'row',
@@ -3420,11 +3649,15 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4,
+    marginRight: 6,
   },
   selectedEquipmentText: {
     color: '#00f0a8',
     fontSize: 12,
     fontWeight: '600',
+  },
+  soilTypeScrollView: {
+    marginBottom: 8,
   },
   soilTypeChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -3443,6 +3676,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
+  },
+  waterSourceScrollView: {
+    marginBottom: 8,
   },
   waterSourceChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -3493,6 +3729,9 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 14,
   },
+  industryScrollView: {
+    marginBottom: 8,
+  },
   industryChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
@@ -3522,10 +3761,8 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  selectedProjects: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  selectedProjectsScrollView: {
+    marginTop: 8,
   },
   selectedProject: {
     flexDirection: 'row',
@@ -3535,6 +3772,7 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4,
+    marginRight: 6,
   },
   selectedProjectText: {
     color: '#007AFF',
@@ -3560,6 +3798,9 @@ const styles = StyleSheet.create({
     color: '#666',
     fontSize: 16,
     fontWeight: '600',
+  },
+  projectSizeScrollView: {
+    marginBottom: 8,
   },
   projectSizeChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
