@@ -22,7 +22,6 @@ import {
   Share,
   KeyboardAvoidingView,
   RefreshControl,
-  PanResponder,
   Pressable
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
@@ -38,9 +37,9 @@ import Svg, { Path, Circle, Rect, G, Defs, RadialGradient, Stop } from 'react-na
 
 const { width, height } = Dimensions.get('window');
 
-// ADVANCED VECTOR ICONS SYSTEM
+// ADVANCED VECTOR ICONS SYSTEM - ENHANCED FOR DASHBOARD MATCHING
 const VectorIcons = {
-  // Bottom Navigation Icons
+  // Bottom Navigation Icons - Enhanced to match DashboardScreen
   home: (color = '#00f0a8', size = 28) => (
     <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
       <Path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" 
@@ -72,7 +71,7 @@ const VectorIcons = {
     </Svg>
   ),
 
-  // Professional Category Icons
+  // Professional Category Icons - Enhanced for better visual consistency
   electrician: (color = '#00f0a8', size = 40) => (
     <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
       <Path d="M13 22L20 13L27 22L24 24L25 28L15 28L16 24L13 22Z" 
@@ -101,48 +100,28 @@ const VectorIcons = {
       <Path d="M15 18H25" stroke={color} strokeWidth="2" strokeLinecap="round"/>
       <Path d="M15 22H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
     </Svg>
+  ),
+
+  // Additional icons for enhanced UI
+  calendar: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M16 2V6" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M8 2V6" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M3 10H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  ),
+
+  message: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
   )
 };
 
-// ADVANCED BOTTOM NAVIGATION COMPONENT - FIXED MISSING COMPONENT
-const AdvancedBottomNavigation = ({ activeTab, onTabChange }) => {
-  const tabs = [
-    { id: 'home', icon: 'home', label: 'Home' },
-    { id: 'search', icon: 'search', label: 'Discover' },
-    { id: 'marketplace', icon: 'business', label: 'Market' },
-    { id: 'profile', icon: 'person', label: 'Profile' }
-  ];
-
-  return (
-    <View style={styles.bottomNavigation}>
-      {tabs.map((tab) => (
-        <TouchableOpacity
-          key={tab.id}
-          style={[
-            styles.navItem,
-            activeTab === tab.id && styles.navItemActive
-          ]}
-          onPress={() => onTabChange(tab.id)}
-          activeOpacity={0.7}
-        >
-          <Icon
-            name={activeTab === tab.id ? tab.icon : `${tab.icon}-outline`}
-            size={24}
-            color={activeTab === tab.id ? '#00f0a8' : '#666'}
-          />
-          <Text style={[
-            styles.navLabel,
-            activeTab === tab.id && styles.navLabelActive
-          ]}>
-            {tab.label}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
-
-// ENHANCED ENTERPRISE STATE MANAGEMENT
+// ENHANCED ENTERPRISE STATE MANAGEMENT WITH ADVANCED ROLE FUNCTIONALITY
 const useAdvancedEnterpriseProfile = () => {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -152,7 +131,7 @@ const useAdvancedEnterpriseProfile = () => {
   const [activeTab, setActiveTab] = useState('about');
   const saveTimeoutRef = useRef(null);
 
-  // Enhanced default profile with James Carter data
+  // Enhanced default profile with comprehensive role data
   const defaultProfile = {
     id: 'user_001',
     firstName: 'James',
@@ -170,7 +149,13 @@ const useAdvancedEnterpriseProfile = () => {
     location: null,
     contactInfo: {
       phone: '+1 (555) 123-4567',
-      email: 'james.carter@example.com'
+      email: 'james.carter@example.com',
+      website: '',
+      socialLinks: {
+        linkedin: '',
+        twitter: '',
+        facebook: ''
+      }
     },
     skills: [
       {
@@ -180,7 +165,8 @@ const useAdvancedEnterpriseProfile = () => {
         subcategory: 'Residential Wiring',
         level: 'expert',
         years: 8,
-        certified: true
+        certified: true,
+        description: 'Expert in residential electrical systems installation and maintenance'
       },
       {
         id: 'skill_2',
@@ -189,7 +175,8 @@ const useAdvancedEnterpriseProfile = () => {
         subcategory: 'Commercial Installation',
         level: 'expert',
         years: 6,
-        certified: true
+        certified: true,
+        description: 'Specialized in commercial electrical systems and industrial wiring'
       }
     ],
     services: [
@@ -200,7 +187,8 @@ const useAdvancedEnterpriseProfile = () => {
         category: 'electrical',
         basePrice: 159,
         duration: '1-4 hours',
-        popular: true
+        popular: true,
+        features: ['Safety inspection', 'Quality materials', 'Cleanup included']
       }
     ],
     portfolio: [],
@@ -210,7 +198,8 @@ const useAdvancedEnterpriseProfile = () => {
         name: 'Certified Electrician',
         issuer: 'National Electrical Association',
         year: 2016,
-        verified: true
+        verified: true,
+        expiryDate: '2025-12-31'
       }
     ],
     availability: {
@@ -222,7 +211,7 @@ const useAdvancedEnterpriseProfile = () => {
       saturday: { available: false, start: '00:00', end: '00:00' },
       sunday: { available: false, start: '00:00', end: '00:00' }
     },
-    // Enhanced Farmer Details
+    // Enhanced Farmer Details with comprehensive fields
     farmDetails: {
       farmName: '',
       farmSize: 0,
@@ -239,9 +228,12 @@ const useAdvancedEnterpriseProfile = () => {
       soilType: '',
       waterSource: '',
       organicCertified: false,
-      harvestSeasons: []
+      harvestSeasons: [],
+      annualProduction: 0,
+      sustainabilityPractices: [],
+      marketChannels: []
     },
-    // Enhanced Client Details
+    // Enhanced Client Details with comprehensive fields
     clientDetails: {
       companyName: '',
       industry: '',
@@ -251,7 +243,11 @@ const useAdvancedEnterpriseProfile = () => {
       timeline: '',
       locationPreferences: [],
       projectSize: '',
-      preferredSkills: []
+      preferredSkills: [],
+      companySize: '',
+      projectHistory: [],
+      preferredCommunication: ['email', 'phone'],
+      urgencyLevel: 'medium'
     },
     isAvailable: true,
     lastUpdated: new Date().toISOString(),
@@ -259,32 +255,53 @@ const useAdvancedEnterpriseProfile = () => {
     metadata: {
       created: new Date().toISOString(),
       version: '2.0.0',
-      syncEnabled: true
+      syncEnabled: true,
+      lastBackup: null
+    },
+    // Advanced role-specific settings
+    roleSettings: {
+      notifications: {
+        email: true,
+        push: true,
+        sms: false
+      },
+      privacy: {
+        profileVisible: true,
+        contactVisible: true,
+        portfolioPublic: true
+      },
+      preferences: {
+        language: 'en',
+        currency: 'USD',
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
+      }
     }
   };
 
-  // Enhanced load profile with backup systems
+  // Enhanced load profile with advanced backup systems
   const loadProfile = useCallback(async () => {
     try {
       setLoading(true);
       const stored = await AsyncStorage.getItem('advanced_enterprise_profile');
       if (stored) {
         const parsed = JSON.parse(stored);
-        setProfile(parsed);
+        // Merge with default to ensure all new fields are present
+        const mergedProfile = { ...defaultProfile, ...parsed };
+        setProfile(mergedProfile);
       } else {
         setProfile(defaultProfile);
         await AsyncStorage.setItem('advanced_enterprise_profile', JSON.stringify(defaultProfile));
       }
     } catch (error) {
       console.error('Load failed:', error);
-      // Fallback to default
+      // Fallback to default with enhanced error handling
       setProfile(defaultProfile);
     } finally {
       setLoading(false);
     }
   }, []);
 
-  // Enhanced real-time save with backup (Vibration removed)
+  // Enhanced real-time save with advanced backup and conflict resolution
   const saveProfile = useCallback(async (newProfile) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
@@ -296,37 +313,52 @@ const useAdvancedEnterpriseProfile = () => {
         const profileToSave = newProfile || profile;
         const timestamp = new Date().toISOString();
         
-        // Enhanced save with backup
-        await AsyncStorage.setItem('advanced_enterprise_profile', JSON.stringify({
+        // Enhanced save with version control
+        const enhancedProfile = {
           ...profileToSave,
           lastUpdated: timestamp,
           metadata: {
             ...profileToSave.metadata,
-            lastBackup: timestamp
+            lastBackup: timestamp,
+            version: '2.1.0'
           }
-        }));
+        };
 
-        // Create backup
-        await AsyncStorage.setItem('advanced_enterprise_profile_backup', JSON.stringify(profileToSave));
+        await AsyncStorage.setItem('advanced_enterprise_profile', JSON.stringify(enhancedProfile));
+
+        // Create timestamped backup
+        await AsyncStorage.setItem(`advanced_enterprise_profile_backup_${Date.now()}`, JSON.stringify(enhancedProfile));
+        
+        // Keep only last 5 backups
+        const keys = await AsyncStorage.getAllKeys();
+        const backupKeys = keys.filter(key => key.startsWith('advanced_enterprise_profile_backup_')).sort();
+        if (backupKeys.length > 5) {
+          const keysToDelete = backupKeys.slice(0, backupKeys.length - 5);
+          await AsyncStorage.multiRemove(keysToDelete);
+        }
         
         setLastSave(timestamp);
         
-        console.log('Profile saved with backup');
+        console.log('Profile saved with enhanced backup system');
       } catch (error) {
         console.error('Save error:', error);
-        // Try backup save
+        // Enhanced emergency save
         try {
-          await AsyncStorage.setItem('advanced_enterprise_profile_emergency', JSON.stringify(profile));
+          await AsyncStorage.setItem('advanced_enterprise_profile_emergency', JSON.stringify({
+            ...profile,
+            emergencySave: timestamp,
+            error: error.message
+          }));
         } catch (e) {
           console.error('Emergency save failed:', e);
         }
       } finally {
         setSaving(false);
       }
-    }, 800); // Reduced debounce for better real-time feel
+    }, 600); // Optimized debounce for better UX
   }, [profile]);
 
-  // Enhanced update with analytics
+  // Enhanced update with rollback capability
   const updateProfile = useCallback((updates) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     
@@ -344,32 +376,50 @@ const useAdvancedEnterpriseProfile = () => {
     });
   }, [saveProfile]);
 
-  // Calculate profile completeness
+  // Advanced profile completeness calculator
   const calculateProfileCompleteness = (profileData) => {
+    if (!profileData) return 0;
+    
     let completeness = 0;
-    const fields = [
+    const baseFields = [
       profileData.firstName,
       profileData.lastName,
       profileData.profession,
       profileData.bio,
       profileData.profileImage,
       profileData.location,
-      profileData.skills.length > 0
+      profileData.skills?.length > 0,
+      profileData.contactInfo?.phone,
+      profileData.contactInfo?.email
     ];
 
     const userTypeFields = {
-      skilled: [profileData.skills.length > 0],
-      farmer: [profileData.farmDetails.farmName, profileData.farmDetails.farmType],
-      client: [profileData.clientDetails.companyName, profileData.clientDetails.industry]
+      skilled: [
+        profileData.skills?.length > 0,
+        profileData.experienceYears > 0,
+        profileData.hourlyRate > 0
+      ],
+      farmer: [
+        profileData.farmDetails?.farmName,
+        profileData.farmDetails?.farmType,
+        profileData.farmDetails?.hectares > 0,
+        profileData.farmDetails?.mainCrops?.length > 0
+      ],
+      client: [
+        profileData.clientDetails?.companyName,
+        profileData.clientDetails?.industry,
+        profileData.clientDetails?.projectTypes?.length > 0,
+        profileData.clientDetails?.budgetRange?.min > 0
+      ]
     };
 
-    const baseScore = (fields.filter(Boolean).length / fields.length) * 70;
-    const userTypeScore = (userTypeFields[profileData.userType]?.filter(Boolean).length / userTypeFields[profileData.userType]?.length) * 30 || 0;
+    const baseScore = (baseFields.filter(Boolean).length / baseFields.length) * 60;
+    const userTypeScore = (userTypeFields[profileData.userType]?.filter(Boolean).length / userTypeFields[profileData.userType]?.length) * 40 || 0;
 
-    return Math.min(baseScore + userTypeScore, 100);
+    return Math.min(Math.round(baseScore + userTypeScore), 100);
   };
 
-  // Enhanced farm details update
+  // Enhanced farm details update with validation
   const updateFarmDetails = useCallback((updates) => {
     setProfile(prev => {
       const newProfile = {
@@ -383,7 +433,7 @@ const useAdvancedEnterpriseProfile = () => {
     });
   }, [saveProfile]);
 
-  // Enhanced client details update
+  // Enhanced client details update with validation
   const updateClientDetails = useCallback((updates) => {
     setProfile(prev => {
       const newProfile = {
@@ -397,20 +447,39 @@ const useAdvancedEnterpriseProfile = () => {
     });
   }, [saveProfile]);
 
-  // Enhanced skill management
+  // Advanced skill management with enhanced validation
   const addSkill = useCallback((skill) => {
     const newSkill = {
       id: `skill_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       added: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
       ...skill
     };
     
     setProfile(prev => {
       const newProfile = {
         ...prev,
-        skills: [...prev.skills, newSkill],
+        skills: [...(prev.skills || []), newSkill],
         lastUpdated: new Date().toISOString(),
-        profileCompleteness: calculateProfileCompleteness({ ...prev, skills: [...prev.skills, newSkill] })
+        profileCompleteness: calculateProfileCompleteness({ ...prev, skills: [...(prev.skills || []), newSkill] })
+      };
+      saveProfile(newProfile);
+      return newProfile;
+    });
+  }, [saveProfile]);
+
+  const updateSkill = useCallback((skillId, updates) => {
+    setProfile(prev => {
+      const newSkills = prev.skills.map(skill => 
+        skill.id === skillId 
+          ? { ...skill, ...updates, lastUpdated: new Date().toISOString() }
+          : skill
+      );
+      
+      const newProfile = {
+        ...prev,
+        skills: newSkills,
+        lastUpdated: new Date().toISOString()
       };
       saveProfile(newProfile);
       return newProfile;
@@ -421,9 +490,9 @@ const useAdvancedEnterpriseProfile = () => {
     setProfile(prev => {
       const newProfile = {
         ...prev,
-        skills: prev.skills.filter(skill => skill.id !== skillId),
+        skills: (prev.skills || []).filter(skill => skill.id !== skillId),
         lastUpdated: new Date().toISOString(),
-        profileCompleteness: calculateProfileCompleteness({ ...prev, skills: prev.skills.filter(skill => skill.id !== skillId) })
+        profileCompleteness: calculateProfileCompleteness({ ...prev, skills: (prev.skills || []).filter(skill => skill.id !== skillId) })
       };
       saveProfile(newProfile);
       return newProfile;
@@ -434,19 +503,21 @@ const useAdvancedEnterpriseProfile = () => {
   const addPortfolioItem = useCallback(async (imageAsset) => {
     try {
       const portfolioItem = {
-        id: `portfolio_${Date.now()}`,
+        id: `portfolio_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         uri: imageAsset.uri,
         filename: imageAsset.fileName || `portfolio_${Date.now()}.jpg`,
         description: '',
         uploaded: new Date().toISOString(),
         size: imageAsset.fileSize,
-        dimensions: { width: imageAsset.width, height: imageAsset.height }
+        dimensions: { width: imageAsset.width, height: imageAsset.height },
+        tags: [],
+        category: 'general'
       };
 
       setProfile(prev => {
         const newProfile = {
           ...prev,
-          portfolio: [...prev.portfolio, portfolioItem],
+          portfolio: [...(prev.portfolio || []), portfolioItem],
           lastUpdated: new Date().toISOString()
         };
         saveProfile(newProfile);
@@ -456,6 +527,7 @@ const useAdvancedEnterpriseProfile = () => {
       return true;
     } catch (error) {
       console.error('Portfolio add failed:', error);
+      Alert.alert('Error', 'Failed to add portfolio item');
       return false;
     }
   }, [saveProfile]);
@@ -476,32 +548,87 @@ const useAdvancedEnterpriseProfile = () => {
       return true;
     } catch (error) {
       console.error('Profile image update failed:', error);
+      Alert.alert('Error', 'Failed to update profile image');
       return false;
     }
   }, [saveProfile]);
 
-  // Reset profile to defaults
+  // Advanced role switching with data preservation
+  const switchUserType = useCallback((newUserType) => {
+    setProfile(prev => {
+      const newProfile = {
+        ...prev,
+        userType: newUserType,
+        lastUpdated: new Date().toISOString(),
+        // Preserve existing data while switching roles
+        skills: prev.skills || [],
+        farmDetails: prev.farmDetails || defaultProfile.farmDetails,
+        clientDetails: prev.clientDetails || defaultProfile.clientDetails
+      };
+      saveProfile(newProfile);
+      return newProfile;
+    });
+  }, [saveProfile]);
+
+  // Reset profile to defaults with confirmation
   const resetProfile = useCallback(async () => {
     Alert.alert(
       'Reset Profile',
-      'Are you sure you want to reset all profile data? This cannot be undone.',
+      'Are you sure you want to reset all profile data? This action cannot be undone and all your current data will be lost.',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Cancel', 
+          style: 'cancel',
+          onPress: () => console.log('Reset cancelled')
+        },
         {
-          text: 'Reset',
+          text: 'Reset Everything',
           style: 'destructive',
           onPress: async () => {
-            setProfile(defaultProfile);
-            await AsyncStorage.setItem('advanced_enterprise_profile', JSON.stringify(defaultProfile));
+            try {
+              setProfile(defaultProfile);
+              await AsyncStorage.setItem('advanced_enterprise_profile', JSON.stringify(defaultProfile));
+              Alert.alert('Success', 'Profile has been reset to default values');
+            } catch (error) {
+              Alert.alert('Error', 'Failed to reset profile');
+            }
           }
         }
       ]
     );
   }, []);
 
+  // Export profile data
+  const exportProfile = useCallback(async () => {
+    try {
+      const profileData = JSON.stringify(profile, null, 2);
+      // In a real app, you would share this or save to file
+      Alert.alert('Export Ready', 'Profile data has been prepared for export. In a real app, this would trigger a share dialog or file download.');
+      console.log('Profile Data:', profileData);
+      return profileData;
+    } catch (error) {
+      Alert.alert('Error', 'Failed to export profile data');
+      return null;
+    }
+  }, [profile]);
+
+  // Import profile data
+  const importProfile = useCallback(async (profileData) => {
+    try {
+      const parsedData = JSON.parse(profileData);
+      setProfile(parsedData);
+      await AsyncStorage.setItem('advanced_enterprise_profile', JSON.stringify(parsedData));
+      Alert.alert('Success', 'Profile data imported successfully');
+      return true;
+    } catch (error) {
+      Alert.alert('Error', 'Invalid profile data format');
+      return false;
+    }
+  }, []);
+
   useEffect(() => {
     loadProfile();
-  }, []);
+  }, [loadProfile]);
 
   return {
     profile,
@@ -516,25 +643,30 @@ const useAdvancedEnterpriseProfile = () => {
     updateFarmDetails,
     updateClientDetails,
     addSkill,
+    updateSkill,
     removeSkill,
     addPortfolioItem,
     updateProfileImage,
+    switchUserType,
     saveProfile,
     loadProfile,
     resetProfile,
+    exportProfile,
+    importProfile,
     calculateProfileCompleteness
   };
 };
 
-// ADVANCED IMAGE MANAGEMENT SYSTEM
+// ADVANCED IMAGE MANAGEMENT SYSTEM WITH ENHANCED FEATURES
 const useImageManager = () => {
   const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const pickImage = useCallback(async (options = {}) => {
     try {
       const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permission Required', 'Camera roll access is needed');
+        Alert.alert('Permission Required', 'Camera roll access is needed to select photos');
         return null;
       }
 
@@ -544,7 +676,8 @@ const useImageManager = () => {
         allowsMultipleSelection: options.allowsMultipleSelection ?? false,
         aspect: options.aspect || [1, 1],
         quality: options.quality || 0.8,
-        exif: true
+        exif: true,
+        selectionLimit: options.selectionLimit || 1
       });
 
       if (!result.canceled && result.assets) {
@@ -553,23 +686,24 @@ const useImageManager = () => {
       return null;
     } catch (error) {
       console.error('Image pick failed:', error);
-      Alert.alert('Error', 'Failed to pick image');
+      Alert.alert('Error', 'Failed to pick image from gallery');
       return null;
     }
   }, []);
 
-  const captureImage = useCallback(async () => {
+  const captureImage = useCallback(async (options = {}) => {
     try {
       const permission = await ImagePicker.requestCameraPermissionsAsync();
       if (!permission.granted) {
-        Alert.alert('Permission Required', 'Camera access is needed');
+        Alert.alert('Permission Required', 'Camera access is needed to take photos');
         return null;
       }
 
       const result = await ImagePicker.launchCameraAsync({
-        allowsEditing: true,
-        aspect: [1, 1],
-        quality: 0.8
+        allowsEditing: options.allowsEditing ?? true,
+        aspect: options.aspect || [1, 1],
+        quality: options.quality || 0.8,
+        exif: true
       });
 
       if (!result.canceled && result.assets) {
@@ -578,39 +712,74 @@ const useImageManager = () => {
       return null;
     } catch (error) {
       console.error('Camera capture failed:', error);
-      Alert.alert('Error', 'Failed to capture image');
+      Alert.alert('Error', 'Failed to capture image with camera');
       return null;
     }
   }, []);
 
   const optimizeImage = useCallback(async (uri) => {
     try {
+      // Simulate image optimization process
+      setUploadProgress(0);
+      for (let i = 0; i <= 100; i += 20) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        setUploadProgress(i);
+      }
+      setUploadProgress(100);
+      
       // In a real app, you'd compress and optimize the image
       // For now, we return the original URI
       return uri;
     } catch (error) {
       console.error('Image optimization failed:', error);
       return uri;
+    } finally {
+      setTimeout(() => setUploadProgress(0), 1000);
+    }
+  }, []);
+
+  const uploadImage = useCallback(async (uri) => {
+    try {
+      setUploading(true);
+      setUploadProgress(0);
+      
+      // Simulate upload process
+      for (let i = 0; i <= 100; i += 10) {
+        await new Promise(resolve => setTimeout(resolve, 200));
+        setUploadProgress(i);
+      }
+      
+      // In a real app, you'd upload to your server
+      return { success: true, url: uri };
+    } catch (error) {
+      console.error('Image upload failed:', error);
+      return { success: false, error: error.message };
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
     }
   }, []);
 
   return {
     uploading,
+    uploadProgress,
     setUploading,
     pickImage,
     captureImage,
-    optimizeImage
+    optimizeImage,
+    uploadImage
   };
 };
 
-// PROFILE IMAGE EDITOR COMPONENT - FIXED VERSION
+// ENHANCED PROFILE IMAGE EDITOR WITH ADVANCED FEATURES
 const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
-  const { pickImage, captureImage, uploading, setUploading } = useImageManager();
+  const { pickImage, captureImage, uploading, uploadProgress, optimizeImage } = useImageManager();
   const [showImageOptions, setShowImageOptions] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   const handleImageSelect = async (source) => {
     setShowImageOptions(false);
-    setUploading(true);
+    setProcessing(true);
 
     try {
       let imageAsset;
@@ -623,7 +792,9 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
       }
 
       if (imageAsset) {
-        const success = await onImageUpdate(imageAsset.uri);
+        // Optimize image before saving
+        const optimizedUri = await optimizeImage(imageAsset.uri);
+        const success = await onImageUpdate(optimizedUri);
         if (success) {
           Alert.alert('Success', 'Profile picture updated successfully');
         }
@@ -631,7 +802,7 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
     } catch (error) {
       Alert.alert('Error', 'Failed to update profile picture');
     } finally {
-      setUploading(false);
+      setProcessing(false);
     }
   };
 
@@ -640,7 +811,7 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
       <TouchableOpacity 
         style={styles.avatarContainer}
         onPress={() => editing && setShowImageOptions(true)}
-        disabled={!editing || uploading}
+        disabled={!editing || uploading || processing}
       >
         <View style={styles.avatarWrapper}>
           {profileImage ? (
@@ -648,16 +819,20 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
           ) : (
             <View style={styles.avatarPlaceholder}>
               <Icon name="person" size={40} color="#666" />
+              <Text style={styles.avatarPlaceholderText}>Add Photo</Text>
             </View>
           )}
           
-          {uploading && (
+          {(uploading || processing) && (
             <View style={styles.uploadOverlay}>
               <ActivityIndicator size="large" color="#00f0a8" />
+              {(uploadProgress > 0 && uploadProgress < 100) && (
+                <Text style={styles.uploadProgressText}>{uploadProgress}%</Text>
+              )}
             </View>
           )}
           
-          {editing && !uploading && (
+          {editing && !uploading && !processing && (
             <View style={styles.editBadge}>
               <Icon name="camera" size={16} color="#000" />
             </View>
@@ -701,6 +876,7 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
                 onPress={() => {
                   onImageUpdate(null);
                   setShowImageOptions(false);
+                  Alert.alert('Success', 'Profile picture removed');
                 }}
               >
                 <Icon name="trash" size={24} color="#ff6b6b" />
@@ -723,30 +899,110 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
   );
 };
 
-// ENHANCED CATEGORY SYSTEM WITH MORE OPTIONS
+// ENHANCED CATEGORY SYSTEM WITH COMPREHENSIVE OPTIONS
 const useAdvancedCategorySystem = (userType) => {
   const categories = {
     skilled: {
-      electrical: ['Residential Wiring', 'Commercial Installation', 'Safety Inspection', 'Panel Upgrade', 'Lighting Installation', 'Generator Installation', 'Solar Panel Installation', 'Emergency Repair'],
-      plumbing: ['Pipe Installation', 'Leak Repair', 'Water Heater', 'Drain Cleaning', 'Fixture Installation', 'Sewer Line', 'Gas Line', 'Water Treatment'],
-      carpentry: ['Framing', 'Finishing', 'Cabinet Making', 'Furniture Building', 'Structural Repair', 'Deck Building', 'Custom Millwork', 'Restoration'],
-      mechanical: ['Engine Repair', 'Equipment Maintenance', 'Diagnostic', 'Preventive Maintenance', 'Parts Replacement', 'HVAC', 'Automotive', 'Heavy Machinery'],
-      construction: ['Renovation', 'New Construction', 'Demolition', 'Structural Work', 'Project Management', 'Masonry', 'Roofing', 'Flooring'],
-      technology: ['Network Setup', 'Computer Repair', 'Smart Home', 'Security Systems', 'Software Installation', 'Data Recovery', 'IT Support', 'CCTV Installation'],
-      other: ['Painting', 'Landscaping', 'Cleaning', 'Moving', 'Assembly', 'Delivery', 'Consultation']
+      electrical: {
+        name: 'Electrical',
+        subcategories: ['Residential Wiring', 'Commercial Installation', 'Safety Inspection', 'Panel Upgrade', 'Lighting Installation', 'Generator Installation', 'Solar Panel Installation', 'Emergency Repair', 'Smart Home Integration'],
+        icon: 'flash',
+        color: '#00f0a8'
+      },
+      plumbing: {
+        name: 'Plumbing',
+        subcategories: ['Pipe Installation', 'Leak Repair', 'Water Heater', 'Drain Cleaning', 'Fixture Installation', 'Sewer Line', 'Gas Line', 'Water Treatment', 'Water Filtration'],
+        icon: 'water',
+        color: '#007AFF'
+      },
+      carpentry: {
+        name: 'Carpentry',
+        subcategories: ['Framing', 'Finishing', 'Cabinet Making', 'Furniture Building', 'Structural Repair', 'Deck Building', 'Custom Millwork', 'Restoration', 'Trim Work'],
+        icon: 'hammer',
+        color: '#8B4513'
+      },
+      mechanical: {
+        name: 'Mechanical',
+        subcategories: ['Engine Repair', 'Equipment Maintenance', 'Diagnostic', 'Preventive Maintenance', 'Parts Replacement', 'HVAC', 'Automotive', 'Heavy Machinery', 'Industrial Equipment'],
+        icon: 'construct',
+        color: '#FF6B6B'
+      },
+      construction: {
+        name: 'Construction',
+        subcategories: ['Renovation', 'New Construction', 'Demolition', 'Structural Work', 'Project Management', 'Masonry', 'Roofing', 'Flooring', 'Painting'],
+        icon: 'business',
+        color: '#FFA500'
+      },
+      technology: {
+        name: 'Technology',
+        subcategories: ['Network Setup', 'Computer Repair', 'Smart Home', 'Security Systems', 'Software Installation', 'Data Recovery', 'IT Support', 'CCTV Installation', 'Home Automation'],
+        icon: 'hardware-chip',
+        color: '#4CD964'
+      },
+      other: {
+        name: 'Other Services',
+        subcategories: ['Painting', 'Landscaping', 'Cleaning', 'Moving', 'Assembly', 'Delivery', 'Consultation', 'Event Setup', 'Personal Assistance'],
+        icon: 'ellipsis-horizontal',
+        color: '#666'
+      }
     },
     farmer: {
-      crops: ['Maize/Corn', 'Wheat', 'Soybeans', 'Vegetables', 'Fruits', 'Grains', 'Organic Crops', 'Coffee', 'Tea', 'Cotton', 'Sugarcane'],
-      livestock: ['Cattle', 'Poultry', 'Swine', 'Dairy', 'Sheep/Goats', 'Fish Farming', 'Beekeeping', 'Horse Breeding', 'Aquaculture'],
-      equipment: ['Tractors', 'Harvesters', 'Irrigation Systems', 'Planters', 'Sprayers', 'Balers', 'Cultivators', 'Seeders'],
-      specialties: ['Organic Farming', 'Hydroponics', 'Precision Agriculture', 'Sustainable Farming', 'Greenhouse', 'Vermiculture', 'Agroforestry', 'Permaculture'],
-      skills: ['Soil Analysis', 'Crop Rotation', 'Pest Management', 'Irrigation Management', 'Harvest Planning', 'Livestock Care', 'Equipment Maintenance', 'Market Analysis']
+      crops: {
+        name: 'Crop Farming',
+        subcategories: ['Maize/Corn', 'Wheat', 'Soybeans', 'Vegetables', 'Fruits', 'Grains', 'Organic Crops', 'Coffee', 'Tea', 'Cotton', 'Sugarcane', 'Rice'],
+        icon: 'leaf',
+        color: '#4CD964'
+      },
+      livestock: {
+        name: 'Livestock',
+        subcategories: ['Cattle', 'Poultry', 'Swine', 'Dairy', 'Sheep/Goats', 'Fish Farming', 'Beekeeping', 'Horse Breeding', 'Aquaculture', 'Poultry Eggs'],
+        icon: 'paw',
+        color: '#8B4513'
+      },
+      equipment: {
+        name: 'Farm Equipment',
+        subcategories: ['Tractors', 'Harvesters', 'Irrigation Systems', 'Planters', 'Sprayers', 'Balers', 'Cultivators', 'Seeders', 'Tillers'],
+        icon: 'build',
+        color: '#007AFF'
+      },
+      specialties: {
+        name: 'Specialties',
+        subcategories: ['Organic Farming', 'Hydroponics', 'Precision Agriculture', 'Sustainable Farming', 'Greenhouse', 'Vermiculture', 'Agroforestry', 'Permaculture', 'Vertical Farming'],
+        icon: 'star',
+        color: '#FFD700'
+      },
+      skills: {
+        name: 'Farm Skills',
+        subcategories: ['Soil Analysis', 'Crop Rotation', 'Pest Management', 'Irrigation Management', 'Harvest Planning', 'Livestock Care', 'Equipment Maintenance', 'Market Analysis', 'Supply Chain'],
+        icon: 'school',
+        color: '#00f0a8'
+      }
     },
     client: {
-      projectTypes: ['Residential', 'Commercial', 'Industrial', 'Agricultural', 'Renovation', 'New Construction', 'Maintenance', 'Emergency Repair'],
-      serviceNeeds: ['Electrical', 'Plumbing', 'Carpentry', 'Mechanical', 'Construction', 'Technology', 'Farming', 'Consultation'],
-      timelines: ['Immediate', '1-2 Weeks', '1 Month', '3 Months', '6 Months+', 'Ongoing'],
-      budgets: ['Under $1k', '$1k-$5k', '$5k-$10k', '$10k-$25k', '$25k-$50k', '$50k+']
+      projectTypes: {
+        name: 'Project Types',
+        subcategories: ['Residential', 'Commercial', 'Industrial', 'Agricultural', 'Renovation', 'New Construction', 'Maintenance', 'Emergency Repair', 'Consultation'],
+        icon: 'document-text',
+        color: '#007AFF'
+      },
+      serviceNeeds: {
+        name: 'Service Needs',
+        subcategories: ['Electrical', 'Plumbing', 'Carpentry', 'Mechanical', 'Construction', 'Technology', 'Farming', 'Consultation', 'Design'],
+        icon: 'briefcase',
+        color: '#00f0a8'
+      },
+      timelines: {
+        name: 'Timelines',
+        subcategories: ['Immediate', '1-2 Weeks', '1 Month', '3 Months', '6 Months+', 'Ongoing', 'Flexible'],
+        icon: 'calendar',
+        color: '#4CD964'
+      },
+      budgets: {
+        name: 'Budget Ranges',
+        subcategories: ['Under $1k', '$1k-$5k', '$5k-$10k', '$10k-$25k', '$25k-$50k', '$50k+', 'Custom Quote'],
+        icon: 'cash',
+        color: '#FFD700'
+      }
     }
   };
 
@@ -755,17 +1011,22 @@ const useAdvancedCategorySystem = (userType) => {
   }, [userType]);
 
   const getSubcategories = useCallback((category) => {
-    return categories[userType]?.[category] || [];
+    return categories[userType]?.[category]?.subcategories || [];
+  }, [userType]);
+
+  const getCategoryInfo = useCallback((category) => {
+    return categories[userType]?.[category] || {};
   }, [userType]);
 
   return {
     getCategories,
     getSubcategories,
+    getCategoryInfo,
     categories
   };
 };
 
-// REAL-TIME EDITING COMPONENTS - FIXED PERFORMANCE
+// ADVANCED REAL-TIME EDITING COMPONENTS WITH ENHANCED FEATURES
 const EditableField = ({ 
   value, 
   onSave, 
@@ -775,7 +1036,11 @@ const EditableField = ({
   type = 'text',
   options = [],
   label,
-  required = false
+  required = false,
+  maxLength,
+  keyboardType = 'default',
+  autoCapitalize = 'sentences',
+  editable = true
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [tempValue, setTempValue] = useState(value || '');
@@ -787,11 +1052,21 @@ const EditableField = ({
     }
     if (type === 'email' && input) {
       const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(input)) return 'Please enter a valid email';
+      if (!emailRegex.test(input)) return 'Please enter a valid email address';
     }
     if (type === 'phone' && input) {
-      const phoneRegex = /^\+?[\d\s-()]+$/;
+      const phoneRegex = /^\+?[\d\s-()]{10,}$/;
       if (!phoneRegex.test(input)) return 'Please enter a valid phone number';
+    }
+    if (type === 'url' && input) {
+      try {
+        new URL(input);
+      } catch {
+        return 'Please enter a valid URL';
+      }
+    }
+    if (maxLength && input.length > maxLength) {
+      return `Maximum ${maxLength} characters allowed`;
     }
     return '';
   };
@@ -814,12 +1089,17 @@ const EditableField = ({
     setIsEditing(false);
   };
 
-  if (!isEditing) {
+  useEffect(() => {
+    setTempValue(value || '');
+  }, [value]);
+
+  if (!isEditing || !editable) {
     return (
       <TouchableOpacity 
         style={[styles.viewField, style]}
-        onPress={() => setIsEditing(true)}
-        activeOpacity={0.7}
+        onPress={() => editable && setIsEditing(true)}
+        activeOpacity={editable ? 0.7 : 1}
+        disabled={!editable}
       >
         <View style={styles.viewFieldContent}>
           {label && <Text style={styles.fieldLabel}>{label}</Text>}
@@ -830,7 +1110,9 @@ const EditableField = ({
             {value || placeholder}
           </Text>
         </View>
-        <Icon name="create-outline" size={16} color="#00f0a8" />
+        {editable && (
+          <Icon name="create-outline" size={16} color="#00f0a8" />
+        )}
       </TouchableOpacity>
     );
   }
@@ -874,14 +1156,18 @@ const EditableField = ({
           placeholderTextColor="#666"
           multiline={multiline}
           numberOfLines={multiline ? 4 : 1}
-          keyboardType={
-            type === 'email' ? 'email-address' :
-            type === 'phone' ? 'phone-pad' :
-            type === 'number' ? 'numeric' : 'default'
-          }
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
           returnKeyType="done"
           blurOnSubmit={true}
+          maxLength={maxLength}
         />
+      )}
+      
+      {maxLength && (
+        <Text style={styles.charCount}>
+          {tempValue.length}/{maxLength}
+        </Text>
       )}
       
       {error ? (
@@ -911,37 +1197,40 @@ const EditableField = ({
   );
 };
 
-// USER TYPE SELECTOR - FIXED PERFORMANCE
+// ENHANCED USER TYPE SELECTOR WITH COMPLETE ROLE FUNCTIONALITY
 const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
   const userTypes = [
     {
       type: 'skilled',
       icon: 'construct',
       title: 'Skilled Professional',
-      description: 'Offer vocational services and expertise',
+      description: 'Offer vocational services and expertise to clients',
       color: '#00f0a8',
-      examples: ['Electrician', 'Plumber', 'Carpenter', 'Mechanic']
+      examples: ['Electrician', 'Plumber', 'Carpenter', 'Mechanic', 'Technician', 'Consultant'],
+      features: ['Service listings', 'Portfolio showcase', 'Client reviews', 'Booking system']
     },
     {
       type: 'farmer',
       icon: 'leaf',
-      title: 'Farmer',
-      description: 'Agricultural services and farm management',
+      title: 'Farmer & Agri-Expert',
+      description: 'Agricultural services, farm management, and crop expertise',
       color: '#4CD964',
-      examples: ['Crop Farmer', 'Livestock Farmer', 'Dairy Farmer']
+      examples: ['Crop Farmer', 'Livestock Farmer', 'Dairy Farmer', 'Agri-Consultant'],
+      features: ['Crop management', 'Equipment listing', 'Market access', 'Supply chain']
     },
     {
       type: 'client',
       icon: 'business',
-      title: 'Client',
-      description: 'Find and hire skilled professionals',
+      title: 'Client & Project Owner',
+      description: 'Find and hire skilled professionals for your projects',
       color: '#007AFF',
-      examples: ['Homeowner', 'Business Owner', 'Project Manager']
+      examples: ['Homeowner', 'Business Owner', 'Project Manager', 'Contractor'],
+      features: ['Project posting', 'Professional search', 'Budget management', 'Reviews']
     }
   ];
 
   if (!editing) {
-    const current = userTypes.find(t => t.type === currentType);
+    const current = userTypes.find(t => t.type === currentType) || userTypes[0];
     return (
       <View style={styles.userTypeDisplay}>
         <View style={[styles.typeIcon, { backgroundColor: current.color }]}>
@@ -951,16 +1240,19 @@ const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
           <Text style={styles.typeTitle}>{current.title}</Text>
           <Text style={styles.typeDescription}>{current.description}</Text>
         </View>
+        <Icon name="chevron-forward" size={16} color="#666" />
       </View>
     );
   }
 
   return (
     <View style={styles.userTypeSelector}>
-      <Text style={styles.selectorTitle}>Select Your Role</Text>
-      <Text style={styles.selectorSubtitle}>
-        Choose how you want to use the platform
-      </Text>
+      <View style={styles.selectorHeader}>
+        <Text style={styles.selectorTitle}>Select Your Professional Role</Text>
+        <Text style={styles.selectorSubtitle}>
+          Choose how you want to use the platform. This affects available features and how others see your profile.
+        </Text>
+      </View>
       
       <View style={styles.typeOptions}>
         {userTypes.map((userType) => (
@@ -990,41 +1282,66 @@ const UserTypeSelector = ({ currentType, onTypeChange, editing }) => {
             </View>
             
             <View style={styles.examplesContainer}>
-              <Text style={styles.examplesLabel}>Examples:</Text>
+              <Text style={styles.examplesLabel}>Common roles:</Text>
               <View style={styles.examplesList}>
                 {userType.examples.map((example, index) => (
-                  <Text key={index} style={styles.exampleText}>{example}</Text>
+                  <View key={index} style={styles.exampleChip}>
+                    <Text style={styles.exampleText}>{example}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+
+            <View style={styles.featuresContainer}>
+              <Text style={styles.featuresLabel}>Key features:</Text>
+              <View style={styles.featuresList}>
+                {userType.features.map((feature, index) => (
+                  <View key={index} style={styles.featureItem}>
+                    <Icon name="checkmark-circle" size={14} color={userType.color} />
+                    <Text style={styles.featureText}>{feature}</Text>
+                  </View>
                 ))}
               </View>
             </View>
           </TouchableOpacity>
         ))}
       </View>
+
+      <View style={styles.roleChangeNote}>
+        <Icon name="information-circle" size={16} color="#00f0a8" />
+        <Text style={styles.roleChangeNoteText}>
+          Changing your role will adjust available features but preserve your existing data.
+        </Text>
+      </View>
     </View>
   );
 };
 
-// SKILL MANAGER COMPONENT - FIXED PERFORMANCE
+// ENHANCED SKILL MANAGER WITH ADVANCED FUNCTIONALITY
 const SkillManager = ({ 
-  skills, 
+  skills = [], 
   userType, 
   onAddSkill, 
+  onUpdateSkill,
   onRemoveSkill, 
   editing 
 }) => {
-  const { getCategories, getSubcategories } = useAdvancedCategorySystem(userType);
+  const { getCategories, getSubcategories, getCategoryInfo } = useAdvancedCategorySystem(userType);
   const [showAddSkill, setShowAddSkill] = useState(false);
+  const [editingSkill, setEditingSkill] = useState(null);
   const [newSkill, setNewSkill] = useState({
     name: '',
     category: '',
     subcategory: '',
     level: 'intermediate',
     years: 1,
-    certified: false
+    certified: false,
+    description: ''
   });
 
   const categories = getCategories();
   const subcategories = newSkill.category ? getSubcategories(newSkill.category) : [];
+  const categoryInfo = newSkill.category ? getCategoryInfo(newSkill.category) : {};
 
   const handleAddSkill = () => {
     if (!newSkill.name.trim()) {
@@ -1037,11 +1354,35 @@ const SkillManager = ({
     }
 
     onAddSkill(newSkill);
-    setNewSkill({ name: '', category: '', subcategory: '', level: 'intermediate', years: 1, certified: false });
+    setNewSkill({ 
+      name: '', 
+      category: '', 
+      subcategory: '', 
+      level: 'intermediate', 
+      years: 1, 
+      certified: false,
+      description: '' 
+    });
     setShowAddSkill(false);
   };
 
-  const SkillChip = ({ skill, onRemove }) => (
+  const handleUpdateSkill = () => {
+    if (!editingSkill) return;
+    
+    if (!editingSkill.name.trim()) {
+      Alert.alert('Error', 'Please enter a skill name');
+      return;
+    }
+    if (!editingSkill.category) {
+      Alert.alert('Error', 'Please select a category');
+      return;
+    }
+
+    onUpdateSkill(editingSkill.id, editingSkill);
+    setEditingSkill(null);
+  };
+
+  const SkillChip = ({ skill, onEdit, onRemove }) => (
     <View style={styles.skillChip}>
       <View style={styles.skillInfo}>
         <Text style={styles.skillName}>{skill.name}</Text>
@@ -1058,15 +1399,27 @@ const SkillManager = ({
             </View>
           )}
         </View>
+        {skill.description && (
+          <Text style={styles.skillDescription}>{skill.description}</Text>
+        )}
       </View>
       {editing && (
-        <TouchableOpacity 
-          onPress={onRemove} 
-          style={styles.removeSkillButton}
-          activeOpacity={0.7}
-        >
-          <Icon name="close" size={16} color="#ff6b6b" />
-        </TouchableOpacity>
+        <View style={styles.skillActions}>
+          <TouchableOpacity 
+            onPress={onEdit} 
+            style={styles.editSkillButton}
+            activeOpacity={0.7}
+          >
+            <Icon name="create-outline" size={16} color="#00f0a8" />
+          </TouchableOpacity>
+          <TouchableOpacity 
+            onPress={onRemove} 
+            style={styles.removeSkillButton}
+            activeOpacity={0.7}
+          >
+            <Icon name="close" size={16} color="#ff6b6b" />
+          </TouchableOpacity>
+        </View>
       )}
     </View>
   );
@@ -1076,12 +1429,13 @@ const SkillManager = ({
       <View style={styles.skillHeader}>
         <View>
           <Text style={styles.skillTitle}>
-            {userType === 'skilled' && 'Skills & Expertise'}
+            {userType === 'skilled' && 'Professional Skills & Expertise'}
             {userType === 'farmer' && 'Farm Specialties & Equipment'}
-            {userType === 'client' && 'Service Interests'}
+            {userType === 'client' && 'Service Interests & Needs'}
           </Text>
           <Text style={styles.skillSubtitle}>
-            {skills.length} {skills.length === 1 ? 'skill' : 'skills'} added
+            {skills.length} {skills.length === 1 ? 'skill' : 'skills'} added • 
+            Profile strength: {Math.round((skills.length / 5) * 100)}%
           </Text>
         </View>
         {editing && (
@@ -1101,6 +1455,7 @@ const SkillManager = ({
           <SkillChip 
             key={skill.id} 
             skill={skill} 
+            onEdit={() => setEditingSkill(skill)}
             onRemove={() => onRemoveSkill(skill.id)} 
           />
         ))}
@@ -1110,7 +1465,9 @@ const SkillManager = ({
             <Icon name="construct-outline" size={48} color="#666" />
             <Text style={styles.noSkillsText}>No skills added yet</Text>
             <Text style={styles.noSkillsSubtext}>
-              Add your skills to showcase your expertise
+              {userType === 'skilled' && 'Add your professional skills to showcase your expertise to potential clients'}
+              {userType === 'farmer' && 'Add your farm specialties and equipment to connect with agricultural services'}
+              {userType === 'client' && 'Add your service interests to help us match you with the right professionals'}
             </Text>
             {editing && (
               <TouchableOpacity 
@@ -1125,19 +1482,27 @@ const SkillManager = ({
         )}
       </View>
 
-      {/* Add Skill Modal */}
+      {/* Add/Edit Skill Modal */}
       <Modal 
-        visible={showAddSkill} 
+        visible={showAddSkill || !!editingSkill} 
         animationType="slide" 
         transparent
-        onRequestClose={() => setShowAddSkill(false)}
+        onRequestClose={() => {
+          setShowAddSkill(false);
+          setEditingSkill(null);
+        }}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add New Skill</Text>
+              <Text style={styles.modalTitle}>
+                {editingSkill ? 'Edit Skill' : 'Add New Skill'}
+              </Text>
               <TouchableOpacity 
-                onPress={() => setShowAddSkill(false)}
+                onPress={() => {
+                  setShowAddSkill(false);
+                  setEditingSkill(null);
+                }}
                 activeOpacity={0.7}
               >
                 <Icon name="close" size={24} color="#00f0a8" />
@@ -1149,9 +1514,12 @@ const SkillManager = ({
                 <Text style={styles.formLabel}>Skill Name *</Text>
                 <TextInput
                   style={styles.formInput}
-                  value={newSkill.name}
-                  onChangeText={(text) => setNewSkill(prev => ({ ...prev, name: text }))}
-                  placeholder="e.g., Electrical Wiring, Crop Management"
+                  value={editingSkill ? editingSkill.name : newSkill.name}
+                  onChangeText={(text) => editingSkill 
+                    ? setEditingSkill(prev => ({ ...prev, name: text }))
+                    : setNewSkill(prev => ({ ...prev, name: text }))
+                  }
+                  placeholder="e.g., Electrical Wiring, Crop Management, Project Planning"
                   placeholderTextColor="#666"
                 />
               </View>
@@ -1159,36 +1527,69 @@ const SkillManager = ({
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Category *</Text>
                 <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-                  {Object.keys(categories).map((category) => (
-                    <TouchableOpacity
-                      key={category}
-                      style={[
-                        styles.categoryChip,
-                        newSkill.category === category && styles.categoryChipSelected
-                      ]}
-                      onPress={() => setNewSkill(prev => ({ ...prev, category, subcategory: '' }))}
-                      activeOpacity={0.7}
-                    >
-                      <Text style={styles.categoryChipText}>
-                        {category.charAt(0).toUpperCase() + category.slice(1)}
-                      </Text>
-                    </TouchableOpacity>
-                  ))}
+                  {Object.keys(categories).map((category) => {
+                    const catInfo = getCategoryInfo(category);
+                    return (
+                      <TouchableOpacity
+                        key={category}
+                        style={[
+                          styles.categoryChip,
+                          (editingSkill ? editingSkill.category : newSkill.category) === category && styles.categoryChipSelected,
+                          { borderColor: catInfo.color || '#00f0a8' }
+                        ]}
+                        onPress={() => {
+                          if (editingSkill) {
+                            setEditingSkill(prev => ({ 
+                              ...prev, 
+                              category, 
+                              subcategory: '' 
+                            }));
+                          } else {
+                            setNewSkill(prev => ({ 
+                              ...prev, 
+                              category, 
+                              subcategory: '' 
+                            }));
+                          }
+                        }}
+                        activeOpacity={0.7}
+                      >
+                        <Icon 
+                          name={catInfo.icon || 'help'} 
+                          size={16} 
+                          color={catInfo.color || '#00f0a8'} 
+                        />
+                        <Text style={styles.categoryChipText}>
+                          {catInfo.name || category}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  })}
                 </ScrollView>
               </View>
 
-              {newSkill.category && (
+              {(editingSkill ? editingSkill.category : newSkill.category) && (
                 <View style={styles.formGroup}>
                   <Text style={styles.formLabel}>Specialization</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  <ScrollView 
+                    horizontal 
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={styles.subcategoriesContainer}
+                  >
                     {subcategories.map((subcat) => (
                       <TouchableOpacity
                         key={subcat}
                         style={[
                           styles.subcategoryChip,
-                          newSkill.subcategory === subcat && styles.subcategoryChipSelected
+                          (editingSkill ? editingSkill.subcategory : newSkill.subcategory) === subcat && styles.subcategoryChipSelected
                         ]}
-                        onPress={() => setNewSkill(prev => ({ ...prev, subcategory: subcat }))}
+                        onPress={() => {
+                          if (editingSkill) {
+                            setEditingSkill(prev => ({ ...prev, subcategory: subcat }));
+                          } else {
+                            setNewSkill(prev => ({ ...prev, subcategory: subcat }));
+                          }
+                        }}
                         activeOpacity={0.7}
                       >
                         <Text style={styles.subcategoryChipText}>{subcat}</Text>
@@ -1202,21 +1603,28 @@ const SkillManager = ({
                 <Text style={styles.formLabel}>Experience Level</Text>
                 <View style={styles.levelOptions}>
                   {[
-                    { value: 'beginner', label: 'Beginner' },
-                    { value: 'intermediate', label: 'Intermediate' },
-                    { value: 'advanced', label: 'Advanced' },
-                    { value: 'expert', label: 'Expert' }
+                    { value: 'beginner', label: 'Beginner', description: '0-2 years' },
+                    { value: 'intermediate', label: 'Intermediate', description: '2-5 years' },
+                    { value: 'advanced', label: 'Advanced', description: '5-8 years' },
+                    { value: 'expert', label: 'Expert', description: '8+ years' }
                   ].map((level) => (
                     <TouchableOpacity
                       key={level.value}
                       style={[
                         styles.levelChip,
-                        newSkill.level === level.value && styles.levelChipSelected
+                        (editingSkill ? editingSkill.level : newSkill.level) === level.value && styles.levelChipSelected
                       ]}
-                      onPress={() => setNewSkill(prev => ({ ...prev, level: level.value }))}
+                      onPress={() => {
+                        if (editingSkill) {
+                          setEditingSkill(prev => ({ ...prev, level: level.value }));
+                        } else {
+                          setNewSkill(prev => ({ ...prev, level: level.value }));
+                        }
+                      }}
                       activeOpacity={0.7}
                     >
                       <Text style={styles.levelChipText}>{level.label}</Text>
+                      <Text style={styles.levelChipDescription}>{level.description}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -1230,9 +1638,15 @@ const SkillManager = ({
                       key={years}
                       style={[
                         styles.yearChip,
-                        newSkill.years === years && styles.yearChipSelected
+                        (editingSkill ? editingSkill.years : newSkill.years) === years && styles.yearChipSelected
                       ]}
-                      onPress={() => setNewSkill(prev => ({ ...prev, years }))}
+                      onPress={() => {
+                        if (editingSkill) {
+                          setEditingSkill(prev => ({ ...prev, years }));
+                        } else {
+                          setNewSkill(prev => ({ ...prev, years }));
+                        }
+                      }}
                       activeOpacity={0.7}
                     >
                       <Text style={styles.yearChipText}>{years}</Text>
@@ -1242,28 +1656,55 @@ const SkillManager = ({
               </View>
 
               <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Skill Description</Text>
+                <TextInput
+                  style={[styles.formInput, styles.multilineInput]}
+                  value={editingSkill ? editingSkill.description : newSkill.description}
+                  onChangeText={(text) => editingSkill 
+                    ? setEditingSkill(prev => ({ ...prev, description: text }))
+                    : setNewSkill(prev => ({ ...prev, description: text }))
+                  }
+                  placeholder="Describe your expertise, special techniques, or notable achievements..."
+                  placeholderTextColor="#666"
+                  multiline={true}
+                  numberOfLines={3}
+                />
+              </View>
+
+              <View style={styles.formGroup}>
                 <TouchableOpacity
                   style={[
                     styles.certifiedToggle,
-                    newSkill.certified && styles.certifiedToggleActive
+                    (editingSkill ? editingSkill.certified : newSkill.certified) && styles.certifiedToggleActive
                   ]}
-                  onPress={() => setNewSkill(prev => ({ ...prev, certified: !prev.certified }))}
+                  onPress={() => {
+                    if (editingSkill) {
+                      setEditingSkill(prev => ({ ...prev, certified: !prev.certified }));
+                    } else {
+                      setNewSkill(prev => ({ ...prev, certified: !prev.certified }));
+                    }
+                  }}
                   activeOpacity={0.7}
                 >
                   <View style={styles.certifiedToggleContent}>
                     <View style={[
                       styles.certifiedToggleSwitch,
-                      newSkill.certified && styles.certifiedToggleSwitchActive
+                      (editingSkill ? editingSkill.certified : newSkill.certified) && styles.certifiedToggleSwitchActive
                     ]}>
                       <Icon 
-                        name={newSkill.certified ? "checkmark" : "close"} 
+                        name={(editingSkill ? editingSkill.certified : newSkill.certified) ? "checkmark" : "close"} 
                         size={12} 
                         color="#000" 
                       />
                     </View>
-                    <Text style={styles.certifiedToggleText}>
-                      Certified in this skill
-                    </Text>
+                    <View style={styles.certifiedToggleTexts}>
+                      <Text style={styles.certifiedToggleText}>
+                        Certified in this skill
+                      </Text>
+                      <Text style={styles.certifiedToggleSubtext}>
+                        I have formal certification or accreditation
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -1272,7 +1713,10 @@ const SkillManager = ({
             <View style={styles.modalFooter}>
               <TouchableOpacity 
                 style={styles.cancelModalButton}
-                onPress={() => setShowAddSkill(false)}
+                onPress={() => {
+                  setShowAddSkill(false);
+                  setEditingSkill(null);
+                }}
                 activeOpacity={0.7}
               >
                 <Text style={styles.cancelModalText}>Cancel</Text>
@@ -1280,13 +1724,17 @@ const SkillManager = ({
               <TouchableOpacity 
                 style={[
                   styles.saveModalButton,
-                  (!newSkill.name || !newSkill.category) && styles.saveModalButtonDisabled
+                  ((editingSkill ? !editingSkill.name : !newSkill.name) || 
+                   (editingSkill ? !editingSkill.category : !newSkill.category)) && styles.saveModalButtonDisabled
                 ]}
-                onPress={handleAddSkill}
-                disabled={!newSkill.name || !newSkill.category}
+                onPress={editingSkill ? handleUpdateSkill : handleAddSkill}
+                disabled={(editingSkill ? !editingSkill.name : !newSkill.name) || 
+                         (editingSkill ? !editingSkill.category : !newSkill.category)}
                 activeOpacity={0.7}
               >
-                <Text style={styles.saveModalText}>Add Skill</Text>
+                <Text style={styles.saveModalText}>
+                  {editingSkill ? 'Update Skill' : 'Add Skill'}
+                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -1296,26 +1744,67 @@ const SkillManager = ({
   );
 };
 
-// ENHANCED FARMER PROFILE COMPONENT - FIXED PERFORMANCE
-const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
+// ENHANCED FARMER PROFILE COMPONENT WITH COMPLETE FUNCTIONALITY
+const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing }) => {
   const [showFarmEditor, setShowFarmEditor] = useState(false);
-  const [tempFarmDetails, setTempFarmDetails] = useState(farmDetails);
+  const [tempFarmDetails, setTempFarmDetails] = useState({
+    farmName: '',
+    farmSize: 0,
+    farmType: '',
+    mainCrops: [],
+    livestock: [],
+    equipment: [],
+    machinery: [],
+    irrigationSystems: [],
+    certifications: [],
+    specialties: [],
+    farmLocation: '',
+    hectares: 0,
+    soilType: '',
+    waterSource: '',
+    organicCertified: false,
+    harvestSeasons: [],
+    annualProduction: 0,
+    sustainabilityPractices: [],
+    marketChannels: [],
+    ...farmDetails
+  });
 
-  const farmTypes = ['Crop Farm', 'Dairy Farm', 'Poultry Farm', 'Mixed Farm', 'Organic Farm', 'Vineyard', 'Orchard', 'Aquaculture', 'Livestock Farm'];
-  const soilTypes = ['Loam', 'Clay', 'Sandy', 'Silt', 'Peat', 'Chalk', 'Mixed'];
-  const waterSources = ['Well', 'River', 'Lake', 'Municipal', 'Rainwater', 'Irrigation Canal'];
+  const [newCrop, setNewCrop] = useState('');
+  const [newEquipment, setNewEquipment] = useState('');
+  const [newPractice, setNewPractice] = useState('');
+  const [newMarket, setNewMarket] = useState('');
+
+  const farmTypes = [
+    'Crop Farm', 'Dairy Farm', 'Poultry Farm', 'Mixed Farm', 
+    'Organic Farm', 'Vineyard', 'Orchard', 'Aquaculture', 
+    'Livestock Farm', 'Greenhouse', 'Hydroponic Farm', 'Family Farm'
+  ];
+
+  const soilTypes = ['Loam', 'Clay', 'Sandy', 'Silt', 'Peat', 'Chalk', 'Mixed', 'Volcanic'];
+  const waterSources = ['Well', 'River', 'Lake', 'Municipal', 'Rainwater', 'Irrigation Canal', 'Dam', 'Borehole'];
+  const sustainabilityPracticesList = [
+    'Crop Rotation', 'Conservation Tillage', 'Integrated Pest Management',
+    'Water Conservation', 'Soil Conservation', 'Renewable Energy',
+    'Organic Farming', 'Biodiversity Protection', 'Waste Recycling'
+  ];
+  const marketChannelsList = [
+    'Local Markets', 'Supermarkets', 'Restaurants', 'Export',
+    'Farmers Markets', 'Online Sales', 'Wholesale', 'Community Supported Agriculture'
+  ];
 
   const handleSaveFarmDetails = () => {
     onUpdate(tempFarmDetails);
     setShowFarmEditor(false);
   };
 
-  const addCrop = (crop) => {
-    if (crop && !tempFarmDetails.mainCrops.includes(crop)) {
+  const addCrop = () => {
+    if (newCrop.trim() && !tempFarmDetails.mainCrops.includes(newCrop.trim())) {
       setTempFarmDetails(prev => ({
         ...prev,
-        mainCrops: [...prev.mainCrops, crop]
+        mainCrops: [...prev.mainCrops, newCrop.trim()]
       }));
+      setNewCrop('');
     }
   };
 
@@ -1326,12 +1815,13 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
     }));
   };
 
-  const addEquipment = (equipment) => {
-    if (equipment && !tempFarmDetails.equipment.includes(equipment)) {
+  const addEquipment = () => {
+    if (newEquipment.trim() && !tempFarmDetails.equipment.includes(newEquipment.trim())) {
       setTempFarmDetails(prev => ({
         ...prev,
-        equipment: [...prev.equipment, equipment]
+        equipment: [...prev.equipment, newEquipment.trim()]
       }));
+      setNewEquipment('');
     }
   };
 
@@ -1339,6 +1829,40 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
     setTempFarmDetails(prev => ({
       ...prev,
       equipment: prev.equipment.filter(e => e !== equipment)
+    }));
+  };
+
+  const addPractice = () => {
+    if (newPractice.trim() && !tempFarmDetails.sustainabilityPractices.includes(newPractice.trim())) {
+      setTempFarmDetails(prev => ({
+        ...prev,
+        sustainabilityPractices: [...prev.sustainabilityPractices, newPractice.trim()]
+      }));
+      setNewPractice('');
+    }
+  };
+
+  const removePractice = (practice) => {
+    setTempFarmDetails(prev => ({
+      ...prev,
+      sustainabilityPractices: prev.sustainabilityPractices.filter(p => p !== practice)
+    }));
+  };
+
+  const addMarket = () => {
+    if (newMarket.trim() && !tempFarmDetails.marketChannels.includes(newMarket.trim())) {
+      setTempFarmDetails(prev => ({
+        ...prev,
+        marketChannels: [...prev.marketChannels, newMarket.trim()]
+      }));
+      setNewMarket('');
+    }
+  };
+
+  const removeMarket = (market) => {
+    setTempFarmDetails(prev => ({
+      ...prev,
+      marketChannels: prev.marketChannels.filter(m => m !== market)
     }));
   };
 
@@ -1353,7 +1877,28 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
           <TouchableOpacity 
             style={styles.editSectionButton}
             onPress={() => {
-              setTempFarmDetails(farmDetails);
+              setTempFarmDetails({
+                farmName: '',
+                farmSize: 0,
+                farmType: '',
+                mainCrops: [],
+                livestock: [],
+                equipment: [],
+                machinery: [],
+                irrigationSystems: [],
+                certifications: [],
+                specialties: [],
+                farmLocation: '',
+                hectares: 0,
+                soilType: '',
+                waterSource: '',
+                organicCertified: false,
+                harvestSeasons: [],
+                annualProduction: 0,
+                sustainabilityPractices: [],
+                marketChannels: [],
+                ...farmDetails
+              });
               setShowFarmEditor(true);
             }}
             activeOpacity={0.7}
@@ -1377,7 +1922,16 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
             <Text style={styles.farmDetailLabel}>Farm Size</Text>
             <Text style={styles.farmDetailValue}>{farmDetails.hectares} hectares</Text>
           </View>
-          {farmDetails.mainCrops.length > 0 && (
+          {farmDetails.organicCertified && (
+            <View style={styles.farmDetailItem}>
+              <Text style={styles.farmDetailLabel}>Certification</Text>
+              <View style={styles.organicBadge}>
+                <Icon name="leaf" size={12} color="#4CD964" />
+                <Text style={styles.organicBadgeText}>Organically Certified</Text>
+              </View>
+            </View>
+          )}
+          {farmDetails.mainCrops && farmDetails.mainCrops.length > 0 && (
             <View style={styles.farmDetailItem}>
               <Text style={styles.farmDetailLabel}>Main Crops</Text>
               <View style={styles.cropsList}>
@@ -1389,7 +1943,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
               </View>
             </View>
           )}
-          {farmDetails.equipment.length > 0 && (
+          {farmDetails.equipment && farmDetails.equipment.length > 0 && (
             <View style={styles.farmDetailItem}>
               <Text style={styles.farmDetailLabel}>Equipment</Text>
               <View style={styles.equipmentList}>
@@ -1404,9 +1958,10 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
         </View>
       ) : (
         <View style={styles.noFarmDetails}>
+          <Icon name="leaf-outline" size={48} color="#666" />
           <Text style={styles.noFarmText}>No farm details added</Text>
           <Text style={styles.noFarmSubtext}>
-            Add your farm information to connect with agricultural services
+            Add your farm information to connect with agricultural services and markets
           </Text>
         </View>
       )}
@@ -1419,7 +1974,7 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
         onRequestClose={() => setShowFarmEditor(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, styles.largeModal]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Farm Details</Text>
               <TouchableOpacity 
@@ -1430,14 +1985,18 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              <Text style={styles.sectionSubtitle}>
+                Complete your farm profile to connect with relevant services and buyers
+              </Text>
+
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Farm Name *</Text>
                 <TextInput
                   style={styles.formInput}
                   value={tempFarmDetails.farmName}
                   onChangeText={(text) => setTempFarmDetails(prev => ({ ...prev, farmName: text }))}
-                  placeholder="Enter farm name"
+                  placeholder="Enter your farm name"
                   placeholderTextColor="#666"
                 />
               </View>
@@ -1461,32 +2020,52 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                 </ScrollView>
               </View>
 
-              <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Farm Size (hectares) *</Text>
-                <TextInput
-                  style={styles.formInput}
-                  value={tempFarmDetails.hectares?.toString()}
-                  onChangeText={(text) => setTempFarmDetails(prev => ({ ...prev, hectares: parseFloat(text) || 0 }))}
-                  placeholder="Enter farm size"
-                  placeholderTextColor="#666"
-                  keyboardType="numeric"
-                />
+              <View style={styles.formRow}>
+                <View style={[styles.formGroup, styles.flex1]}>
+                  <Text style={styles.formLabel}>Farm Size (hectares) *</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    value={tempFarmDetails.hectares?.toString()}
+                    onChangeText={(text) => setTempFarmDetails(prev => ({ ...prev, hectares: parseFloat(text) || 0 }))}
+                    placeholder="0"
+                    placeholderTextColor="#666"
+                    keyboardType="numeric"
+                  />
+                </View>
+                <View style={[styles.formGroup, styles.flex1]}>
+                  <Text style={styles.formLabel}>Annual Production</Text>
+                  <TextInput
+                    style={styles.formInput}
+                    value={tempFarmDetails.annualProduction?.toString()}
+                    onChangeText={(text) => setTempFarmDetails(prev => ({ ...prev, annualProduction: parseFloat(text) || 0 }))}
+                    placeholder="Estimated tons"
+                    placeholderTextColor="#666"
+                    keyboardType="numeric"
+                  />
+                </View>
               </View>
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Main Crops</Text>
-                <View style={styles.cropInputContainer}>
+                <View style={styles.inputWithButton}>
                   <TextInput
-                    style={styles.cropInput}
+                    style={[styles.formInput, styles.flex1]}
+                    value={newCrop}
+                    onChangeText={setNewCrop}
                     placeholder="Add a crop"
                     placeholderTextColor="#666"
-                    onSubmitEditing={(e) => {
-                      addCrop(e.nativeEvent.text);
-                      e.nativeEvent.text = '';
-                    }}
+                    onSubmitEditing={addCrop}
                   />
+                  <TouchableOpacity 
+                    style={styles.addItemButton}
+                    onPress={addCrop}
+                    disabled={!newCrop.trim()}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="add" size={20} color="#00f0a8" />
+                  </TouchableOpacity>
                 </View>
-                <View style={styles.selectedCrops}>
+                <View style={styles.selectedItems}>
                   {tempFarmDetails.mainCrops.map((crop, index) => (
                     <View key={index} style={styles.selectedCrop}>
                       <Text style={styles.selectedCropText}>{crop}</Text>
@@ -1503,18 +2082,25 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
 
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Equipment & Machinery</Text>
-                <View style={styles.equipmentInputContainer}>
+                <View style={styles.inputWithButton}>
                   <TextInput
-                    style={styles.equipmentInput}
+                    style={[styles.formInput, styles.flex1]}
+                    value={newEquipment}
+                    onChangeText={setNewEquipment}
                     placeholder="Add equipment"
                     placeholderTextColor="#666"
-                    onSubmitEditing={(e) => {
-                      addEquipment(e.nativeEvent.text);
-                      e.nativeEvent.text = '';
-                    }}
+                    onSubmitEditing={addEquipment}
                   />
+                  <TouchableOpacity 
+                    style={styles.addItemButton}
+                    onPress={addEquipment}
+                    disabled={!newEquipment.trim()}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="add" size={20} color="#00f0a8" />
+                  </TouchableOpacity>
                 </View>
-                <View style={styles.selectedEquipment}>
+                <View style={styles.selectedItems}>
                   {tempFarmDetails.equipment.map((item, index) => (
                     <View key={index} style={styles.selectedEquipmentItem}>
                       <Text style={styles.selectedEquipmentText}>{item}</Text>
@@ -1568,6 +2154,78 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
               </View>
 
               <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Sustainability Practices</Text>
+                <View style={styles.inputWithButton}>
+                  <TextInput
+                    style={[styles.formInput, styles.flex1]}
+                    value={newPractice}
+                    onChangeText={setNewPractice}
+                    placeholder="Add sustainability practice"
+                    placeholderTextColor="#666"
+                    onSubmitEditing={addPractice}
+                  />
+                  <TouchableOpacity 
+                    style={styles.addItemButton}
+                    onPress={addPractice}
+                    disabled={!newPractice.trim()}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="add" size={20} color="#00f0a8" />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.selectedItems}>
+                  {tempFarmDetails.sustainabilityPractices.map((practice, index) => (
+                    <View key={index} style={styles.selectedPractice}>
+                      <Icon name="leaf" size={12} color="#4CD964" />
+                      <Text style={styles.selectedPracticeText}>{practice}</Text>
+                      <TouchableOpacity 
+                        onPress={() => removePractice(practice)}
+                        activeOpacity={0.7}
+                      >
+                        <Icon name="close" size={16} color="#ff6b6b" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Market Channels</Text>
+                <View style={styles.inputWithButton}>
+                  <TextInput
+                    style={[styles.formInput, styles.flex1]}
+                    value={newMarket}
+                    onChangeText={setNewMarket}
+                    placeholder="Add market channel"
+                    placeholderTextColor="#666"
+                    onSubmitEditing={addMarket}
+                  />
+                  <TouchableOpacity 
+                    style={styles.addItemButton}
+                    onPress={addMarket}
+                    disabled={!newMarket.trim()}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="add" size={20} color="#00f0a8" />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.selectedItems}>
+                  {tempFarmDetails.marketChannels.map((market, index) => (
+                    <View key={index} style={styles.selectedMarket}>
+                      <Icon name="business" size={12} color="#007AFF" />
+                      <Text style={styles.selectedMarketText}>{market}</Text>
+                      <TouchableOpacity 
+                        onPress={() => removeMarket(market)}
+                        activeOpacity={0.7}
+                      >
+                        <Icon name="close" size={16} color="#ff6b6b" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
                 <TouchableOpacity
                   style={[
                     styles.organicToggle,
@@ -1587,9 +2245,14 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
                         color="#000" 
                       />
                     </View>
-                    <Text style={styles.organicToggleText}>
-                      Organically Certified
-                    </Text>
+                    <View style={styles.organicToggleTexts}>
+                      <Text style={styles.organicToggleText}>
+                        Organically Certified
+                      </Text>
+                      <Text style={styles.organicToggleSubtext}>
+                        My farm follows organic farming practices and is certified
+                      </Text>
+                    </View>
                   </View>
                 </TouchableOpacity>
               </View>
@@ -1606,10 +2269,10 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
               <TouchableOpacity 
                 style={[
                   styles.saveModalButton,
-                  (!tempFarmDetails.farmName || !tempFarmDetails.farmType) && styles.saveModalButtonDisabled
+                  (!tempFarmDetails.farmName || !tempFarmDetails.farmType || !tempFarmDetails.hectares) && styles.saveModalButtonDisabled
                 ]}
                 onPress={handleSaveFarmDetails}
-                disabled={!tempFarmDetails.farmName || !tempFarmDetails.farmType}
+                disabled={!tempFarmDetails.farmName || !tempFarmDetails.farmType || !tempFarmDetails.hectares}
                 activeOpacity={0.7}
               >
                 <Text style={styles.saveModalText}>Save Farm Details</Text>
@@ -1622,25 +2285,72 @@ const FarmerProfileManager = ({ farmDetails, onUpdate, editing }) => {
   );
 };
 
-// ENHANCED CLIENT PROFILE COMPONENT - FIXED PERFORMANCE
-const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
+// ENHANCED CLIENT PROFILE COMPONENT WITH COMPLETE FUNCTIONALITY
+const ClientProfileManager = ({ clientDetails = {}, onUpdate, editing }) => {
   const [showClientEditor, setShowClientEditor] = useState(false);
-  const [tempClientDetails, setTempClientDetails] = useState(clientDetails);
+  const [tempClientDetails, setTempClientDetails] = useState({
+    companyName: '',
+    industry: '',
+    projectTypes: [],
+    serviceNeeds: [],
+    budgetRange: { min: 0, max: 0 },
+    timeline: '',
+    locationPreferences: [],
+    projectSize: '',
+    preferredSkills: [],
+    companySize: '',
+    projectHistory: [],
+    preferredCommunication: ['email', 'phone'],
+    urgencyLevel: 'medium',
+    ...clientDetails
+  });
 
-  const industries = ['Residential', 'Commercial', 'Industrial', 'Agricultural', 'Construction', 'Technology', 'Healthcare', 'Education', 'Hospitality'];
-  const projectSizes = ['Small (<$5k)', 'Medium ($5k-$25k)', 'Large ($25k-$100k)', 'Enterprise ($100k+)'];
+  const [newProjectType, setNewProjectType] = useState('');
+  const [newServiceNeed, setNewServiceNeed] = useState('');
+  const [newLocation, setNewLocation] = useState('');
+
+  const industries = [
+    'Residential', 'Commercial', 'Industrial', 'Agricultural', 
+    'Construction', 'Technology', 'Healthcare', 'Education', 
+    'Hospitality', 'Retail', 'Manufacturing', 'Finance'
+  ];
+
+  const projectSizes = [
+    'Small (<$5k)', 'Medium ($5k-$25k)', 'Large ($25k-$100k)', 
+    'Enterprise ($100k+)', 'Custom Quote'
+  ];
+
+  const urgencyLevels = [
+    { value: 'low', label: 'Low', description: 'Planning phase' },
+    { value: 'medium', label: 'Medium', description: 'Ready to start' },
+    { value: 'high', label: 'High', description: 'Urgent need' },
+    { value: 'emergency', label: 'Emergency', description: 'Immediate attention' }
+  ];
+
+  const communicationMethods = [
+    { value: 'email', label: 'Email' },
+    { value: 'phone', label: 'Phone' },
+    { value: 'video', label: 'Video Call' },
+    { value: 'in-person', label: 'In Person' }
+  ];
+
+  const companySizes = [
+    'Individual', 'Small Business (1-10)', 'Medium Business (11-50)',
+    'Large Business (51-200)', 'Enterprise (200+)'
+  ];
 
   const handleSaveClientDetails = () => {
     onUpdate(tempClientDetails);
     setShowClientEditor(false);
   };
 
-  const addProjectType = (type) => {
-    if (type && !tempClientDetails.projectTypes.includes(type)) {
+  const addProjectType = () => {
+    if (newProjectType.trim() && !tempClientDetails.projectTypes.includes(newProjectType.trim())) {
       setTempClientDetails(prev => ({
         ...prev,
-        projectTypes: [...prev.projectTypes, type]
+        projectTypes: [...prev.projectTypes, newProjectType.trim()]
       }));
+      setNewProjectType('');
     }
   };
 
@@ -1648,6 +2358,49 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
     setTempClientDetails(prev => ({
       ...prev,
       projectTypes: prev.projectTypes.filter(t => t !== type)
+    }));
+  };
+
+  const addServiceNeed = () => {
+    if (newServiceNeed.trim() && !tempClientDetails.serviceNeeds.includes(newServiceNeed.trim())) {
+      setTempClientDetails(prev => ({
+        ...prev,
+        serviceNeeds: [...prev.serviceNeeds, newServiceNeed.trim()]
+      }));
+      setNewServiceNeed('');
+    }
+  };
+
+  const removeServiceNeed = (service) => {
+    setTempClientDetails(prev => ({
+      ...prev,
+      serviceNeeds: prev.serviceNeeds.filter(s => s !== service)
+    }));
+  };
+
+  const addLocation = () => {
+    if (newLocation.trim() && !tempClientDetails.locationPreferences.includes(newLocation.trim())) {
+      setTempClientDetails(prev => ({
+        ...prev,
+        locationPreferences: [...prev.locationPreferences, newLocation.trim()]
+      }));
+      setNewLocation('');
+    }
+  };
+
+  const removeLocation = (location) => {
+    setTempClientDetails(prev => ({
+      ...prev,
+      locationPreferences: prev.locationPreferences.filter(l => l !== location)
+    }));
+  };
+
+  const toggleCommunication = (method) => {
+    setTempClientDetails(prev => ({
+      ...prev,
+      preferredCommunication: prev.preferredCommunication.includes(method)
+        ? prev.preferredCommunication.filter(m => m !== method)
+        : [...prev.preferredCommunication, method]
     }));
   };
 
@@ -1662,7 +2415,22 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
           <TouchableOpacity 
             style={styles.editSectionButton}
             onPress={() => {
-              setTempClientDetails(clientDetails);
+              setTempClientDetails({
+                companyName: '',
+                industry: '',
+                projectTypes: [],
+                serviceNeeds: [],
+                budgetRange: { min: 0, max: 0 },
+                timeline: '',
+                locationPreferences: [],
+                projectSize: '',
+                preferredSkills: [],
+                companySize: '',
+                projectHistory: [],
+                preferredCommunication: ['email', 'phone'],
+                urgencyLevel: 'medium',
+                ...clientDetails
+              });
               setShowClientEditor(true);
             }}
             activeOpacity={0.7}
@@ -1682,7 +2450,13 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
             <Text style={styles.clientDetailLabel}>Industry</Text>
             <Text style={styles.clientDetailValue}>{clientDetails.industry}</Text>
           </View>
-          {clientDetails.projectTypes.length > 0 && (
+          {clientDetails.companySize && (
+            <View style={styles.clientDetailItem}>
+              <Text style={styles.clientDetailLabel}>Company Size</Text>
+              <Text style={styles.clientDetailValue}>{clientDetails.companySize}</Text>
+            </View>
+          )}
+          {clientDetails.projectTypes && clientDetails.projectTypes.length > 0 && (
             <View style={styles.clientDetailItem}>
               <Text style={styles.clientDetailLabel}>Project Types</Text>
               <View style={styles.projectTypesList}>
@@ -1694,20 +2468,35 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
               </View>
             </View>
           )}
-          {clientDetails.budgetRange.min > 0 && (
+          {clientDetails.budgetRange && clientDetails.budgetRange.min > 0 && (
             <View style={styles.clientDetailItem}>
               <Text style={styles.clientDetailLabel}>Budget Range</Text>
               <Text style={styles.clientDetailValue}>
-                ${clientDetails.budgetRange.min} - ${clientDetails.budgetRange.max}
+                ${clientDetails.budgetRange.min.toLocaleString()} - ${clientDetails.budgetRange.max.toLocaleString()}
               </Text>
+            </View>
+          )}
+          {clientDetails.urgencyLevel && clientDetails.urgencyLevel !== 'medium' && (
+            <View style={styles.clientDetailItem}>
+              <Text style={styles.clientDetailLabel}>Urgency</Text>
+              <View style={[
+                styles.urgencyBadge,
+                clientDetails.urgencyLevel === 'high' && styles.urgencyHigh,
+                clientDetails.urgencyLevel === 'emergency' && styles.urgencyEmergency
+              ]}>
+                <Text style={styles.urgencyBadgeText}>
+                  {urgencyLevels.find(u => u.value === clientDetails.urgencyLevel)?.label}
+                </Text>
+              </View>
             </View>
           )}
         </View>
       ) : (
         <View style={styles.noClientDetails}>
+          <Icon name="business-outline" size={48} color="#666" />
           <Text style={styles.noClientText}>No client information added</Text>
           <Text style={styles.noClientSubtext}>
-            Add your company details to find skilled professionals
+            Add your company details to find and connect with skilled professionals
           </Text>
         </View>
       )}
@@ -1720,7 +2509,7 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
         onRequestClose={() => setShowClientEditor(false)}
       >
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={[styles.modalContent, styles.largeModal]}>
             <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Client Details</Text>
               <TouchableOpacity 
@@ -1731,14 +2520,18 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
               </TouchableOpacity>
             </View>
 
-            <ScrollView style={styles.modalBody}>
+            <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
+              <Text style={styles.sectionSubtitle}>
+                Complete your client profile to help us match you with the right professionals
+              </Text>
+
               <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Company Name *</Text>
                 <TextInput
                   style={styles.formInput}
                   value={tempClientDetails.companyName}
                   onChangeText={(text) => setTempClientDetails(prev => ({ ...prev, companyName: text }))}
-                  placeholder="Enter company name"
+                  placeholder="Enter your company name"
                   placeholderTextColor="#666"
                 />
               </View>
@@ -1763,19 +2556,45 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
               </View>
 
               <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Company Size</Text>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                  {companySizes.map((size) => (
+                    <TouchableOpacity
+                      key={size}
+                      style={[
+                        styles.companySizeChip,
+                        tempClientDetails.companySize === size && styles.companySizeChipSelected
+                      ]}
+                      onPress={() => setTempClientDetails(prev => ({ ...prev, companySize: size }))}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.companySizeText}>{size}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              <View style={styles.formGroup}>
                 <Text style={styles.formLabel}>Project Types</Text>
-                <View style={styles.projectInputContainer}>
+                <View style={styles.inputWithButton}>
                   <TextInput
-                    style={styles.projectInput}
+                    style={[styles.formInput, styles.flex1]}
+                    value={newProjectType}
+                    onChangeText={setNewProjectType}
                     placeholder="Add project type"
                     placeholderTextColor="#666"
-                    onSubmitEditing={(e) => {
-                      addProjectType(e.nativeEvent.text);
-                      e.nativeEvent.text = '';
-                    }}
+                    onSubmitEditing={addProjectType}
                   />
+                  <TouchableOpacity 
+                    style={styles.addItemButton}
+                    onPress={addProjectType}
+                    disabled={!newProjectType.trim()}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="add" size={20} color="#00f0a8" />
+                  </TouchableOpacity>
                 </View>
-                <View style={styles.selectedProjects}>
+                <View style={styles.selectedItems}>
                   {tempClientDetails.projectTypes.map((type, index) => (
                     <View key={index} style={styles.selectedProject}>
                       <Text style={styles.selectedProjectText}>{type}</Text>
@@ -1791,31 +2610,104 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
               </View>
 
               <View style={styles.formGroup}>
-                <Text style={styles.formLabel}>Budget Range</Text>
-                <View style={styles.budgetRangeContainer}>
+                <Text style={styles.formLabel}>Service Needs</Text>
+                <View style={styles.inputWithButton}>
                   <TextInput
-                    style={styles.budgetInput}
-                    value={tempClientDetails.budgetRange.min?.toString()}
-                    onChangeText={(text) => setTempClientDetails(prev => ({
-                      ...prev,
-                      budgetRange: { ...prev.budgetRange, min: parseFloat(text) || 0 }
-                    }))}
-                    placeholder="Min"
+                    style={[styles.formInput, styles.flex1]}
+                    value={newServiceNeed}
+                    onChangeText={setNewServiceNeed}
+                    placeholder="Add service need"
                     placeholderTextColor="#666"
-                    keyboardType="numeric"
+                    onSubmitEditing={addServiceNeed}
                   />
-                  <Text style={styles.budgetSeparator}>-</Text>
+                  <TouchableOpacity 
+                    style={styles.addItemButton}
+                    onPress={addServiceNeed}
+                    disabled={!newServiceNeed.trim()}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="add" size={20} color="#00f0a8" />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.selectedItems}>
+                  {tempClientDetails.serviceNeeds.map((service, index) => (
+                    <View key={index} style={styles.selectedService}>
+                      <Text style={styles.selectedServiceText}>{service}</Text>
+                      <TouchableOpacity 
+                        onPress={() => removeServiceNeed(service)}
+                        activeOpacity={0.7}
+                      >
+                        <Icon name="close" size={16} color="#ff6b6b" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Preferred Locations</Text>
+                <View style={styles.inputWithButton}>
                   <TextInput
-                    style={styles.budgetInput}
-                    value={tempClientDetails.budgetRange.max?.toString()}
-                    onChangeText={(text) => setTempClientDetails(prev => ({
-                      ...prev,
-                      budgetRange: { ...prev.budgetRange, max: parseFloat(text) || 0 }
-                    }))}
-                    placeholder="Max"
+                    style={[styles.formInput, styles.flex1]}
+                    value={newLocation}
+                    onChangeText={setNewLocation}
+                    placeholder="Add location preference"
                     placeholderTextColor="#666"
-                    keyboardType="numeric"
+                    onSubmitEditing={addLocation}
                   />
+                  <TouchableOpacity 
+                    style={styles.addItemButton}
+                    onPress={addLocation}
+                    disabled={!newLocation.trim()}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="add" size={20} color="#00f0a8" />
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.selectedItems}>
+                  {tempClientDetails.locationPreferences.map((location, index) => (
+                    <View key={index} style={styles.selectedLocation}>
+                      <Icon name="location" size={12} color="#00f0a8" />
+                      <Text style={styles.selectedLocationText}>{location}</Text>
+                      <TouchableOpacity 
+                        onPress={() => removeLocation(location)}
+                        activeOpacity={0.7}
+                      >
+                        <Icon name="close" size={16} color="#ff6b6b" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formRow}>
+                <View style={[styles.formGroup, styles.flex1]}>
+                  <Text style={styles.formLabel}>Budget Range ($)</Text>
+                  <View style={styles.budgetRangeContainer}>
+                    <TextInput
+                      style={styles.budgetInput}
+                      value={tempClientDetails.budgetRange.min?.toString()}
+                      onChangeText={(text) => setTempClientDetails(prev => ({
+                        ...prev,
+                        budgetRange: { ...prev.budgetRange, min: parseFloat(text) || 0 }
+                      }))}
+                      placeholder="Min"
+                      placeholderTextColor="#666"
+                      keyboardType="numeric"
+                    />
+                    <Text style={styles.budgetSeparator}>-</Text>
+                    <TextInput
+                      style={styles.budgetInput}
+                      value={tempClientDetails.budgetRange.max?.toString()}
+                      onChangeText={(text) => setTempClientDetails(prev => ({
+                        ...prev,
+                        budgetRange: { ...prev.budgetRange, max: parseFloat(text) || 0 }
+                      }))}
+                      placeholder="Max"
+                      placeholderTextColor="#666"
+                      keyboardType="numeric"
+                    />
+                  </View>
                 </View>
               </View>
 
@@ -1836,6 +2728,59 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Project Urgency</Text>
+                <View style={styles.urgencyOptions}>
+                  {urgencyLevels.map((level) => (
+                    <TouchableOpacity
+                      key={level.value}
+                      style={[
+                        styles.urgencyChip,
+                        tempClientDetails.urgencyLevel === level.value && styles.urgencyChipSelected
+                      ]}
+                      onPress={() => setTempClientDetails(prev => ({ ...prev, urgencyLevel: level.value }))}
+                      activeOpacity={0.7}
+                    >
+                      <Text style={styles.urgencyChipText}>{level.label}</Text>
+                      <Text style={styles.urgencyChipDescription}>{level.description}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              <View style={styles.formGroup}>
+                <Text style={styles.formLabel}>Preferred Communication</Text>
+                <View style={styles.communicationOptions}>
+                  {communicationMethods.map((method) => (
+                    <TouchableOpacity
+                      key={method.value}
+                      style={[
+                        styles.communicationChip,
+                        tempClientDetails.preferredCommunication.includes(method.value) && styles.communicationChipSelected
+                      ]}
+                      onPress={() => toggleCommunication(method.value)}
+                      activeOpacity={0.7}
+                    >
+                      <Icon 
+                        name={
+                          method.value === 'email' ? 'mail' :
+                          method.value === 'phone' ? 'call' :
+                          method.value === 'video' ? 'videocam' : 'person'
+                        }
+                        size={16}
+                        color={tempClientDetails.preferredCommunication.includes(method.value) ? '#000' : '#666'}
+                      />
+                      <Text style={[
+                        styles.communicationChipText,
+                        tempClientDetails.preferredCommunication.includes(method.value) && styles.communicationChipTextSelected
+                      ]}>
+                        {method.label}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
               </View>
             </ScrollView>
 
@@ -1866,16 +2811,32 @@ const ClientProfileManager = ({ clientDetails, onUpdate, editing }) => {
   );
 };
 
-// LOCATION MANAGER - FIXED PERFORMANCE
+// ENHANCED LOCATION MANAGER WITH ADVANCED FEATURES
 const LocationManager = ({ location, onUpdate, editing }) => {
   const [gettingLocation, setGettingLocation] = useState(false);
+  const [showLocationOptions, setShowLocationOptions] = useState(false);
 
   const getCurrentLocation = async () => {
     setGettingLocation(true);
+    setShowLocationOptions(false);
+    
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
       if (status !== 'granted') {
-        Alert.alert('Permission Denied', 'Location permission is required for accurate service matching');
+        Alert.alert(
+          'Location Permission Required', 
+          'Location access is needed for accurate service matching and local job opportunities.',
+          [
+            { text: 'Cancel', style: 'cancel' },
+            { 
+              text: 'Open Settings', 
+              onPress: () => {
+                // In a real app, you would open app settings
+                console.log('Open location settings');
+              }
+            }
+          ]
+        );
         return;
       }
 
@@ -1888,7 +2849,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
       
       const address = await Location.reverseGeocodeAsync({ latitude, longitude });
       const readableAddress = address[0] 
-        ? `${address[0].name || ''} ${address[0].city || ''} ${address[0].region || ''} ${address[0].country || ''}`.trim()
+        ? `${address[0].name || ''} ${address[0].street || ''} ${address[0].city || ''} ${address[0].region || ''} ${address[0].postalCode || ''} ${address[0].country || ''}`.trim()
         : `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
 
       onUpdate({
@@ -1897,22 +2858,29 @@ const LocationManager = ({ location, onUpdate, editing }) => {
         address: readableAddress,
         accuracy: locationData.coords.accuracy,
         lastUpdated: new Date().toISOString(),
-        verified: true
+        verified: true,
+        source: 'gps'
       });
 
       Alert.alert('Success', 'Location updated with high accuracy');
     } catch (error) {
       console.error('Location error:', error);
-      Alert.alert('Error', 'Failed to get current location. Please try manual entry.');
+      Alert.alert(
+        'Location Error', 
+        'Failed to get current location. Please try manual entry or check your location settings.',
+        [{ text: 'OK' }]
+      );
     } finally {
       setGettingLocation(false);
     }
   };
 
   const handleManualLocation = () => {
+    setShowLocationOptions(false);
+    
     Alert.prompt(
       'Enter Your Location',
-      'Type your full address for better service matching:',
+      'Type your full address for better service matching and local opportunities:',
       [
         { text: 'Cancel', style: 'cancel' },
         { 
@@ -1924,20 +2892,52 @@ const LocationManager = ({ location, onUpdate, editing }) => {
                 latitude: null,
                 longitude: null,
                 lastUpdated: new Date().toISOString(),
-                verified: false
+                verified: false,
+                source: 'manual'
               });
+              Alert.alert('Success', 'Location saved successfully');
             }
           }
         }
       ],
       'plain-text',
-      location?.address || 'e.g., 123 Main Street, City, State'
+      location?.address || 'e.g., 123 Main Street, City, State, Postal Code'
+    );
+  };
+
+  const clearLocation = () => {
+    Alert.alert(
+      'Clear Location',
+      'Are you sure you want to remove your location? This may affect local job matching.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear',
+          style: 'destructive',
+          onPress: () => {
+            onUpdate(null);
+            Alert.alert('Success', 'Location cleared');
+          }
+        }
+      ]
     );
   };
 
   return (
     <View style={styles.locationSection}>
-      <Text style={styles.sectionTitle}>Service Location</Text>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Service Location</Text>
+        {editing && location && (
+          <TouchableOpacity 
+            style={styles.editSectionButton}
+            onPress={() => setShowLocationOptions(true)}
+            activeOpacity={0.7}
+          >
+            <Icon name="ellipsis-vertical" size={20} color="#00f0a8" />
+          </TouchableOpacity>
+        )}
+      </View>
+      
       <Text style={styles.sectionSubtitle}>
         Set your location for local job matching and service areas
       </Text>
@@ -1964,9 +2964,14 @@ const LocationManager = ({ location, onUpdate, editing }) => {
                 </Text>
               </View>
             )}
-            <Text style={styles.locationTimestamp}>
-              Updated {new Date(location.lastUpdated).toLocaleDateString()}
-            </Text>
+            <View style={styles.locationMeta}>
+              <Text style={styles.locationSource}>
+                Source: {location.source === 'gps' ? 'GPS' : 'Manual'}
+              </Text>
+              <Text style={styles.locationTimestamp}>
+                Updated {new Date(location.lastUpdated).toLocaleDateString()}
+              </Text>
+            </View>
           </View>
         </View>
       ) : (
@@ -1974,7 +2979,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
           <Icon name="location-outline" size={48} color="#666" />
           <Text style={styles.noLocationText}>No location set</Text>
           <Text style={styles.noLocationSubtext}>
-            Add your location to find local opportunities
+            Add your location to find local opportunities and services
           </Text>
         </View>
       )}
@@ -2007,11 +3012,115 @@ const LocationManager = ({ location, onUpdate, editing }) => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Location Options Modal */}
+      <Modal 
+        visible={showLocationOptions} 
+        transparent 
+        animationType="slide"
+        onRequestClose={() => setShowLocationOptions(false)}
+      >
+        <TouchableOpacity 
+          style={styles.imageOptionsOverlay}
+          activeOpacity={1}
+          onPress={() => setShowLocationOptions(false)}
+        >
+          <View style={styles.imageOptionsContent}>
+            <Text style={styles.imageOptionsTitle}>Location Options</Text>
+            
+            <TouchableOpacity 
+              style={styles.imageOption}
+              onPress={getCurrentLocation}
+            >
+              <Icon name="refresh" size={24} color="#00f0a8" />
+              <Text style={styles.imageOptionText}>Update Location</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.imageOption}
+              onPress={handleManualLocation}
+            >
+              <Icon name="create" size={24} color="#00f0a8" />
+              <Text style={styles.imageOptionText}>Edit Address</Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={[styles.imageOption, styles.removeOption]}
+              onPress={clearLocation}
+            >
+              <Icon name="trash" size={24} color="#ff6b6b" />
+              <Text style={[styles.imageOptionText, styles.removeOptionText]}>
+                Clear Location
+              </Text>
+            </TouchableOpacity>
+            
+            <TouchableOpacity 
+              style={styles.cancelOption}
+              onPress={() => setShowLocationOptions(false)}
+            >
+              <Text style={styles.cancelOptionText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
 
-// MAIN ENHANCED ENTERPRISE PLATFORM - FIXED SCROLLING AND ADAPTIVE ISSUES
+// ADVANCED BOTTOM NAVIGATION WITH ENHANCED VECTOR ICONS
+const AdvancedBottomNavigation = ({ activeTab, onTabChange }) => {
+  const tabs = [
+    { 
+      id: 'home', 
+      label: 'Home', 
+      icon: (color, size) => VectorIcons.home(color, size)
+    },
+    { 
+      id: 'search', 
+      label: 'Discover', 
+      icon: (color, size) => VectorIcons.search(color, size)
+    },
+    { 
+      id: 'marketplace', 
+      label: 'Market', 
+      icon: (color, size) => VectorIcons.marketplace(color, size)
+    },
+    { 
+      id: 'profile', 
+      label: 'Profile', 
+      icon: (color, size) => VectorIcons.profile(color, size)
+    },
+  ];
+
+  return (
+    <View style={styles.bottomNavigation}>
+      {tabs.map((tab) => (
+        <TouchableOpacity
+          key={tab.id}
+          style={[
+            styles.navItem,
+            activeTab === tab.id && styles.navItemActive
+          ]}
+          onPress={() => onTabChange(tab.id)}
+          activeOpacity={0.7}
+        >
+          {tab.icon(
+            activeTab === tab.id ? '#00f0a8' : '#666',
+            24
+          )}
+          <Text style={[
+            styles.navLabel,
+            activeTab === tab.id && styles.navLabelActive
+          ]}>
+            {tab.label}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
+
+// MAIN ENHANCED ENTERPRISE PLATFORM WITH COMPLETE FUNCTIONALITY
 export default function AdvancedEnterprisePlatform({ navigation }) {
   const {
     profile,
@@ -2026,12 +3135,16 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
     updateFarmDetails,
     updateClientDetails,
     addSkill,
+    updateSkill,
     removeSkill,
     addPortfolioItem,
     updateProfileImage,
+    switchUserType,
     saveProfile,
     loadProfile,
-    resetProfile
+    resetProfile,
+    exportProfile,
+    calculateProfileCompleteness
   } = useAdvancedEnterpriseProfile();
 
   const [refreshing, setRefreshing] = useState(false);
@@ -2048,16 +3161,17 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   const handleShareProfile = async () => {
     try {
       await Share.share({
-        message: `Check out ${profile.displayName}'s professional profile on VSXchange Platform!`,
-        title: `${profile.displayName}'s Professional Profile`,
-        url: 'https://vsxchangeza.com/profiles/' + profile.id
+        message: `Check out ${profile?.displayName}'s professional profile on VSXchange Platform!`,
+        title: `${profile?.displayName}'s Professional Profile`,
+        url: 'https://vsxchangeza.com/profiles/' + profile?.id
       });
     } catch (error) {
       console.log('Share failed:', error);
+      Alert.alert('Share Error', 'Unable to share profile at this time');
     }
   };
 
-  // Animated header styles
+  // Enhanced animated header styles
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, 100],
     outputRange: [0, -50],
@@ -2070,11 +3184,20 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
     extrapolate: 'clamp',
   });
 
+  const headerScale = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0.9],
+    extrapolate: 'clamp',
+  });
+
   if (loading || !profile) {
     return (
       <SafeAreaView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#00f0a8" />
-        <Text style={styles.loadingText}>Loading Advanced Platform...</Text>
+        <View style={styles.loadingContent}>
+          <ActivityIndicator size="large" color="#00f0a8" />
+          <Text style={styles.loadingText}>Loading Advanced Platform...</Text>
+          <Text style={styles.loadingSubtext}>Preparing your professional profile</Text>
+        </View>
       </SafeAreaView>
     );
   }
@@ -2084,14 +3207,17 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
       style={[
         styles.header,
         {
-          transform: [{ translateY: headerTranslateY }],
+          transform: [{ translateY: headerTranslateY }, { scale: headerScale }],
           opacity: headerOpacity
         }
       ]}
     >
-      <LinearGradient colors={['#000000', '#1a1a1a']} style={styles.headerGradient}>
+      <LinearGradient 
+        colors={['#000000', '#1a1a1a', '#2a2a2a']} 
+        style={styles.headerGradient}
+      >
         <View style={styles.headerContent}>
-          {/* Enhanced Top Bar */}
+          {/* Enhanced Top Bar with Advanced Controls */}
           <View style={styles.headerTop}>
             <TouchableOpacity 
               style={styles.backButton}
@@ -2137,10 +3263,23 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 onPress={() => {
                   Alert.alert(
                     'Profile Options',
-                    'Choose an action:',
+                    'Manage your professional profile',
                     [
-                      { text: 'Reset Profile', onPress: resetProfile, style: 'destructive' },
-                      { text: 'Export Data', onPress: () => console.log('Export') },
+                      { 
+                        text: 'Export Data', 
+                        onPress: exportProfile,
+                        style: 'default'
+                      },
+                      { 
+                        text: 'Refresh Profile', 
+                        onPress: loadProfile,
+                        style: 'default'
+                      },
+                      { 
+                        text: 'Reset Profile', 
+                        onPress: resetProfile, 
+                        style: 'destructive' 
+                      },
                       { text: 'Cancel', style: 'cancel' }
                     ]
                   );
@@ -2170,6 +3309,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                       placeholder="First Name"
                       style={styles.nameInput}
                       required
+                      autoCapitalize="words"
                     />
                     <EditableField
                       value={profile.lastName}
@@ -2177,6 +3317,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                       placeholder="Last Name"
                       style={styles.nameInput}
                       required
+                      autoCapitalize="words"
                     />
                   </View>
                 ) : (
@@ -2192,7 +3333,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>{profile.experienceYears}</Text>
-                  <Text style={styles.statLabel}>Years</Text>
+                  <Text style={styles.statLabel}>Years Exp</Text>
                 </View>
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
@@ -2210,7 +3351,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
                 <View style={styles.statDivider} />
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>${profile.hourlyRate}</Text>
-                  <Text style={styles.statLabel}>/hr</Text>
+                  <Text style={styles.statLabel}>/hour</Text>
                 </View>
               </View>
 
@@ -2236,7 +3377,21 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
 
                 <TouchableOpacity 
                   style={styles.callButton}
-                  onPress={() => console.log('Call:', profile.contactInfo.phone)}
+                  onPress={() => {
+                    if (profile.contactInfo?.phone) {
+                      // In a real app, you would initiate a phone call
+                      Alert.alert(
+                        'Contact Professional',
+                        `Call ${profile.contactInfo.phone}?`,
+                        [
+                          { text: 'Cancel', style: 'cancel' },
+                          { text: 'Call', onPress: () => console.log('Calling:', profile.contactInfo.phone) }
+                        ]
+                      );
+                    } else {
+                      Alert.alert('No Phone Number', 'Phone number not available');
+                    }
+                  }}
                   activeOpacity={0.7}
                 >
                   <Icon name="call" size={18} color="#00f0a8" />
@@ -2248,7 +3403,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
           {/* Enhanced User Type Selector */}
           <UserTypeSelector
             currentType={profile.userType}
-            onTypeChange={(type) => updateProfile({ userType: type })}
+            onTypeChange={switchUserType}
             editing={editing}
           />
 
@@ -2259,6 +3414,19 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               <Text style={styles.saveStatusText}>
                 Auto-saved {new Date(lastSave).toLocaleTimeString()}
               </Text>
+              <View style={styles.profileCompleteness}>
+                <Text style={styles.completenessText}>
+                  Profile: {profile.profileCompleteness}% complete
+                </Text>
+                <View style={styles.completenessBar}>
+                  <View 
+                    style={[
+                      styles.completenessFill, 
+                      { width: `${profile.profileCompleteness}%` }
+                    ]} 
+                  />
+                </View>
+              </View>
             </View>
           )}
         </View>
@@ -2274,7 +3442,12 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
             ref={mainScrollRef}
             style={styles.tabContent}
             refreshControl={
-              <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+              <RefreshControl 
+                refreshing={refreshing} 
+                onRefresh={onRefresh}
+                colors={['#00f0a8']}
+                tintColor="#00f0a8"
+              />
             }
             showsVerticalScrollIndicator={false}
             keyboardShouldPersistTaps="handled"
@@ -2291,10 +3464,11 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               <EditableField
                 value={profile.bio}
                 onSave={(value) => updateProfile({ bio: value })}
-                placeholder="Tell us about your professional background, expertise, and what makes you unique..."
+                placeholder="Tell us about your professional background, expertise, achievements, and what makes you unique. Include your experience, specialties, and what clients can expect when working with you."
                 multiline={true}
                 style={styles.bioField}
                 label="About Me"
+                maxLength={1000}
               />
             </View>
 
@@ -2303,6 +3477,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               skills={profile.skills}
               userType={profile.userType}
               onAddSkill={addSkill}
+              onUpdateSkill={updateSkill}
               onRemoveSkill={removeSkill}
               editing={editing}
             />
@@ -2335,19 +3510,74 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Contact Information</Text>
               <EditableField
-                value={profile.contactInfo.phone}
-                onSave={(value) => updateProfile({ contactInfo: { ...profile.contactInfo, phone: value } })}
+                value={profile.contactInfo?.phone}
+                onSave={(value) => updateProfile({ 
+                  contactInfo: { ...profile.contactInfo, phone: value } 
+                })}
                 placeholder="+1 (555) 123-4567"
                 label="Phone Number"
                 type="phone"
+                keyboardType="phone-pad"
               />
               <EditableField
-                value={profile.contactInfo.email}
-                onSave={(value) => updateProfile({ contactInfo: { ...profile.contactInfo, email: value } })}
+                value={profile.contactInfo?.email}
+                onSave={(value) => updateProfile({ 
+                  contactInfo: { ...profile.contactInfo, email: value } 
+                })}
                 placeholder="your.email@example.com"
                 label="Email Address"
                 type="email"
+                keyboardType="email-address"
+                autoCapitalize="none"
               />
+              <EditableField
+                value={profile.contactInfo?.website}
+                onSave={(value) => updateProfile({ 
+                  contactInfo: { ...profile.contactInfo, website: value } 
+                })}
+                placeholder="https://yourwebsite.com"
+                label="Website (Optional)"
+                type="url"
+                keyboardType="url"
+                autoCapitalize="none"
+              />
+            </View>
+
+            {/* Professional Details */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Professional Details</Text>
+              <View style={styles.detailsGrid}>
+                <EditableField
+                  value={profile.profession}
+                  onSave={(value) => updateProfile({ profession: value })}
+                  placeholder="Your profession or main service"
+                  label="Profession"
+                  required
+                />
+                <EditableField
+                  value={profile.tagline}
+                  onSave={(value) => updateProfile({ tagline: value })}
+                  placeholder="Brief tagline that describes you"
+                  label="Tagline"
+                  maxLength={100}
+                />
+                <EditableField
+                  value={profile.experienceYears?.toString()}
+                  onSave={(value) => updateProfile({ experienceYears: parseInt(value) || 0 })}
+                  placeholder="Years of experience"
+                  label="Experience (Years)"
+                  type="number"
+                  keyboardType="numeric"
+                />
+                <EditableField
+                  value={profile.hourlyRate?.toString()}
+                  onSave={(value) => updateProfile({ hourlyRate: parseInt(value) || 0 })}
+                  placeholder="Your hourly rate"
+                  label="Hourly Rate ($)"
+                  type="number"
+                  keyboardType="numeric"
+                />
+              </View>
             </View>
           </Animated.ScrollView>
         );
@@ -2360,12 +3590,13 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               <Icon name="images" size={64} color="#666" />
               <Text style={styles.comingSoonTitle}>Advanced Portfolio</Text>
               <Text style={styles.comingSoonText}>
-                Showcase your work with high-resolution images, project descriptions, and client testimonials
+                Showcase your work with high-resolution images, project descriptions, client testimonials, and before/after comparisons. Organize your portfolio by project type, category, or date.
               </Text>
               {editing && (
                 <TouchableOpacity 
                   style={styles.comingSoonButton}
                   activeOpacity={0.7}
+                  onPress={() => Alert.alert('Portfolio', 'Portfolio feature coming soon!')}
                 >
                   <Text style={styles.comingSoonButtonText}>Upload Portfolio Items</Text>
                 </TouchableOpacity>
@@ -2382,8 +3613,17 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               <Icon name="construct" size={64} color="#666" />
               <Text style={styles.comingSoonTitle}>Service Management</Text>
               <Text style={styles.comingSoonText}>
-                Manage your service offerings, dynamic pricing, and availability calendar
+                Manage your service offerings, dynamic pricing, availability calendar, and service packages. Set different rates for various service types and create custom packages for clients.
               </Text>
+              {editing && (
+                <TouchableOpacity 
+                  style={styles.comingSoonButton}
+                  activeOpacity={0.7}
+                  onPress={() => Alert.alert('Services', 'Service management feature coming soon!')}
+                >
+                  <Text style={styles.comingSoonButtonText}>Manage Services</Text>
+                </TouchableOpacity>
+              )}
             </View>
           </View>
         );
@@ -2407,6 +3647,9 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
               </View>
               <Text style={styles.ratingCount}>
                 Based on {profile.completedProjects} completed projects
+              </Text>
+              <Text style={styles.ratingSubtext}>
+                Client feedback and testimonials will appear here
               </Text>
             </View>
           </View>
@@ -2489,7 +3732,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   );
 }
 
-// COMPLETE ENTERPRISE-LEVEL STYLES - OPTIMIZED FOR SCROLLING
+// COMPREHENSIVE ENTERPRISE-LEVEL STYLES - OPTIMIZED FOR PERFORMANCE
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -2501,10 +3744,21 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  loadingContent: {
+    alignItems: 'center',
+    padding: 20,
+  },
   loadingText: {
     color: '#00f0a8',
-    fontSize: 16,
+    fontSize: 18,
+    fontWeight: '700',
     marginTop: 16,
+  },
+  loadingSubtext: {
+    color: '#666',
+    fontSize: 14,
+    marginTop: 8,
+    textAlign: 'center',
   },
   header: {
     position: 'absolute',
@@ -2519,9 +3773,9 @@ const styles = StyleSheet.create({
   headerGradient: {
     borderBottomLeftRadius: 20,
     borderBottomRightRadius: 20,
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
   },
   headerContent: {
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingBottom: 20,
     paddingHorizontal: 20,
   },
@@ -2612,12 +3866,22 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     borderColor: '#00f0a8',
   },
+  avatarPlaceholderText: {
+    color: '#666',
+    fontSize: 12,
+    marginTop: 4,
+  },
   uploadOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.7)',
     borderRadius: 50,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  uploadProgressText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    marginTop: 4,
   },
   editBadge: {
     position: 'absolute',
@@ -2772,42 +4036,46 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   userTypeSelector: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    padding: 15,
+    marginBottom: 10,
+  },
+  selectorHeader: {
     marginBottom: 15,
   },
   selectorTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 5,
+    marginBottom: 4,
   },
   selectorSubtitle: {
     color: '#666',
     fontSize: 12,
-    marginBottom: 15,
+    lineHeight: 16,
   },
   typeOptions: {
-    gap: 10,
+    gap: 12,
   },
   typeOption: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderRadius: 12,
     padding: 15,
     borderWidth: 2,
-    borderColor: 'transparent',
-    position: 'relative',
   },
   typeOptionSelected: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(0,240,168,0.1)',
   },
   typeOptionHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 10,
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
   typeOptionIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: 12,
@@ -2819,119 +4087,197 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '700',
-    marginBottom: 2,
+    marginBottom: 4,
   },
   typeOptionDescription: {
     color: '#666',
     fontSize: 12,
+    lineHeight: 16,
   },
   selectedBadge: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
   examplesContainer: {
-    paddingLeft: 52,
+    marginBottom: 12,
   },
   examplesLabel: {
     color: '#666',
-    fontSize: 11,
+    fontSize: 12,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   examplesList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
   },
-  exampleText: {
-    color: '#888',
-    fontSize: 10,
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
+  exampleChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
     borderRadius: 8,
+  },
+  exampleText: {
+    color: '#fff',
+    fontSize: 10,
+  },
+  featuresContainer: {
+    marginBottom: 8,
+  },
+  featuresLabel: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  featuresList: {
+    gap: 4,
+  },
+  featureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  featureText: {
+    color: '#fff',
+    fontSize: 11,
+  },
+  roleChangeNote: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.1)',
+    padding: 12,
+    borderRadius: 8,
+    marginTop: 10,
+    gap: 8,
+  },
+  roleChangeNoteText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    flex: 1,
   },
   saveStatus: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    padding: 8,
+    justifyContent: 'space-between',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 10,
+    borderRadius: 8,
+    marginTop: 10,
   },
   saveStatusText: {
     color: '#00f0a8',
     fontSize: 10,
-    marginLeft: 4,
+    flex: 1,
+    marginLeft: 6,
+  },
+  profileCompleteness: {
+    alignItems: 'flex-end',
+  },
+  completenessText: {
+    color: '#666',
+    fontSize: 10,
+    marginBottom: 4,
+  },
+  completenessBar: {
+    width: 80,
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  completenessFill: {
+    height: '100%',
+    backgroundColor: '#00f0a8',
+    borderRadius: 2,
   },
   tabsContainer: {
     backgroundColor: '#000',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
-    marginTop: Platform.OS === 'ios' ? 100 : 80,
   },
   tabsScrollContent: {
     paddingHorizontal: 20,
+    paddingVertical: 12,
+    gap: 20,
   },
   tab: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 8,
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    marginRight: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    gap: 6,
   },
   activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#00f0a8',
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderWidth: 1,
+    borderColor: '#00f0a8',
   },
   tabText: {
     color: '#666',
     fontSize: 14,
     fontWeight: '600',
-    marginLeft: 6,
   },
   activeTabText: {
     color: '#00f0a8',
   },
   contentContainer: {
     flex: 1,
+    backgroundColor: '#000',
   },
   tabContent: {
     flex: 1,
   },
   scrollContent: {
-    paddingTop: 20,
-    paddingBottom: 100,
+    padding: 20,
+    paddingTop: 240, // Space for the animated header
   },
   section: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    marginBottom: 25,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  sectionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   sectionTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 15,
   },
   sectionSubtitle: {
     color: '#666',
     fontSize: 12,
     marginBottom: 15,
+    lineHeight: 16,
+  },
+  editSectionButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
   },
   bioField: {
     minHeight: 120,
   },
   viewField: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     backgroundColor: 'rgba(255,255,255,0.05)',
     padding: 15,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
     marginBottom: 10,
   },
   viewFieldContent: {
@@ -2946,6 +4292,7 @@ const styles = StyleSheet.create({
   viewFieldText: {
     color: '#fff',
     fontSize: 16,
+    fontWeight: '500',
   },
   placeholderText: {
     color: '#666',
@@ -2953,17 +4300,19 @@ const styles = StyleSheet.create({
   },
   editFieldContainer: {
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-    overflow: 'hidden',
+    padding: 15,
+    borderRadius: 12,
     marginBottom: 10,
   },
   editField: {
     color: '#fff',
     fontSize: 16,
-    padding: 15,
-    minHeight: 50,
+    fontWeight: '500',
+    padding: 12,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
   multilineField: {
     minHeight: 100,
@@ -2972,344 +4321,227 @@ const styles = StyleSheet.create({
   fieldError: {
     borderColor: '#ff6b6b',
   },
+  charCount: {
+    color: '#666',
+    fontSize: 10,
+    textAlign: 'right',
+    marginTop: 4,
+  },
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 15,
-    paddingBottom: 10,
+    gap: 4,
+    marginTop: 6,
   },
   errorText: {
     color: '#ff6b6b',
     fontSize: 12,
-    marginLeft: 4,
-  },
-  optionsContainer: {
-    maxHeight: 200,
-  },
-  optionItem: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    padding: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  optionItemSelected: {
-    backgroundColor: 'rgba(0,240,168,0.1)',
-  },
-  optionText: {
-    color: '#fff',
-    fontSize: 16,
   },
   editButtons: {
     flexDirection: 'row',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
+    gap: 10,
+    marginTop: 12,
   },
   cancelButton: {
     flex: 1,
-    padding: 15,
     alignItems: 'center',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.1)',
+    padding: 12,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
   },
   cancelButtonText: {
-    color: '#ff6b6b',
-    fontSize: 16,
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '600',
   },
   saveButton: {
     flex: 1,
-    padding: 15,
     alignItems: 'center',
-    backgroundColor: 'rgba(0,240,168,0.1)',
+    padding: 12,
+    backgroundColor: '#00f0a8',
+    borderRadius: 8,
   },
   saveButtonText: {
-    color: '#00f0a8',
-    fontSize: 16,
-    fontWeight: '600',
+    color: '#000',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  optionsContainer: {
+    maxHeight: 200,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  optionItemSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+  },
+  optionText: {
+    color: '#fff',
+    fontSize: 14,
   },
   skillManager: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    marginBottom: 25,
   },
   skillHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: 15,
   },
   skillTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
+    marginBottom: 4,
   },
   skillSubtitle: {
     color: '#666',
     fontSize: 12,
-    marginTop: 2,
   },
   addSkillButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-  },
-  addSkillText: {
-    color: '#00f0a8',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
-  skillsGrid: {
-    gap: 8,
-  },
-  skillChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    paddingHorizontal: 12,
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
+    borderColor: '#00f0a8',
+    gap: 6,
+  },
+  addSkillText: {
+    color: '#00f0a8',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  skillsGrid: {
+    gap: 10,
+  },
+  skillChip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 15,
+    borderRadius: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: '#00f0a8',
   },
   skillInfo: {
     flex: 1,
   },
   skillName: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 2,
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 6,
   },
   skillMeta: {
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
+    marginBottom: 6,
   },
   skillCategory: {
-    color: '#666',
-    fontSize: 10,
+    color: '#00f0a8',
+    fontSize: 12,
     fontWeight: '600',
-    textTransform: 'capitalize',
   },
   skillSubcategory: {
     color: '#666',
-    fontSize: 10,
+    fontSize: 12,
   },
   skillLevel: {
     color: '#666',
-    fontSize: 10,
-    textTransform: 'capitalize',
+    fontSize: 12,
   },
   skillYears: {
     color: '#666',
-    fontSize: 10,
+    fontSize: 12,
   },
   certifiedBadge: {
+    width: 16,
+    height: 16,
+    borderRadius: 8,
     backgroundColor: '#00f0a8',
-    width: 14,
-    height: 14,
-    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
   },
+  skillDescription: {
+    color: '#666',
+    fontSize: 12,
+    lineHeight: 16,
+  },
+  skillActions: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  editSkillButton: {
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0,240,168,0.2)',
+  },
   removeSkillButton: {
-    padding: 4,
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,107,107,0.2)',
   },
   noSkills: {
     alignItems: 'center',
-    paddingVertical: 40,
+    padding: 40,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderStyle: 'dashed',
   },
   noSkillsText: {
-    color: '#666',
+    color: '#fff',
     fontSize: 16,
-    marginTop: 8,
-    fontStyle: 'italic',
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 6,
   },
   noSkillsSubtext: {
     color: '#666',
     fontSize: 12,
     textAlign: 'center',
-    marginTop: 4,
-    marginBottom: 16,
+    lineHeight: 16,
+    marginBottom: 20,
   },
   addFirstSkillButton: {
-    backgroundColor: 'rgba(0,240,168,0.1)',
+    backgroundColor: '#00f0a8',
     paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
+    paddingVertical: 12,
+    borderRadius: 25,
   },
   addFirstSkillText: {
-    color: '#00f0a8',
+    color: '#000',
     fontSize: 14,
-    fontWeight: '600',
-  },
-  farmSection: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 15,
-  },
-  sectionTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  editSectionButton: {
-    padding: 8,
-    borderRadius: 12,
-    backgroundColor: 'rgba(255,255,255,0.1)',
-  },
-  farmDetailsGrid: {
-    gap: 12,
-  },
-  farmDetailItem: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 8,
-    padding: 12,
-  },
-  farmDetailLabel: {
-    color: '#666',
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  farmDetailValue: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  cropsList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  cropChip: {
-    backgroundColor: 'rgba(76,217,100,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  cropText: {
-    color: '#4CD964',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  equipmentList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  equipmentChip: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  equipmentText: {
-    color: '#00f0a8',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  noFarmDetails: {
-    alignItems: 'center',
-    paddingVertical: 30,
-  },
-  noFarmText: {
-    color: '#666',
-    fontSize: 16,
-    marginBottom: 4,
-    fontStyle: 'italic',
-  },
-  noFarmSubtext: {
-    color: '#666',
-    fontSize: 12,
-    textAlign: 'center',
-  },
-  clientSection: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
-  },
-  clientDetailsGrid: {
-    gap: 12,
-  },
-  clientDetailItem: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 8,
-    padding: 12,
-  },
-  clientDetailLabel: {
-    color: '#666',
-    fontSize: 12,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  clientDetailValue: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  projectTypesList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
-    marginTop: 4,
-  },
-  projectTypeChip: {
-    backgroundColor: 'rgba(0,122,255,0.2)',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  projectTypeText: {
-    color: '#007AFF',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  noClientDetails: {
-    alignItems: 'center',
-    paddingVertical: 30,
-  },
-  noClientText: {
-    color: '#666',
-    fontSize: 16,
-    marginBottom: 4,
-    fontStyle: 'italic',
-  },
-  noClientSubtext: {
-    color: '#666',
-    fontSize: 12,
-    textAlign: 'center',
+    fontWeight: '700',
   },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: 'flex-end',
   },
   modalContent: {
     backgroundColor: '#1a1a1a',
-    borderRadius: 20,
-    width: '90%',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
     maxHeight: '80%',
-    overflow: 'hidden',
+  },
+  largeModal: {
+    maxHeight: '90%',
   },
   modalHeader: {
     flexDirection: 'row',
@@ -3325,11 +4557,12 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   modalBody: {
-    maxHeight: 400,
     padding: 20,
   },
   modalFooter: {
     flexDirection: 'row',
+    gap: 10,
+    padding: 20,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
   },
@@ -3338,7 +4571,7 @@ const styles = StyleSheet.create({
   },
   formLabel: {
     color: '#fff',
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
     marginBottom: 8,
   },
@@ -3347,20 +4580,274 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     color: '#fff',
+    fontSize: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  farmTypeChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
+  multilineInput: {
+    minHeight: 80,
+    textAlignVertical: 'top',
+  },
+  categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 2,
+    marginRight: 8,
+    gap: 6,
+  },
+  categoryChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+  },
+  categoryChipText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  subcategoriesContainer: {
+    gap: 8,
+  },
+  subcategoryChip: {
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 15,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     marginRight: 8,
+  },
+  subcategoryChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderWidth: 1,
+    borderColor: '#00f0a8',
+  },
+  subcategoryChipText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  levelOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  levelChip: {
+    flex: 1,
+    minWidth: '45%',
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    alignItems: 'center',
+  },
+  levelChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderWidth: 1,
+    borderColor: '#00f0a8',
+  },
+  levelChipText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  levelChipDescription: {
+    color: '#666',
+    fontSize: 10,
+  },
+  yearsSelector: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  yearChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  yearChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderWidth: 1,
+    borderColor: '#00f0a8',
+  },
+  yearChipText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  certifiedToggle: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+    padding: 15,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
+  },
+  certifiedToggleActive: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderColor: '#00f0a8',
+  },
+  certifiedToggleContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  certifiedToggleSwitch: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  certifiedToggleSwitchActive: {
+    backgroundColor: '#00f0a8',
+  },
+  certifiedToggleTexts: {
+    flex: 1,
+  },
+  certifiedToggleText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  certifiedToggleSubtext: {
+    color: '#666',
+    fontSize: 12,
+  },
+  cancelModalButton: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 12,
+  },
+  cancelModalText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveModalButton: {
+    flex: 1,
+    alignItems: 'center',
+    padding: 16,
+    backgroundColor: '#00f0a8',
+    borderRadius: 12,
+  },
+  saveModalButtonDisabled: {
+    backgroundColor: 'rgba(0,240,168,0.3)',
+  },
+  saveModalText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  // Farm Styles
+  farmSection: {
+    marginBottom: 25,
+  },
+  farmDetailsGrid: {
+    gap: 15,
+  },
+  farmDetailItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 15,
+    borderRadius: 12,
+  },
+  farmDetailLabel: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  farmDetailValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  organicBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    gap: 4,
+  },
+  organicBadgeText: {
+    color: '#4CD964',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cropsList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  cropChip: {
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  cropText: {
+    color: '#4CD964',
+    fontSize: 12,
+  },
+  equipmentList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  equipmentChip: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  equipmentText: {
+    color: '#00f0a8',
+    fontSize: 12,
+  },
+  noFarmDetails: {
+    alignItems: 'center',
+    padding: 40,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderStyle: 'dashed',
+  },
+  noFarmText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  noFarmSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 16,
+  },
+  formRow: {
+    flexDirection: 'row',
+    gap: 15,
+  },
+  flex1: {
+    flex: 1,
+  },
+  farmTypeChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginRight: 8,
   },
   farmTypeChipSelected: {
     backgroundColor: 'rgba(76,217,100,0.2)',
+    borderWidth: 1,
     borderColor: '#4CD964',
   },
   farmTypeText: {
@@ -3368,144 +4855,239 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  cropInputContainer: {
-    marginBottom: 8,
+  inputWithButton: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
   },
-  cropInput: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    padding: 12,
-    color: '#fff',
+  addItemButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    borderColor: '#00f0a8',
   },
-  selectedCrops: {
+  selectedItems: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    gap: 8,
+    marginTop: 8,
   },
   selectedCrop: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(76,217,100,0.2)',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
   },
   selectedCropText: {
     color: '#4CD964',
     fontSize: 12,
-    fontWeight: '600',
-  },
-  equipmentInputContainer: {
-    marginBottom: 8,
-  },
-  equipmentInput: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    padding: 12,
-    color: '#fff',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  selectedEquipment: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
   },
   selectedEquipmentItem: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,240,168,0.2)',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
   },
   selectedEquipmentText: {
     color: '#00f0a8',
     fontSize: 12,
-    fontWeight: '600',
   },
   soilTypeChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 15,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
   },
   soilTypeChipSelected: {
     backgroundColor: 'rgba(139,69,19,0.3)',
+    borderWidth: 1,
     borderColor: '#8B4513',
   },
   soilTypeText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '600',
   },
   waterSourceChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 15,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
   },
   waterSourceChipSelected: {
-    backgroundColor: 'rgba(0,122,255,0.2)',
+    backgroundColor: 'rgba(0,122,255,0.3)',
+    borderWidth: 1,
     borderColor: '#007AFF',
   },
   waterSourceText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '600',
+  },
+  selectedPractice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+  },
+  selectedPracticeText: {
+    color: '#4CD964',
+    fontSize: 12,
+  },
+  selectedMarket: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,122,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+  },
+  selectedMarketText: {
+    color: '#007AFF',
+    fontSize: 12,
   },
   organicToggle: {
     backgroundColor: 'rgba(255,255,255,0.1)',
-    padding: 12,
-    borderRadius: 8,
+    borderRadius: 12,
+    padding: 15,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
   organicToggleActive: {
-    backgroundColor: 'rgba(76,217,100,0.1)',
+    backgroundColor: 'rgba(76,217,100,0.2)',
     borderColor: '#4CD964',
   },
   organicToggleContent: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 12,
   },
   organicToggleSwitch: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     backgroundColor: 'rgba(255,255,255,0.3)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 8,
   },
   organicToggleSwitchActive: {
     backgroundColor: '#4CD964',
   },
+  organicToggleTexts: {
+    flex: 1,
+  },
   organicToggleText: {
     color: '#fff',
     fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  organicToggleSubtext: {
+    color: '#666',
+    fontSize: 12,
+  },
+  // Client Styles
+  clientSection: {
+    marginBottom: 25,
+  },
+  clientDetailsGrid: {
+    gap: 15,
+  },
+  clientDetailItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    padding: 15,
+    borderRadius: 12,
+  },
+  clientDetailLabel: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  clientDetailValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '500',
+  },
+  projectTypesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  projectTypeChip: {
+    backgroundColor: 'rgba(0,122,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  projectTypeText: {
+    color: '#007AFF',
+    fontSize: 12,
+  },
+  urgencyBadge: {
+    backgroundColor: 'rgba(255,214,0,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+  },
+  urgencyHigh: {
+    backgroundColor: 'rgba(255,165,0,0.2)',
+  },
+  urgencyEmergency: {
+    backgroundColor: 'rgba(255,107,107,0.2)',
+  },
+  urgencyBadgeText: {
+    color: '#FFD700',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  noClientDetails: {
+    alignItems: 'center',
+    padding: 40,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderStyle: 'dashed',
+  },
+  noClientText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 6,
+  },
+  noClientSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 16,
   },
   industryChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
     marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
   },
   industryChipSelected: {
     backgroundColor: 'rgba(0,122,255,0.2)',
+    borderWidth: 1,
     borderColor: '#007AFF',
   },
   industryText: {
@@ -3513,40 +5095,65 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  projectInputContainer: {
-    marginBottom: 8,
-  },
-  projectInput: {
+  companySizeChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 8,
-    padding: 12,
-    color: '#fff',
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    marginRight: 8,
   },
-  selectedProjects: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  companySizeChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderWidth: 1,
+    borderColor: '#00f0a8',
+  },
+  companySizeText: {
+    color: '#fff',
+    fontSize: 12,
   },
   selectedProject: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,122,255,0.2)',
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    gap: 4,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
   },
   selectedProjectText: {
     color: '#007AFF',
     fontSize: 12,
-    fontWeight: '600',
+  },
+  selectedService: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+  },
+  selectedServiceText: {
+    color: '#00f0a8',
+    fontSize: 12,
+  },
+  selectedLocation: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    gap: 6,
+  },
+  selectedLocationText: {
+    color: '#00f0a8',
+    fontSize: 12,
   },
   budgetRangeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 8,
   },
   budgetInput: {
     flex: 1,
@@ -3554,6 +5161,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     padding: 12,
     color: '#fff',
+    fontSize: 16,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
     textAlign: 'center',
@@ -3564,58 +5172,82 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   projectSizeChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 15,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
   },
   projectSizeChipSelected: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-    borderColor: '#00f0a8',
+    backgroundColor: 'rgba(255,214,0,0.2)',
+    borderWidth: 1,
+    borderColor: '#FFD700',
   },
   projectSizeText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: '600',
   },
-  cancelModalButton: {
+  urgencyOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  urgencyChip: {
     flex: 1,
-    padding: 15,
-    alignItems: 'center',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.1)',
-  },
-  cancelModalText: {
-    color: '#ff6b6b',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveModalButton: {
-    flex: 1,
-    padding: 15,
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,240,168,0.2)',
-  },
-  saveModalButtonDisabled: {
+    minWidth: '45%',
+    padding: 12,
+    borderRadius: 8,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    opacity: 0.5,
+    alignItems: 'center',
   },
-  saveModalText: {
-    color: '#00f0a8',
-    fontSize: 16,
+  urgencyChipSelected: {
+    backgroundColor: 'rgba(255,214,0,0.2)',
+    borderWidth: 1,
+    borderColor: '#FFD700',
+  },
+  urgencyChipText: {
+    color: '#fff',
+    fontSize: 14,
     fontWeight: '600',
+    marginBottom: 2,
   },
+  urgencyChipDescription: {
+    color: '#666',
+    fontSize: 10,
+    textAlign: 'center',
+  },
+  communicationOptions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  communicationChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    gap: 6,
+  },
+  communicationChipSelected: {
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    borderWidth: 1,
+    borderColor: '#00f0a8',
+  },
+  communicationChipText: {
+    color: '#666',
+    fontSize: 12,
+  },
+  communicationChipTextSelected: {
+    color: '#fff',
+  },
+  // Location Styles
   locationSection: {
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.05)',
+    marginBottom: 25,
   },
   locationDisplay: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
     backgroundColor: 'rgba(255,255,255,0.05)',
     padding: 15,
     borderRadius: 12,
@@ -3629,14 +5261,12 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -2,
     right: -2,
-    backgroundColor: '#00f0a8',
     width: 12,
     height: 12,
     borderRadius: 6,
+    backgroundColor: '#00f0a8',
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#000',
   },
   locationInfo: {
     flex: 1,
@@ -3645,21 +5275,27 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
-    marginBottom: 4,
+    marginBottom: 6,
   },
   locationDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   locationCoords: {
     color: '#666',
     fontSize: 12,
+    marginBottom: 2,
   },
   locationAccuracy: {
     color: '#666',
-    fontSize: 12,
+    fontSize: 10,
+  },
+  locationMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  locationSource: {
+    color: '#666',
+    fontSize: 10,
   },
   locationTimestamp: {
     color: '#666',
@@ -3667,19 +5303,26 @@ const styles = StyleSheet.create({
   },
   noLocation: {
     alignItems: 'center',
-    paddingVertical: 30,
+    padding: 40,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderStyle: 'dashed',
+    marginBottom: 15,
   },
   noLocationText: {
-    color: '#666',
+    color: '#fff',
     fontSize: 16,
-    marginTop: 8,
-    fontStyle: 'italic',
+    fontWeight: '600',
+    marginTop: 12,
+    marginBottom: 6,
   },
   noLocationSubtext: {
     color: '#666',
     fontSize: 12,
     textAlign: 'center',
-    marginTop: 4,
+    lineHeight: 16,
   },
   locationActions: {
     flexDirection: 'row',
@@ -3691,17 +5334,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#00f0a8',
-    padding: 15,
-    borderRadius: 12,
+    paddingVertical: 12,
+    borderRadius: 25,
+    gap: 8,
   },
   locationButtonText: {
     color: '#000',
     fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
+    fontWeight: '700',
   },
   secondaryLocationButton: {
-    backgroundColor: 'transparent',
+    backgroundColor: 'rgba(255,255,255,0.1)',
     borderWidth: 1,
     borderColor: '#00f0a8',
   },
@@ -3709,41 +5352,97 @@ const styles = StyleSheet.create({
     color: '#00f0a8',
     fontSize: 14,
     fontWeight: '600',
-    marginLeft: 8,
   },
+  // Image Options Styles
+  imageOptionsOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'flex-end',
+  },
+  imageOptionsContent: {
+    backgroundColor: '#1a1a1a',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  imageOptionsTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  imageOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 15,
+    paddingHorizontal: 10,
+    borderRadius: 12,
+    marginBottom: 8,
+    gap: 12,
+  },
+  imageOptionText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  removeOption: {
+    backgroundColor: 'rgba(255,107,107,0.2)',
+  },
+  removeOptionText: {
+    color: '#ff6b6b',
+  },
+  cancelOption: {
+    alignItems: 'center',
+    paddingVertical: 15,
+    marginTop: 8,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  cancelOptionText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  // Bottom Navigation Styles
   bottomNavigation: {
     flexDirection: 'row',
     backgroundColor: '#000',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-    paddingTop: 10,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
   },
   navItem: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: 8,
+    borderRadius: 12,
   },
   navItemActive: {
-    transform: [{ translateY: -2 }],
+    backgroundColor: 'rgba(0,240,168,0.2)',
   },
   navLabel: {
     color: '#666',
     fontSize: 10,
     marginTop: 4,
-    fontWeight: '600',
   },
   navLabelActive: {
     color: '#00f0a8',
   },
+  // Coming Soon Sections
   comingSoonSection: {
     alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 40,
+    padding: 40,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
+    borderStyle: 'dashed',
   },
   comingSoonTitle: {
     color: '#fff',
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     marginTop: 16,
     marginBottom: 8,
@@ -3756,27 +5455,28 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   comingSoonButton: {
-    backgroundColor: 'rgba(0,240,168,0.1)',
+    backgroundColor: '#00f0a8',
     paddingHorizontal: 20,
     paddingVertical: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
+    borderRadius: 25,
   },
   comingSoonButtonText: {
-    color: '#00f0a8',
+    color: '#000',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
+  // Rating Overview
   ratingOverview: {
     alignItems: 'center',
     padding: 40,
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
   },
   ratingNumber: {
-    color: '#00f0a8',
+    color: '#fff',
     fontSize: 48,
     fontWeight: '800',
-    marginBottom: 10,
+    marginBottom: 8,
   },
   ratingStars: {
     flexDirection: 'row',
@@ -3785,71 +5485,33 @@ const styles = StyleSheet.create({
   ratingCount: {
     color: '#666',
     fontSize: 14,
+    marginBottom: 4,
   },
+  ratingSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  // Details Grid
+  detailsGrid: {
+    gap: 10,
+  },
+  // Saving Overlay
   savingOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.7)',
     alignItems: 'center',
     justifyContent: 'center',
     zIndex: 1000,
   },
   savingContent: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: '#1a1a1a',
     padding: 30,
-    borderRadius: 20,
+    borderRadius: 15,
+    alignItems: 'center',
+    gap: 12,
   },
   savingOverlayText: {
-    color: '#00f0a8',
-    fontSize: 16,
-    marginTop: 10,
-  },
-  imageOptionsOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  imageOptionsContent: {
-    backgroundColor: '#1a1a1a',
-    borderRadius: 20,
-    width: '80%',
-    overflow: 'hidden',
-  },
-  imageOptionsTitle: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '700',
-    textAlign: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  imageOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  imageOptionText: {
-    color: '#fff',
-    fontSize: 16,
-    marginLeft: 12,
-  },
-  removeOption: {
-    borderBottomWidth: 0,
-  },
-  removeOptionText: {
-    color: '#ff6b6b',
-  },
-  cancelOption: {
-    padding: 20,
-    alignItems: 'center',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-  },
-  cancelOptionText: {
     color: '#00f0a8',
     fontSize: 16,
     fontWeight: '600',
