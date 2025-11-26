@@ -38,71 +38,7 @@ import Svg, { Path, Circle, Rect, G, Defs, RadialGradient, Stop } from 'react-na
 
 const { width, height } = Dimensions.get('window');
 
-// ADVANCED VECTOR ICONS SYSTEM - MATCHING DASHBOARD SCREEN
-const VectorIcons = {
-  // Bottom Navigation Icons - Matching DashboardScreen
-  home: (color = '#00f0a8', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M9 22V12H15V22" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-  
-  search: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx="11" cy="11" r="8" stroke={color} strokeWidth="2"/>
-      <Path d="M21 21L16.65 16.65" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-  
-  marketplace: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.1 15.9 4.5 17 5.4 17H17M17 17C16.4696 17 15.9609 17.2107 15.5858 17.5858C15.2107 17.9609 15 18.4696 15 19C15 19.5304 15.2107 20.0391 15.5858 20.4142C15.9609 20.7893 16.4696 21 17 21C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19C19 18.4696 18.7893 17.9609 18.4142 17.5858C17.9609 17.2107 17.5304 17 17 17ZM9 19C9 19.5304 8.78929 20.0391 8.41421 20.4142C8.03914 20.7893 7.53043 21 7 21C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19C5 18.4696 5.21071 17.9609 5.58579 17.5858C5.96086 17.2107 6.46957 17 7 17C7.53043 17 8.03914 17.2107 8.41421 17.5858C8.78929 17.9609 9 18.4696 9 19Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-  
-  profile: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  // Professional Category Icons - Enhanced for better matching
-  electrician: (color = '#00f0a8', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M13 22L20 13L27 22L24 24L25 28L15 28L16 24L13 22Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M20 13V7" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M20 31V28" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  farmer: (color = '#4CD964', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M12 28L15 25L18 28L22 24L25 27L28 24" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M8 16C8 16 10 14 12 16C14 18 16 16 16 16C16 16 18 14 20 16C22 18 24 16 24 16C24 16 26 14 28 16C30 18 32 16 32 16V28C32 28.5304 31.7893 29.0391 31.4142 29.4142C31.0391 29.7893 30.5304 30 30 30H10C9.46957 30 8.96086 29.7893 8.58579 29.4142C8.21071 29.0391 8 28.5304 8 28V16Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M8 20H32" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  client: (color = '#007AFF', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M28 12H12C10.8954 12 10 12.8954 10 14V26C10 27.1046 10.8954 28 12 28H28C29.1046 28 30 27.1046 30 26V14C30 12.8954 29.1046 12 28 12Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M22 12V10C22 8.89543 21.1046 8 20 8C18.8954 8 18 8.89543 18 10V12" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M15 18H25" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M15 22H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  )
-};
+import VectorIcons from '../components/VectorIcons';
 
 // ENHANCED ENTERPRISE STATE MANAGEMENT
 const useAdvancedEnterpriseProfile = () => {
@@ -2116,6 +2052,17 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
     }
   };
 
+  // FIX: when role is changed from Dashboard, enable edit mode and scroll to details
+  const handleRoleChange = (newUserType) => {
+    updateProfile({ userType: newUserType });
+    setEditing(true);
+    setTimeout(() => {
+      if (mainScrollRef.current) {
+        mainScrollRef.current.scrollTo({ y: 400, animated: true });
+      }
+    }, 500);
+  };
+
   // Animated header styles
   const headerTranslateY = scrollY.interpolate({
     inputRange: [0, 100],
@@ -2307,7 +2254,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
           {/* Enhanced User Type Selector */}
           <UserTypeSelector
             currentType={profile.userType}
-            onTypeChange={(type) => updateProfile({ userType: type })}
+            onTypeChange={handleRoleChange}
             editing={editing}
           />
 
