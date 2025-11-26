@@ -1975,7 +1975,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
             )}
           </View>
           <View style={styles.locationInfo}>
-            <Text style={styles.locationAddress}>{location.address}</Text>
+            <Text style={styles.locationAddress}>{location
             {location.latitude && (
               <View style={styles.locationDetails}>
                 <Text style={styles.locationCoords}>
@@ -2094,7 +2094,7 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   } = useAdvancedEnterpriseProfile();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [bottomNavTab, setBottomNavTab] = useState('profile');
+  const [bottomNavTab, setBottomNavTab] = useState('home');
   const scrollY = useRef(new Animated.Value(0)).current;
   const mainScrollRef = useRef(null);
 
@@ -3487,95 +3487,122 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '600',
   },
-  soilTypeChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+  noFarmDetails: {
+    alignItems: 'center',
+    paddingVertical: 30,
   },
-  soilTypeChipSelected: {
-    backgroundColor: 'rgba(139,69,19,0.3)',
-    borderColor: '#8B4513',
+  noFarmText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 4,
+    fontStyle: 'italic',
   },
-  soilTypeText: {
-    color: '#fff',
+  noFarmSubtext: {
+    color: '#666',
     fontSize: 12,
-    fontWeight: '600',
+    textAlign: 'center',
   },
-  waterSourceChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+  clientSection: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  waterSourceChipSelected: {
-    backgroundColor: 'rgba(0,122,255,0.2)',
-    borderColor: '#007AFF',
+  clientDetailsGrid: {
+    gap: 12,
   },
-  waterSourceText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  organicToggle: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    padding: 12,
+  clientDetailItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
     borderRadius: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
+    padding: 12,
   },
-  organicToggleActive: {
-    backgroundColor: 'rgba(76,217,100,0.1)',
-    borderColor: '#4CD964',
+  clientDetailLabel: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
   },
-  organicToggleContent: {
+  clientDetailValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  projectTypesList: {
     flexDirection: 'row',
-    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
   },
-  organicToggleSwitch: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  organicToggleSwitchActive: {
-    backgroundColor: '#4CD964',
-  },
-  organicToggleText: {
-    color: '#fff',
-    fontSize: 14,
-  },
-  industryChip: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 15,
-    marginRight: 8,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.2)',
-  },
-  industryChipSelected: {
+  projectTypeChip: {
     backgroundColor: 'rgba(0,122,255,0.2)',
-    borderColor: '#007AFF',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
   },
-  industryText: {
-    color: '#fff',
+  projectTypeText: {
+    color: '#007AFF',
     fontSize: 12,
     fontWeight: '600',
   },
-  projectInputContainer: {
+  noClientDetails: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noClientText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 4,
+    fontStyle: 'italic',
+  },
+  noClientSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    width: '90%',
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  modalBody: {
+    maxHeight: 400,
+    padding: 20,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
     marginBottom: 8,
   },
-  projectInput: {
+  formInput: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 8,
     padding: 12,
@@ -3583,46 +3610,208 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  selectedProjects: {
+  farmTypeChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  farmTypeChipSelected: {
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    borderColor: '#4CD964',
+  },
+  farmTypeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cropInputContainer: {
+    marginBottom: 8,
+  },
+  cropInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  selectedCrops: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 6,
   },
-  selectedProject: {
+  selectedCrop: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,122,255,0.2)',
+    backgroundColor: 'rgba(76,217,100,0.2)',
     paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 12,
     gap: 4,
   },
-  selectedProjectText: {
-    color: '#007AFF',
+  selectedCropText: {
+    color: '#4CD964',
     fontSize: 12,
     fontWeight: '600',
   },
-  budgetRangeContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  equipmentInputContainer: {
+    marginBottom: 8,
   },
-  budgetInput: {
-    flex: 1,
+  equipmentInput: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     borderRadius: 8,
     padding: 12,
     color: '#fff',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
+  },
+  selectedEquipment: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  selectedEquipmentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  selectedEquipmentText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  noFarmDetails: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noFarmText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 4,
+    fontStyle: 'italic',
+  },
+  noFarmSubtext: {
+    color: '#666',
+    fontSize: 12,
     textAlign: 'center',
   },
-  budgetSeparator: {
+  clientSection: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  clientDetailsGrid: {
+    gap: 12,
+  },
+  clientDetailItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 12,
+  },
+  clientDetailLabel: {
     color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  clientDetailValue: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
-  projectSizeChip: {
+  projectTypesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  projectTypeChip: {
+    backgroundColor: 'rgba(0,122,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  projectTypeText: {
+    color: '#007AFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  noClientDetails: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noClientText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 4,
+    fontStyle: 'italic',
+  },
+  noClientSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    width: '90%',
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  modalBody: {
+    maxHeight: 400,
+    padding: 20,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  formInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  farmTypeChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -3631,286 +3820,596 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  projectSizeChipSelected: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-    borderColor: '#00f0a8',
+  farmTypeChipSelected: {
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    borderColor: '#4CD964',
   },
-  projectSizeText: {
+  farmTypeText: {
     color: '#fff',
     fontSize: 12,
     fontWeight: '600',
   },
-  cancelModalButton: {
-    flex: 1,
-    padding: 15,
-    alignItems: 'center',
-    borderRightWidth: 1,
-    borderRightColor: 'rgba(255,255,255,0.1)',
+  cropInputContainer: {
+    marginBottom: 8,
   },
-  cancelModalText: {
-    color: '#ff6b6b',
-    fontSize: 16,
+  cropInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  selectedCrops: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  selectedCrop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  selectedCropText: {
+    color: '#4CD964',
+    fontSize: 12,
     fontWeight: '600',
   },
-  saveModalButton: {
-    flex: 1,
-    padding: 15,
+  equipmentInputContainer: {
+    marginBottom: 8,
+  },
+  equipmentInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  selectedEquipment: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  selectedEquipmentItem: {
+    flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
   },
-  saveModalButtonDisabled: {
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    opacity: 0.5,
-  },
-  saveModalText: {
+  selectedEquipmentText: {
     color: '#00f0a8',
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: '600',
   },
-  locationSection: {
+  noFarmDetails: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noFarmText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 4,
+    fontStyle: 'italic',
+  },
+  noFarmSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  clientSection: {
     padding: 20,
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.05)',
   },
-  locationDisplay: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
+  clientDetailsGrid: {
+    gap: 12,
+  },
+  clientDetailItem: {
     backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 15,
+    borderRadius: 8,
+    padding: 12,
   },
-  locationIconContainer: {
-    position: 'relative',
-    marginRight: 12,
-  },
-  verifiedBadge: {
-    position: 'absolute',
-    bottom: -2,
-    right: -2,
-    backgroundColor: '#00f0a8',
-    width: 12,
-    height: 12,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#000',
-  },
-  locationInfo: {
-    flex: 1,
-  },
-  locationAddress: {
-    color: '#fff',
-    fontSize: 16,
+  clientDetailLabel: {
+    color: '#666',
+    fontSize: 12,
     fontWeight: '600',
     marginBottom: 4,
   },
-  locationDetails: {
+  clientDetailValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  projectTypesList: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    marginBottom: 4,
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
   },
-  locationCoords: {
-    color: '#666',
+  projectTypeChip: {
+    backgroundColor: 'rgba(0,122,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  projectTypeText: {
+    color: '#007AFF',
     fontSize: 12,
+    fontWeight: '600',
   },
-  locationAccuracy: {
-    color: '#666',
-    fontSize: 12,
-  },
-  locationTimestamp: {
-    color: '#666',
-    fontSize: 10,
-  },
-  noLocation: {
+  noClientDetails: {
     alignItems: 'center',
     paddingVertical: 30,
   },
-  noLocationText: {
+  noClientText: {
     color: '#666',
     fontSize: 16,
-    marginTop: 8,
+    marginBottom: 4,
     fontStyle: 'italic',
   },
-  noLocationSubtext: {
+  noClientSubtext: {
     color: '#666',
     fontSize: 12,
     textAlign: 'center',
-    marginTop: 4,
   },
-  locationActions: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  locationButton: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#00f0a8',
-    padding: 15,
-    borderRadius: 12,
-  },
-  locationButtonText: {
-    color: '#000',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  secondaryLocationButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#00f0a8',
-  },
-  secondaryLocationButtonText: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
-  bottomNavigation: {
-    flexDirection: 'row',
-    backgroundColor: '#000',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-    paddingBottom: Platform.OS === 'ios' ? 20 : 10,
-    paddingTop: 10,
-  },
-  navItem: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 8,
-  },
-  navItemActive: {
-    transform: [{ translateY: -2 }],
-  },
-  navLabel: {
-    color: '#666',
-    fontSize: 10,
-    marginTop: 4,
-    fontWeight: '600',
-  },
-  navLabelActive: {
-    color: '#00f0a8',
-  },
-  comingSoonSection: {
-    alignItems: 'center',
-    paddingVertical: 60,
-    paddingHorizontal: 40,
-  },
-  comingSoonTitle: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: '700',
-    marginTop: 16,
-    marginBottom: 8,
-  },
-  comingSoonText: {
-    color: '#666',
-    fontSize: 14,
-    textAlign: 'center',
-    lineHeight: 20,
-    marginBottom: 20,
-  },
-  comingSoonButton: {
-    backgroundColor: 'rgba(0,240,168,0.1)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: 'rgba(0,240,168,0.3)',
-  },
-  comingSoonButtonText: {
-    color: '#00f0a8',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  ratingOverview: {
-    alignItems: 'center',
-    padding: 40,
-  },
-  ratingNumber: {
-    color: '#00f0a8',
-    fontSize: 48,
-    fontWeight: '800',
-    marginBottom: 10,
-  },
-  ratingStars: {
-    flexDirection: 'row',
-    marginBottom: 8,
-  },
-  ratingCount: {
-    color: '#666',
-    fontSize: 14,
-  },
-  savingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 1000,
-  },
-  savingContent: {
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    padding: 30,
-    borderRadius: 20,
-  },
-  savingOverlayText: {
-    color: '#00f0a8',
-    fontSize: 16,
-    marginTop: 10,
-  },
-  imageOptionsOverlay: {
+  modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  imageOptionsContent: {
+  modalContent: {
     backgroundColor: '#1a1a1a',
     borderRadius: 20,
-    width: '80%',
+    width: '90%',
+    maxHeight: '80%',
     overflow: 'hidden',
   },
-  imageOptionsTitle: {
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  modalTitle: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '700',
-    textAlign: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
   },
-  imageOption: {
+  modalBody: {
+    maxHeight: 400,
+    padding: 20,
+  },
+  modalFooter: {
     flexDirection: 'row',
-    alignItems: 'center',
-    padding: 20,
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(255,255,255,0.1)',
-  },
-  imageOptionText: {
-    color: '#fff',
-    fontSize: 16,
-    marginLeft: 12,
-  },
-  removeOption: {
-    borderBottomWidth: 0,
-  },
-  removeOptionText: {
-    color: '#ff6b6b',
-  },
-  cancelOption: {
-    padding: 20,
-    alignItems: 'center',
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
   },
-  cancelOptionText: {
+  formGroup: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  formInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  farmTypeChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  farmTypeChipSelected: {
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    borderColor: '#4CD964',
+  },
+  farmTypeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cropInputContainer: {
+    marginBottom: 8,
+  },
+  cropInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  selectedCrops: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  selectedCrop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  selectedCropText: {
+    color: '#4CD964',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  equipmentInputContainer: {
+    marginBottom: 8,
+  },
+  equipmentInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  selectedEquipment: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  selectedEquipmentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  selectedEquipmentText: {
     color: '#00f0a8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  noFarmDetails: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noFarmText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 4,
+    fontStyle: 'italic',
+  },
+  noFarmSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  clientSection: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  clientDetailsGrid: {
+    gap: 12,
+  },
+  clientDetailItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 12,
+  },
+  clientDetailLabel: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  clientDetailValue: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },
-});
+  projectTypesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  projectTypeChip: {
+    backgroundColor: 'rgba(0,122,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  projectTypeText: {
+    color: '#007AFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  noClientDetails: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noClientText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 4,
+    fontStyle: 'italic',
+  },
+  noClientSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    width: '90%',
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  modalBody: {
+    maxHeight: 400,
+    padding: 20,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  formInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  farmTypeChip: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 15,
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  farmTypeChipSelected: {
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    borderColor: '#4CD964',
+  },
+  farmTypeText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  cropInputContainer: {
+    marginBottom: 8,
+  },
+  cropInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  selectedCrops: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  selectedCrop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(76,217,100,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  selectedCropText: {
+    color: '#4CD964',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  equipmentInputContainer: {
+    marginBottom: 8,
+  },
+  equipmentInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  selectedEquipment: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  selectedEquipmentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    gap: 4,
+  },
+  selectedEquipmentText: {
+    color: '#00f0a8',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  noFarmDetails: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noFarmText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 4,
+    fontStyle: 'italic',
+  },
+  noFarmSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  clientSection: {
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  clientDetailsGrid: {
+    gap: 12,
+  },
+  clientDetailItem: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 8,
+    padding: 12,
+  },
+  clientDetailLabel: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  clientDetailValue: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  projectTypesList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    marginTop: 4,
+  },
+  projectTypeChip: {
+    backgroundColor: 'rgba(0,122,255,0.2)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  projectTypeText: {
+    color: '#007AFF',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  noClientDetails: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noClientText: {
+    color: '#666',
+    fontSize: 16,
+    marginBottom: 4,
+    fontStyle: 'italic',
+  },
+  noClientSubtext: {
+    color: '#666',
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    width: '90%',
+    maxHeight: '80%',
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  modalBody: {
+    maxHeight: 400,
+    padding: 20,
+  },
+  modalFooter: {
+    flexDirection: 'row',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  formLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  formInput: {
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 8,
+    padding: 12,
+    color: '#fff',
+    borderWidth: 1,
+    border

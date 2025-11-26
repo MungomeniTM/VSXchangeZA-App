@@ -3317,9 +3317,8 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
   // FIXED: Enhanced role switching with automatic navigation to role-specific details
   const handleRoleChange = (newUserType) => {
     switchUserType(newUserType);
-    // Automatically open role-specific details after switching
+    setEditing(true);                   // <-- open edit mode so role details can be edited
     setAutoOpenRoleDetails(true);
-    // Scroll to the relevant section
     setTimeout(() => {
       if (mainScrollRef.current) {
         mainScrollRef.current.scrollTo({ y: 400, animated: true });
@@ -3764,7 +3763,6 @@ export default function AdvancedEnterprisePlatform({ navigation }) {
             </View>
           </View>
         );
-
       case 'services':
         return (
           <View style={styles.tabContent}>
@@ -4291,7 +4289,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   roleExampleItemSelected: {
-    backgroundColor: 'rgba(0,240,168,0.1)',
+    backgroundColor: 'rgba(0,240,168,0.2)',
   },
   roleExampleHeader: {
     flexDirection: 'row',
@@ -4349,7 +4347,8 @@ const styles = StyleSheet.create({
   },
   roleExampleChipText: {
     color: '#fff',
-    fontSize: 10,
+    fontSize: 12,
+    fontWeight: '600',
   },
   roleFeaturesContainer: {
     marginBottom: 8,
@@ -4552,7 +4551,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.2)',
   },
-  multilineField: {
+  multilineInput: {
     minHeight: 100,
     textAlignVertical: 'top',
   },
@@ -4832,9 +4831,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    borderWidth: 2,
+    backgroundColor: 'rgba(255,255,255,0.1)',
     marginRight: 8,
-    gap: 6,
   },
   categoryChipSelected: {
     backgroundColor: 'rgba(0,240,168,0.2)',
