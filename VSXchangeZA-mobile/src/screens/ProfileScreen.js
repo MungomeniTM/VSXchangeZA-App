@@ -35,6 +35,9 @@ import { AppContext } from '../context/AppContext';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect, G, Defs, RadialGradient, Stop } from 'react-native-svg';
 
+import VectorIconsShared from '../components/VectorIcons';
+
+
 const { width, height } = Dimensions.get('window');
 
 // ADVANCED VECTOR ICONS SYSTEM - PERFECTLY MATCHING DASHBOARD
@@ -308,67 +311,71 @@ const useAdvancedEnterpriseProfile = () => {
     }
   }, []);
 
-  // Enhanced real-time save with advanced backup and conflict resolution
-  const saveProfile = useCallback(async (newProfile) => {
+  // Save control: switch from automatic saves to explicit commit saves.
+  const [isDirty, setIsDirty] = useState(false);
+
+  const performSave = useCallback(async (profileToSave) => {
+    try {
+      setSaving(true);
+      const timestamp = new Date().toISOString();
+
+      const enhancedProfile = {
+        ...profileToSave,
+        lastUpdated: timestamp,
+        metadata: {
+          ...profileToSave.metadata,
+          lastBackup: timestamp,
+          version: '2.1.0'
+        }
+      };
+
+      await AsyncStorage.setItem('advanced_enterprise_profile', JSON.stringify(enhancedProfile));
+      await AsyncStorage.setItem(`advanced_enterprise_profile_backup_${Date.now()}`, JSON.stringify(enhancedProfile));
+
+      // Trim backups to last 5
+      const keys = await AsyncStorage.getAllKeys();
+      const backupKeys = keys.filter(key => key.startsWith('advanced_enterprise_profile_backup_')).sort();
+      if (backupKeys.length > 5) {
+        const keysToDelete = backupKeys.slice(0, backupKeys.length - 5);
+        await AsyncStorage.multiRemove(keysToDelete);
+      }
+
+      setLastSave(timestamp);
+      console.log('Profile saved (commit)');
+    } catch (error) {
+      console.error('Save error:', error);
+      try {
+        await AsyncStorage.setItem('advanced_enterprise_profile_emergency', JSON.stringify({
+          ...(profile || {}),
+          emergencySave: new Date().toISOString(),
+          error: error.message
+        }));
+      } catch (e) {
+        console.error('Emergency save failed:', e);
+      }
+    } finally {
+      setSaving(false);
+      setIsDirty(false);
+    }
+  }, [profile]);
+
+  // Debounced (internal) autosave kept for background use but not invoked by updates anymore
+  const saveProfile = useCallback((newProfile) => {
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => performSave(newProfile || profile), 800);
+  }, [performSave, profile]);
+
+  // Explicit commit save called when user presses Save
+  const commitProfileSave = useCallback(async (newProfile) => {
     if (saveTimeoutRef.current) {
       clearTimeout(saveTimeoutRef.current);
     }
+    await performSave(newProfile || profile);
+  }, [performSave, profile]);
 
-    saveTimeoutRef.current = setTimeout(async () => {
-      try {
-        setSaving(true);
-        const profileToSave = newProfile || profile;
-        const timestamp = new Date().toISOString();
-        
-        // Enhanced save with version control
-        const enhancedProfile = {
-          ...profileToSave,
-          lastUpdated: timestamp,
-          metadata: {
-            ...profileToSave.metadata,
-            lastBackup: timestamp,
-            version: '2.1.0'
-          }
-        };
-
-        await AsyncStorage.setItem('advanced_enterprise_profile', JSON.stringify(enhancedProfile));
-
-        // Create timestamped backup
-        await AsyncStorage.setItem(`advanced_enterprise_profile_backup_${Date.now()}`, JSON.stringify(enhancedProfile));
-        
-        // Keep only last 5 backups
-        const keys = await AsyncStorage.getAllKeys();
-        const backupKeys = keys.filter(key => key.startsWith('advanced_enterprise_profile_backup_')).sort();
-        if (backupKeys.length > 5) {
-          const keysToDelete = backupKeys.slice(0, backupKeys.length - 5);
-          await AsyncStorage.multiRemove(keysToDelete);
-        }
-        
-        setLastSave(timestamp);
-        
-        console.log('Profile saved with enhanced backup system');
-      } catch (error) {
-        console.error('Save error:', error);
-        // Enhanced emergency save
-        try {
-          await AsyncStorage.setItem('advanced_enterprise_profile_emergency', JSON.stringify({
-            ...profile,
-            emergencySave: timestamp,
-            error: error.message
-          }));
-        } catch (e) {
-          console.error('Emergency save failed:', e);
-        }
-      } finally {
-        setSaving(false);
-      }
-    }, 600); // Optimized debounce for better UX
-  }, [profile]);
-
-  // Enhanced update with rollback capability
+  // Enhanced update with rollback capability (no auto-save; mark dirty)
   const updateProfile = useCallback((updates) => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    
     setProfile(prev => {
       const newProfile = {
         ...prev,
@@ -377,11 +384,10 @@ const useAdvancedEnterpriseProfile = () => {
         displayName: `${updates.firstName || prev.firstName} ${updates.lastName || prev.lastName}`.trim(),
         profileCompleteness: calculateProfileCompleteness({ ...prev, ...updates })
       };
-      
-      saveProfile(newProfile);
+      setIsDirty(true);
       return newProfile;
     });
-  }, [saveProfile]);
+  }, []);
 
   // Advanced profile completeness calculator
   const calculateProfileCompleteness = (profileData) => {
@@ -435,10 +441,10 @@ const useAdvancedEnterpriseProfile = () => {
         lastUpdated: new Date().toISOString(),
         profileCompleteness: calculateProfileCompleteness({ ...prev, farmDetails: { ...prev.farmDetails, ...updates } })
       };
-      saveProfile(newProfile);
+      setIsDirty(true);
       return newProfile;
     });
-  }, [saveProfile]);
+  }, []);
 
   // Enhanced client details update with validation
   const updateClientDetails = useCallback((updates) => {
@@ -449,10 +455,10 @@ const useAdvancedEnterpriseProfile = () => {
         lastUpdated: new Date().toISOString(),
         profileCompleteness: calculateProfileCompleteness({ ...prev, clientDetails: { ...prev.clientDetails, ...updates } })
       };
-      saveProfile(newProfile);
+      setIsDirty(true);
       return newProfile;
     });
-  }, [saveProfile]);
+  }, []);
 
   // Advanced skill management with enhanced validation
   const addSkill = useCallback((skill) => {
@@ -470,10 +476,10 @@ const useAdvancedEnterpriseProfile = () => {
         lastUpdated: new Date().toISOString(),
         profileCompleteness: calculateProfileCompleteness({ ...prev, skills: [...(prev.skills || []), newSkill] })
       };
-      saveProfile(newProfile);
+      setIsDirty(true);
       return newProfile;
     });
-  }, [saveProfile]);
+  }, []);
 
   const updateSkill = useCallback((skillId, updates) => {
     setProfile(prev => {
@@ -527,7 +533,7 @@ const useAdvancedEnterpriseProfile = () => {
           portfolio: [...(prev.portfolio || []), portfolioItem],
           lastUpdated: new Date().toISOString()
         };
-        saveProfile(newProfile);
+        setIsDirty(true);
         return newProfile;
       });
 
@@ -549,7 +555,7 @@ const useAdvancedEnterpriseProfile = () => {
           lastUpdated: new Date().toISOString(),
           profileCompleteness: calculateProfileCompleteness({ ...prev, profileImage: imageUri })
         };
-        saveProfile(newProfile);
+        setIsDirty(true);
         return newProfile;
       });
       return true;
@@ -572,13 +578,13 @@ const useAdvancedEnterpriseProfile = () => {
         farmDetails: prev.farmDetails || defaultProfile.farmDetails,
         clientDetails: prev.clientDetails || defaultProfile.clientDetails
       };
-      saveProfile(newProfile);
+      setIsDirty(true);
       return newProfile;
     });
-    
+
     // Automatically show role details when switching roles
     setShowRoleDetails(true);
-  }, [saveProfile]);
+  }, []);
 
   // FIXED: Function to navigate to role-specific details
   const navigateToRoleDetails = useCallback(() => {
@@ -636,6 +642,7 @@ const useAdvancedEnterpriseProfile = () => {
     loading,
     saving,
     lastSave,
+    isDirty,
     editing,
     setEditing,
     activeTab,
@@ -652,7 +659,7 @@ const useAdvancedEnterpriseProfile = () => {
     updateProfileImage,
     switchUserType,
     navigateToRoleDetails,
-    saveProfile,
+    commitProfileSave,
     loadProfile,
     resetProfile,
     exportProfile,
@@ -1219,7 +1226,9 @@ const UserTypeSelector = ({
     return (
       <View style={styles.userTypeDisplay}>
         <View style={[styles.typeIcon, { backgroundColor: current.color }]}>
-          <Icon name={current.icon} size={20} color="#000" />
+          {current.type === 'skilled' ? VectorIconsShared.electrician('#000', 20)
+            : current.type === 'farmer' ? VectorIconsShared.farmer('#000', 20)
+            : VectorIconsShared.client('#000', 20)}
         </View>
         <View style={styles.typeInfo}>
           <Text style={styles.typeTitle}>{current.title}</Text>
@@ -1259,7 +1268,9 @@ const UserTypeSelector = ({
           >
             <View style={styles.typeOptionHeader}>
               <View style={[styles.typeOptionIcon, { backgroundColor: userType.color }]}>
-                <Icon name={userType.icon} size={24} color="#000" />
+                {userType.type === 'skilled' ? VectorIconsShared.electrician('#000', 24)
+                  : userType.type === 'farmer' ? VectorIconsShared.farmer('#000', 24)
+                  : VectorIconsShared.client('#000', 24)}
               </View>
               <View style={styles.typeOptionTexts}>
                 <Text style={styles.typeOptionTitle}>{userType.title}</Text>
@@ -1315,7 +1326,8 @@ const SkillManager = ({
   onAddSkill, 
   onUpdateSkill,
   onRemoveSkill, 
-  editing 
+  editing,
+  commitProfileSave
 }) => {
   const { getCategories, getSubcategories, getCategoryInfo } = useAdvancedCategorySystem(userType);
   const [showAddSkill, setShowAddSkill] = useState(false);
@@ -1355,6 +1367,7 @@ const SkillManager = ({
       description: '' 
     });
     setShowAddSkill(false);
+    if (typeof commitProfileSave === 'function') commitProfileSave();
   };
 
   const handleUpdateSkill = () => {
@@ -1371,6 +1384,7 @@ const SkillManager = ({
 
     onUpdateSkill(editingSkill.id, editingSkill);
     setEditingSkill(null);
+    if (typeof commitProfileSave === 'function') commitProfileSave();
   };
 
   const SkillChip = ({ skill, onEdit, onRemove }) => (
@@ -1447,7 +1461,7 @@ const SkillManager = ({
             key={skill.id} 
             skill={skill} 
             onEdit={() => setEditingSkill(skill)}
-            onRemove={() => onRemoveSkill(skill.id)} 
+              onRemove={() => { onRemoveSkill(skill.id); if (typeof commitProfileSave === 'function') commitProfileSave(); }} 
           />
         ))}
         
@@ -2917,25 +2931,25 @@ const AdvancedBottomNavigation = ({ activeTab, onTabChange, navigation }) => {
     { 
       id: 'home', 
       label: 'Home', 
-      icon: (color, size) => VectorIcons.home(color, size),
+      icon: (color, size) => VectorIconsShared.home(color, size),
       screen: 'DashboardScreen'
     },
     { 
       id: 'search', 
       label: 'Discover', 
-      icon: (color, size) => VectorIcons.search(color, size),
+      icon: (color, size) => VectorIconsShared.search(color, size),
       screen: 'DiscoverScreen'
     },
     { 
       id: 'marketplace', 
       label: 'Market', 
-      icon: (color, size) => VectorIcons.marketplace(color, size),
+      icon: (color, size) => VectorIconsShared.marketplace(color, size),
       screen: 'MarketplaceScreen'
     },
     { 
       id: 'profile', 
       label: 'Profile', 
-      icon: (color, size) => VectorIcons.profile(color, size),
+      icon: (color, size) => VectorIconsShared.profile(color, size),
       screen: 'ProfileScreen'
     },
   ];
@@ -2982,6 +2996,7 @@ export default function ProfileScreen({ navigation }) {
     loading,
     saving,
     lastSave,
+    isDirty,
     editing,
     setEditing,
     activeTab,
@@ -2998,17 +3013,33 @@ export default function ProfileScreen({ navigation }) {
     updateProfileImage,
     switchUserType,
     navigateToRoleDetails,
-    saveProfile,
+    commitProfileSave,
     loadProfile,
     resetProfile,
     exportProfile,
-    calculateProfileCompleteness
+    calculateProfileCompleteness,
   } = useAdvancedEnterpriseProfile();
 
   const [refreshing, setRefreshing] = useState(false);
   const [bottomNavTab, setBottomNavTab] = useState('profile');
   const scrollY = useRef(new Animated.Value(0)).current;
   const mainScrollRef = useRef(null);
+
+  const handleRoleChange = (newType) => {
+    // switch role, enter edit mode and auto-open role details, then scroll
+    try {
+      switchUserType(newType);
+      setEditing(true);
+      setShowRoleDetails(true);
+      setTimeout(() => {
+        if (mainScrollRef && mainScrollRef.current && mainScrollRef.current.scrollTo) {
+          mainScrollRef.current.scrollTo({ y: 400, animated: true });
+        }
+      }, 400);
+    } catch (e) {
+      console.error('Role change failed', e);
+    }
+  };
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -3090,7 +3121,13 @@ export default function ProfileScreen({ navigation }) {
               {saving && (
                 <View style={styles.savingIndicator}>
                   <ActivityIndicator size="small" color="#00f0a8" />
-                  <Text style={styles.savingText}>Auto-saving...</Text>
+                  <Text style={styles.savingText}>Saving...</Text>
+                </View>
+              )}
+              {isDirty && !saving && (
+                <View style={styles.savingIndicator}>
+                  <Icon name="pencil" size={12} color="#FFD700" />
+                  <Text style={styles.savingText}>Unsaved changes</Text>
                 </View>
               )}
             </View>
@@ -3100,13 +3137,42 @@ export default function ProfileScreen({ navigation }) {
                 style={styles.shareButton}
                 onPress={handleShareProfile}
                 activeOpacity={0.7}
+                disabled={editing}
               >
-                <Icon name="share-social" size={20} color="#00f0a8" />
+                <Icon name="share-social" size={20} color={editing ? "#666" : "#00f0a8"} />
               </TouchableOpacity>
               
               <TouchableOpacity 
                 style={[styles.editButton, editing && styles.editButtonActive]}
-                onPress={() => setEditing(!editing)}
+                onPress={() => {
+                  if (editing && isDirty) {
+                    Alert.alert(
+                      'Unsaved Changes',
+                      'You have unsaved changes. Do you want to save before exiting edit mode?',
+                      [
+                        {
+                          text: 'Discard',
+                          style: 'destructive',
+                          onPress: () => {
+                            setEditing(false);
+                            loadProfile();
+                          }
+                        },
+                        {
+                          text: 'Save & Exit',
+                          style: 'default',
+                          onPress: async () => {
+                            await commitProfileSave();
+                            setEditing(false);
+                          }
+                        },
+                        { text: 'Continue Editing', style: 'cancel' }
+                      ]
+                    );
+                  } else {
+                    setEditing(!editing);
+                  }
+                }}
                 activeOpacity={0.7}
               >
                 <Icon 
@@ -3115,6 +3181,16 @@ export default function ProfileScreen({ navigation }) {
                   color="#00f0a8" 
                 />
               </TouchableOpacity>
+
+              {editing && isDirty && (
+                <TouchableOpacity
+                  style={[styles.saveButton, { marginLeft: 8 }]}
+                  onPress={() => commitProfileSave()}
+                  activeOpacity={0.8}
+                >
+                  <Icon name="save" size={18} color="#00f0a8" />
+                </TouchableOpacity>
+              )}
 
               <TouchableOpacity 
                 style={styles.menuButton}
@@ -3161,17 +3237,17 @@ export default function ProfileScreen({ navigation }) {
               <View style={styles.nameSection}>
                 {editing ? (
                   <View style={styles.nameEditor}>
+                        <EditableField
+                          value={profile.firstName}
+                          onSave={(value) => { updateProfile({ firstName: value }); commitProfileSave(); }}
+                          placeholder="First Name"
+                          style={styles.nameInput}
+                          required
+                          autoCapitalize="words"
+                        />
                     <EditableField
-                      value={profile.firstName}
-                      onSave={(value) => updateProfile({ firstName: value })}
-                      placeholder="First Name"
-                      style={styles.nameInput}
-                      required
-                      autoCapitalize="words"
-                    />
-                    <EditableField
-                      value={profile.lastName}
-                      onSave={(value) => updateProfile({ lastName: value })}
+                          value={profile.lastName}
+                          onSave={(value) => { updateProfile({ lastName: value }); commitProfileSave(); }}
                       placeholder="Last Name"
                       style={styles.nameInput}
                       required
@@ -3261,7 +3337,7 @@ export default function ProfileScreen({ navigation }) {
           {/* FIXED: Enhanced User Type Selector with proper navigation */}
           <UserTypeSelector
             currentType={profile.userType}
-            onTypeChange={switchUserType}
+            onTypeChange={handleRoleChange}
             onNavigateToDetails={navigateToRoleDetails}
             editing={editing}
           />
@@ -3322,7 +3398,7 @@ export default function ProfileScreen({ navigation }) {
               <Text style={styles.sectionTitle}>Professional Bio</Text>
               <EditableField
                 value={profile.bio}
-                onSave={(value) => updateProfile({ bio: value })}
+                onSave={(value) => { updateProfile({ bio: value }); commitProfileSave(); }}
                 placeholder="Tell us about your professional background, expertise, achievements, and what makes you unique. Include your experience, specialties, and what clients can expect when working with you."
                 multiline={true}
                 style={styles.bioField}
@@ -3346,9 +3422,7 @@ export default function ProfileScreen({ navigation }) {
               <Text style={styles.sectionTitle}>Contact Information</Text>
               <EditableField
                 value={profile.contactInfo?.phone}
-                onSave={(value) => updateProfile({ 
-                  contactInfo: { ...profile.contactInfo, phone: value } 
-                })}
+                onSave={(value) => { updateProfile({ contactInfo: { ...profile.contactInfo, phone: value } }); commitProfileSave(); }}
                 placeholder="+1 (555) 123-4567"
                 label="Phone Number"
                 type="phone"
@@ -3356,9 +3430,7 @@ export default function ProfileScreen({ navigation }) {
               />
               <EditableField
                 value={profile.contactInfo?.email}
-                onSave={(value) => updateProfile({ 
-                  contactInfo: { ...profile.contactInfo, email: value } 
-                })}
+                onSave={(value) => { updateProfile({ contactInfo: { ...profile.contactInfo, email: value } }); commitProfileSave(); }}
                 placeholder="your.email@example.com"
                 label="Email Address"
                 type="email"
@@ -3367,9 +3439,7 @@ export default function ProfileScreen({ navigation }) {
               />
               <EditableField
                 value={profile.contactInfo?.website}
-                onSave={(value) => updateProfile({ 
-                  contactInfo: { ...profile.contactInfo, website: value } 
-                })}
+                onSave={(value) => { updateProfile({ contactInfo: { ...profile.contactInfo, website: value } }); commitProfileSave(); }}
                 placeholder="https://yourwebsite.com"
                 label="Website (Optional)"
                 type="url"
@@ -3384,21 +3454,21 @@ export default function ProfileScreen({ navigation }) {
               <View style={styles.detailsGrid}>
                 <EditableField
                   value={profile.profession}
-                  onSave={(value) => updateProfile({ profession: value })}
+                  onSave={(value) => { updateProfile({ profession: value }); commitProfileSave(); }}
                   placeholder="Your profession or main service"
                   label="Profession"
                   required
                 />
                 <EditableField
                   value={profile.tagline}
-                  onSave={(value) => updateProfile({ tagline: value })}
+                  onSave={(value) => { updateProfile({ tagline: value }); commitProfileSave(); }}
                   placeholder="Brief tagline that describes you"
                   label="Tagline"
                   maxLength={100}
                 />
                 <EditableField
                   value={profile.experienceYears?.toString()}
-                  onSave={(value) => updateProfile({ experienceYears: parseInt(value) || 0 })}
+                  onSave={(value) => { updateProfile({ experienceYears: parseInt(value) || 0 }); commitProfileSave(); }}
                   placeholder="Years of experience"
                   label="Experience (Years)"
                   type="number"
@@ -3406,7 +3476,7 @@ export default function ProfileScreen({ navigation }) {
                 />
                 <EditableField
                   value={profile.hourlyRate?.toString()}
-                  onSave={(value) => updateProfile({ hourlyRate: parseInt(value) || 0 })}
+                  onSave={(value) => { updateProfile({ hourlyRate: parseInt(value) || 0 }); commitProfileSave(); }}
                   placeholder="Your hourly rate"
                   label="Hourly Rate ($)"
                   type="number"
@@ -3418,7 +3488,7 @@ export default function ProfileScreen({ navigation }) {
             {/* Enhanced Location */}
             <LocationManager
               location={profile.location}
-              onUpdate={(location) => updateProfile({ location })}
+              onUpdate={(location) => { updateProfile({ location }); commitProfileSave(); }}
               editing={editing}
             />
           </Animated.ScrollView>
@@ -3512,7 +3582,7 @@ export default function ProfileScreen({ navigation }) {
       {profile.userType === 'farmer' && (
         <FarmerProfileManager
           farmDetails={profile.farmDetails}
-          onUpdate={updateFarmDetails}
+          onUpdate={(updates) => { updateFarmDetails(updates); commitProfileSave(); }}
           editing={editing}
           isVisible={showRoleDetails && profile.userType === 'farmer'}
           onClose={() => setShowRoleDetails(false)}
@@ -3522,7 +3592,7 @@ export default function ProfileScreen({ navigation }) {
       {profile.userType === 'client' && (
         <ClientProfileManager
           clientDetails={profile.clientDetails}
-          onUpdate={updateClientDetails}
+          onUpdate={(updates) => { updateClientDetails(updates); commitProfileSave(); }}
           editing={editing}
           isVisible={showRoleDetails && profile.userType === 'client'}
           onClose={() => setShowRoleDetails(false)}
@@ -3694,6 +3764,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,240,168,0.2)',
     transform: [{ scale: 1.1 }],
   },
+  saveButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: 'rgba(0,240,168,0.2)',
+    marginRight: 8,
+  },
   menuButton: {
     padding: 8,
     borderRadius: 20,
@@ -3767,7 +3843,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   nameEditor: {
-    gap: 8,
+    // removed unsupported 'gap' property for React Native
   },
   userName: {
     color: '#fff',
@@ -3825,7 +3901,7 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    gap: 10,
+    // removed unsupported 'gap' property for React Native
   },
   contactButton: {
     flex: 2,
@@ -3923,7 +3999,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   typeOptions: {
-    gap: 12,
+    // removed unsupported 'gap' property for React Native
   },
   typeOption: {
     backgroundColor: 'rgba(255,255,255,0.03)',
@@ -3980,7 +4056,7 @@ const styles = StyleSheet.create({
   examplesList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 6,
+    // removed unsupported 'gap' property for React Native
   },
   exampleChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -4002,12 +4078,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   featuresList: {
-    gap: 4,
+    // removed unsupported 'gap' property for React Native
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    // removed unsupported 'gap' property for React Native
   },
   featureText: {
     color: '#fff',
@@ -4020,7 +4096,7 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginTop: 10,
-    gap: 8,
+    // removed unsupported 'gap' property for React Native
   },
   roleChangeNoteText: {
     color: '#00f0a8',
@@ -4070,7 +4146,7 @@ const styles = StyleSheet.create({
   tabsScrollContent: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    gap: 20,
+    // removed unsupported 'gap' property for React Native
   },
   tab: {
     flexDirection: 'row',
@@ -4079,7 +4155,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.05)',
-    gap: 6,
+    // removed unsupported 'gap' property for React Native
   },
   activeTab: {
     backgroundColor: 'rgba(0,240,168,0.2)',
@@ -4283,7 +4359,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#00f0a8',
-    gap: 6,
+    // removed unsupported 'gap' property for React Native
   },
   addSkillText: {
     color: '#00f0a8',
@@ -4291,7 +4367,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   skillsGrid: {
-    gap: 10,
+    // removed unsupported 'gap' property for React Native
   },
   skillChip: {
     flexDirection: 'row',
@@ -4315,7 +4391,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    gap: 8,
+    // removed unsupported 'gap' property for React Native
     marginBottom: 6,
   },
   skillCategory: {
@@ -4495,7 +4571,7 @@ const styles = StyleSheet.create({
   levelOptions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    // removed unsupported 'gap' property for React Native
   },
   levelChip: {
     flex: 1,
@@ -4523,7 +4599,7 @@ const styles = StyleSheet.create({
   yearsSelector: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
+    // removed unsupported 'gap' property for React Native
   },
   yearChip: {
     paddingHorizontal: 16,

@@ -956,7 +956,7 @@ const styles = StyleSheet.create({
   activeFilterChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,240,168,0.18)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15, marginRight: 8 },
   activeFilterText: { color: '#00f0a8', fontSize: 12, fontWeight: '600', marginRight: 6 },
 
-  feed: { gap: 12 },
+  feed: {},
 
   postCard: { borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 12 },
   postHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10, padding: 16, paddingBottom: 6 },
@@ -974,7 +974,7 @@ const styles = StyleSheet.create({
   postContent: { color: '#fff', fontSize: 15, lineHeight: 20, marginBottom: 12, paddingHorizontal: 16 },
   postMedia: { width: '100%', height: 200, marginBottom: 12 },
   postActions: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 12, paddingHorizontal: 12, paddingBottom: 14, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  postAction: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 10 },
+  postAction: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 10 },
   postActionText: { color: '#666', fontSize: 14, fontWeight: '600' },
   likedText: { color: '#ff375f' },
 
