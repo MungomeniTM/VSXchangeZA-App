@@ -1,5 +1,5 @@
-// src/screens/DashboardScreen.js - FIXED & OPTIMIZED VERSION
-import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
+// src/screens/DashboardScreen.js - ADVANCED ENTERPRISE VERSION
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -23,1059 +23,1186 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchPosts } from "../api";
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Path, Circle, Rect } from 'react-native-svg';
+import { useFocusEffect } from '@react-navigation/native';
 
 const { width, height } = Dimensions.get('window');
 
-// Professional Gradient Component
-const ProfessionalGradient = ({ colors, style, children }) => (
-  <View style={[style, { backgroundColor: colors[0], overflow: 'hidden' }]}>
-    {children}
-  </View>
-);
+// PROFESSIONAL VECTOR ICONS SYSTEM - MATCHING PROFILE SCREEN
+const VectorIcons = {
+  home: (color = '#00f0a8', size = 28) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M9 22V12H15V22" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
+  
+  search: (color = '#666', size = 28) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="11" cy="11" r="8" stroke={color} strokeWidth="2"/>
+      <Path d="M21 21L16.65 16.65" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  ),
+  
+  marketplace: (color = '#666', size = 28) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.1 15.9 4.5 17 5.4 17H17M17 17C16.4696 17 15.9609 17.2107 15.5858 17.5858C15.2107 17.9609 15 18.4696 15 19C15 19.5304 15.2107 20.0391 15.5858 20.4142C15.9609 20.7893 16.4696 21 17 21C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19C19 18.4696 18.7893 17.9609 18.4142 17.5858C17.9609 17.2107 17.5304 17 17 17ZM9 19C9 19.5304 8.78929 20.0391 8.41421 20.4142C8.03914 20.7893 7.53043 21 7 21C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19C5 18.4696 5.21071 17.9609 5.58579 17.5858C5.96086 17.2107 6.46957 17 7 17C7.53043 17 8.03914 17.2107 8.41421 17.5858C8.78929 17.9609 9 18.4696 9 19Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
+  
+  profile: (color = '#666', size = 28) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
 
-// AI Recommendation Engine - FIXED DEPENDENCIES
-const useAIRecommendations = (user, posts) => {
-  const [recommendations, setRecommendations] = useState([]);
+  // Additional Professional Icons
+  analytics: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M3 3V19H21" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M7 14L10 10L14 16L19 10" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
 
-  const generateRecommendations = useCallback(() => {
-    if (!user || !posts.length) return [];
+  network: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2"/>
+      <Path d="M19.4 15C17.2 17.2 14.8 19 12 19C9.2 19 6.8 17.2 4.6 15" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M19.4 9C17.2 6.8 14.8 5 12 5C9.2 5 6.8 6.8 4.6 9" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  ),
 
-    const userSkills = user.skills || [];
-    const userType = user.userType || 'skilled';
-    
-    const scoredPosts = posts.map(post => {
-      let score = 0;
-      
-      if (post.skills && userSkills.length) {
-        const matchingSkills = post.skills.filter(skill => 
-          userSkills.some(userSkill => 
-            userSkill.name?.toLowerCase().includes(skill.toLowerCase()) ||
-            skill.toLowerCase().includes(userSkill.name?.toLowerCase())
-          )
-        );
-        score += matchingSkills.length * 10;
-      }
+  skills: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M14 2V8H20" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M16 13H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M16 17H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M10 9H9H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  ),
 
-      if (user.location && post.location) score += 5;
-
-      if (userType === 'farmer' && post.type === 'service_offer') score += 15;
-      if (userType === 'client' && post.type === 'service_request') score += 15;
-      if (userType === 'skilled' && post.type === 'job_opportunity') score += 15;
-
-      const postDate = new Date(post.createdAt || post.timestamp);
-      const daysAgo = (Date.now() - postDate.getTime()) / (1000 * 3600 * 24);
-      if (daysAgo < 7) score += 10 - daysAgo;
-
-      return { ...post, relevanceScore: score };
-    });
-
-    return scoredPosts
-      .filter(post => post.relevanceScore > 5)
-      .sort((a, b) => b.relevanceScore - a.relevanceScore)
-      .slice(0, 5);
-  }, [user?.skills, user?.userType, user?.location, posts]);
-
-  useEffect(() => {
-    const newRecs = generateRecommendations();
-    setRecommendations(newRecs);
-  }, [posts.length, user?.skills?.length]); // FIXED: Only update when posts or skills change
-
-  return recommendations;
+  trending: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M23 6L13.5 15.5L8.5 10.5L1 18" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M17 6H23V12" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  )
 };
 
-// Custom hook for global user data - FIXED INFINITE LOOP
-const useGlobalUser = () => {
-  const [globalUser, setGlobalUser] = useState({
-    firstName: '',
-    lastName: '',
-    profileImage: null,
-    userType: 'skilled',
-    skills: [],
-    skillCategories: []
+// ADVANCED DATA MANAGEMENT HOOK
+const useAdvancedDashboardData = () => {
+  const [user, setUser] = useState(null);
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    profileCompletion: 65,
+    networkScore: 240,
+    reputation: 85,
+    opportunities: 12,
+    engagement: 156
   });
 
-  const [isLoaded, setIsLoaded] = useState(false);
-
-  const loadGlobalUser = useCallback(async () => {
-    if (isLoaded) return; // PREVENT MULTIPLE LOADS
-    
+  const loadUserData = useCallback(async () => {
     try {
       const userData = await AsyncStorage.getItem('globalUserData');
       if (userData) {
-        setGlobalUser(JSON.parse(userData));
+        const parsedUser = JSON.parse(userData);
+        setUser(parsedUser);
+        
+        // Calculate advanced stats
+        const profileScore = calculateProfileScore(parsedUser);
+        const networkScore = calculateNetworkScore(parsedUser);
+        
+        setStats(prev => ({
+          ...prev,
+          profileCompletion: profileScore,
+          networkScore: networkScore
+        }));
       }
-      setIsLoaded(true);
     } catch (error) {
-      console.warn('Failed to load global user data:', error);
-      setIsLoaded(true);
+      console.warn('User data load failed:', error);
     }
-  }, [isLoaded]);
-
-  const updateGlobalUser = useCallback(async (userData) => {
-    setGlobalUser(prev => {
-      const newUser = { ...prev, ...userData };
-      AsyncStorage.setItem('globalUserData', JSON.stringify(newUser));
-      return newUser;
-    });
   }, []);
 
-  useEffect(() => {
-    loadGlobalUser();
-  }, []); // FIXED: Empty dependency array - load once
-
-  return { globalUser, updateGlobalUser, loadGlobalUser };
-};
-
-export default function DashboardScreen({ navigation }) {
-  // Enhanced state management
-  const { globalUser, updateGlobalUser } = useGlobalUser();
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [user, setUser] = useState(null);
-  const [activeTab, setActiveTab] = useState('feed');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [exploreOpen, setExploreOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState(new Set());
-  const [showCreateMenu, setShowCreateMenu] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [unreadMessages, setUnreadMessages] = useState(0);
-
-  // Track initial load to prevent multiple calls
-  const initialLoadRef = useRef(false);
-
-  // AI Recommendations - FIXED DEPENDENCIES
-  const aiRecommendations = useAIRecommendations(user, posts);
-
-  // Anim values
-  const fadeAnim = useRef(new Animated.Value(0)).current;
-  const slideAnim = useRef(new Animated.Value(50)).current;
-  const sheetAnim = useRef(new Animated.Value(height)).current;
-  const createMenuAnim = useRef(new Animated.Value(0)).current;
-
-  // Enhanced Orb animations
-  const orbScale = useRef(new Animated.Value(1)).current;
-  const rippleScale = useRef(new Animated.Value(0)).current;
-  const rippleOpacity = useRef(new Animated.Value(0)).current;
-
-  // Professional Navigation Handler - FIXED DEPENDENCIES
-  const handleNavigation = useCallback((screenName, params = {}) => {
-    console.log('Navigating to:', screenName);
+  const calculateProfileScore = (userData) => {
+    let score = 0;
+    const fields = [
+      userData.firstName,
+      userData.lastName,
+      userData.profileImage,
+      userData.bio,
+      userData.skills?.length > 0,
+      userData.location,
+      userData.contactInfo?.phone,
+      userData.contactInfo?.email
+    ];
     
-    const navigationPaths = {
-      feed: () => setActiveTab('feed'),
-      explore: () => setExploreOpen(true),
-      create: () => setShowCreateMenu(true),
-      messages: () => navigation?.navigate?.('Messages'),
-      profile: () => navigation?.navigate?.('Profile'),
-      analytics: () => navigation?.navigate?.('Analytics'),
-      network: () => navigation?.navigate?.('Network'),
-      farms: () => navigation?.navigate?.('FarmManagement'),
-      services: () => navigation?.navigate?.('Services'),
-      notifications: () => navigation?.navigate?.('Notifications'),
-    };
-
-    const navigationHandler = navigationPaths[screenName];
-    if (navigationHandler) {
-      navigationHandler();
-    } else if (navigation?.navigate) {
-      navigation.navigate(screenName, params);
-    } else {
-      console.warn('Navigation not available for:', screenName);
-    }
-  }, [navigation]); // FIXED: Removed user dependency
-
-  // Animation Orchestration - FIXED: Run once
-  useEffect(() => {
-    if (initialLoadRef.current) return;
-    
-    Animated.parallel([
-      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 600, useNativeDriver: true }),
-    ]).start();
-
-    const pulsate = Animated.loop(
-      Animated.sequence([
-        Animated.timing(orbScale, { toValue: 1.08, duration: 1200, useNativeDriver: true }),
-        Animated.timing(orbScale, { toValue: 0.96, duration: 1200, useNativeDriver: true }),
-      ]),
-      { iterations: -1 }
-    );
-    pulsate.start();
-
-    initialLoadRef.current = true;
-
-    return () => {
-      pulsate.stop();
-    };
-  }, []); // FIXED: Empty dependency array
-
-  // Create Menu Animation
-  useEffect(() => {
-    Animated.spring(createMenuAnim, {
-      toValue: showCreateMenu ? 1 : 0,
-      useNativeDriver: true,
-      tension: 50,
-      friction: 7,
-    }).start();
-  }, [showCreateMenu]);
-
-  // Sheet Animation
-  useEffect(() => {
-    Animated.timing(sheetAnim, { 
-      toValue: exploreOpen ? 0 : height, 
-      duration: 340, 
-      useNativeDriver: true 
-    }).start();
-  }, [exploreOpen]);
-
-  // Enhanced Data Management - FIXED DEPENDENCIES
-  const loadUserData = useCallback(async () => {
-    try {
-      const userData = await AsyncStorage.getItem('user');
-      if (userData) {
-        const userObj = JSON.parse(userData);
-        setUser(userObj);
-        // Update global user with basic data
-        updateGlobalUser({
-          firstName: userObj.firstName || userObj.username || 'User',
-          lastName: userObj.lastName || '',
-          profileImage: userObj.profileImage,
-          userType: userObj.role || 'skilled'
-        });
-      }
-    } catch (error) {
-      console.warn('Failed to load user data:', error);
-    }
-  }, [updateGlobalUser]); // FIXED: Stable dependency
-
-  const loadPosts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await fetchPosts();
-      const postsData = res?.data?.posts || res?.data || res || [];
-      
-      const formattedPosts = Array.isArray(postsData) ? postsData.map((post, index) => ({
-        ...post,
-        id: post._id || post.id || `post-${index}-${Date.now()}`,
-        author: post.user || globalUser || {
-          firstName: user?.firstName || 'Community',
-          lastName: user?.lastName || 'Member',
-          profileImage: user?.profileImage,
-          userType: user?.userType || 'member',
-          skills: user?.skills || []
-        }
-      })) : [];
-      
-      setPosts(formattedPosts);
-    } catch (err) {
-      console.warn("Fetch posts failed:", err);
-      // Fallback to empty array instead of causing errors
-      setPosts([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []); // FIXED: Removed dependencies causing loops
-
-  const onRefresh = useCallback(async () => {
-    if (refreshing) return; // PREVENT MULTIPLE REFRESHES
-    setRefreshing(true);
-    try {
-      await Promise.all([loadUserData(), loadPosts()]);
-    } catch (error) {
-      console.warn('Refresh failed:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, [loadUserData, loadPosts, refreshing]); // FIXED: Added refreshing to dependencies
-
-  // Initial load - FIXED: Run once on mount
-  useEffect(() => {
-    const initializeData = async () => {
-      await loadUserData();
-      await loadPosts();
-    };
-    
-    initializeData();
-  }, []); // FIXED: Empty dependency array
-
-  // Enhanced Post Card with Global User Data - FIXED PERFORMANCE
-  const PostCard = React.memo(({ item }) => {
-    const [liked, setLiked] = useState(false);
-    const [likeCount, setLikeCount] = useState(item.approvals || item.likes || 0);
-    const [bookmarked, setBookmarked] = useState(false);
-    
-    const author = item.author || item.user || globalUser || {};
-    const userName = author.firstName ? `${author.firstName} ${author.lastName || ''}`.trim() : 'Community Member';
-    const userRole = author.userType || author.role || 'Member';
-    const userInitial = userName.charAt(0).toUpperCase();
-    const postText = item.text || item.content || item.body || '';
-    const postTime = item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Recently';
-    const comments = item.comments?.length || 0;
-    const shares = item.shares || 0;
-
-    const handleLike = useCallback(() => {
-      setLiked(prev => !prev);
-      setLikeCount(prev => liked ? prev - 1 : prev + 1);
-    }, [liked]);
-
-    const handleBookmark = useCallback(() => {
-      setBookmarked(prev => !prev);
-    }, []);
-
-    const handleShare = useCallback(async () => {
-      try {
-        await Share.share({
-          message: `Check out this post from VSXchangeZA: ${postText.substring(0, 100)}...`,
-          url: 'https://vsxchangeza.com',
-        });
-      } catch (error) {
-        console.warn('Share failed:', error);
-      }
-    }, [postText]);
-
-    return (
-      <Animated.View style={[styles.postCard, { opacity: fadeAnim }]}>
-        <ProfessionalGradient colors={['rgba(255,255,255,0.03)', 'rgba(255,255,255,0.01)']}>
-          <View style={styles.postHeader}>
-            <View style={styles.postAvatar}>
-              {author.profileImage ? (
-                <Image source={{ uri: author.profileImage }} style={styles.postAvatarImage} />
-              ) : (
-                <Text style={styles.postAvatarText}>{userInitial}</Text>
-              )}
-            </View>
-            <View style={styles.postUserInfo}>
-              <Text style={styles.postUserName} numberOfLines={1}>{userName}</Text>
-              <Text style={styles.postTime}>{postTime} • {userRole}</Text>
-              {author.skills?.length > 0 && (
-                <View style={styles.postSkills}>
-                  {author.skills.slice(0, 2).map((skill, index) => (
-                    <View key={`skill-${index}`} style={styles.skillTag}>
-                      <Text style={styles.skillTagText}>{skill.name || skill}</Text>
-                    </View>
-                  ))}
-                  {author.skills.length > 2 && (
-                    <Text style={styles.moreSkills}>+{author.skills.length - 2} more</Text>
-                  )}
-                </View>
-              )}
-            </View>
-            <TouchableOpacity style={styles.postMenu} onPress={handleBookmark}>
-              <Icon 
-                name={bookmarked ? "bookmark" : "bookmark-outline"} 
-                size={20} 
-                color={bookmarked ? "#00f0a8" : "#666"} 
-              />
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.postContent}>{postText}</Text>
-
-          {item.media && (
-            <Image source={{ uri: item.media }} style={styles.postMedia} resizeMode="cover" />
-          )}
-
-          <View style={styles.postActions}>
-            <TouchableOpacity style={styles.postAction} onPress={handleLike}>
-              <Icon 
-                name={liked ? "heart" : "heart-outline"} 
-                size={20} 
-                color={liked ? "#ff375f" : "#666"} 
-              />
-              <Text style={[styles.postActionText, liked && styles.likedText]}>{likeCount}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.postAction}>
-              <Icon name="chatbubble-outline" size={20} color="#666" />
-              <Text style={styles.postActionText}>{comments}</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.postAction} onPress={handleShare}>
-              <Icon name="share-social-outline" size={20} color="#666" />
-              <Text style={styles.postActionText}>{shares}</Text>
-            </TouchableOpacity>
-          </View>
-        </ProfessionalGradient>
-      </Animated.View>
-    );
-  });
-
-  // Enhanced Header with Global User Data
-  const ProfessionalHeader = () => (
-    <ProfessionalGradient colors={['#000000', '#0f1116']} style={styles.professionalHeader}>
-      <View style={styles.headerTop}>
-        <View style={styles.brandContainer}>
-          <Text style={styles.brandText}>VSXchangeZA</Text>
-          <View style={styles.glowDot} />
-        </View>
-
-        <View style={styles.headerActions}>
-          <TouchableOpacity 
-            style={styles.iconButton} 
-            onPress={() => handleNavigation('notifications')}
-          >
-            <Icon name="notifications-outline" size={20} color="#00f0a8" />
-            {notifications.length > 0 && (
-              <View style={styles.notificationBadge}>
-                <Text style={styles.notificationText}>{notifications.length}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.iconButton} onPress={logout}>
-            <Icon name="log-out-outline" size={20} color="#ff6b6b" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={styles.userWelcome}>
-        <View style={styles.avatar}>
-          {globalUser?.profileImage ? (
-            <Image source={{ uri: globalUser.profileImage }} style={styles.avatarImage} />
-          ) : (
-            <Text style={styles.avatarText}>
-              {globalUser?.firstName?.[0]?.toUpperCase() || user?.firstName?.[0]?.toUpperCase() || 'U'}
-            </Text>
-          )}
-        </View>
-        <View style={styles.userInfo}>
-          <Text style={styles.welcomeText}>Welcome back,</Text>
-          <Text style={styles.userName}>
-            {globalUser?.firstName || user?.firstName || user?.username || 'User'}
-          </Text>
-          <Text style={styles.userRole}>
-            {globalUser?.userType || user?.role || 'Member'} • 
-            {globalUser?.skills?.length || user?.skills?.length || 0} skills
-          </Text>
-        </View>
-      </View>
-    </ProfessionalGradient>
-  );
-
-  // Enhanced Stats with Real Data
-  const StatsCard = () => (
-    <Animated.View style={[styles.statsCard, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-      <ProfessionalGradient colors={['rgba(30,144,255,0.12)', 'rgba(0,240,168,0.12)']}>
-        <Text style={styles.statsTitle}>Platform Analytics</Text>
-        <View style={styles.statsGrid}>
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{posts.length}</Text>
-            <Text style={styles.statLabel}>Live Posts</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{globalUser?.skills?.length || 0}</Text>
-            <Text style={styles.statLabel}>Your Skills</Text>
-          </View>
-          <View style={styles.statDivider} />
-          <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{aiRecommendations.length}</Text>
-            <Text style={styles.statLabel}>AI Matches</Text>
-          </View>
-        </View>
-
-        <View style={styles.sparklineContainer}>
-          <Icon name="trending-up" size={16} color="#00f0a8" />
-          <Text style={styles.sparklineText}>
-            {aiRecommendations.length > 0 ? 'Personalized matches available' : 'Building your network...'}
-          </Text>
-        </View>
-      </ProfessionalGradient>
-    </Animated.View>
-  );
-
-  // AI Recommendations Section
-  const AIRecommendationsSection = () => {
-    if (aiRecommendations.length === 0) return null;
-
-    return (
-      <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.sectionTitleRow}>
-            <Icon name="sparkles" size={20} color="#00f0a8" />
-            <Text style={styles.sectionTitle}>AI Recommendations</Text>
-          </View>
-          <Text style={styles.sectionSubtitle}>Curated based on your profile</Text>
-        </View>
-        
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.recommendationsScroll}>
-          {aiRecommendations.map((rec, index) => (
-            <TouchableOpacity key={`rec-${rec.id || index}`} style={styles.recommendationCard}>
-              <ProfessionalGradient colors={['rgba(0,240,168,0.1)', 'rgba(30,144,255,0.1)']}>
-                <View style={styles.recommendationHeader}>
-                  <Text style={styles.recommendationTitle} numberOfLines={2}>
-                    {rec.text?.substring(0, 60)}...
-                  </Text>
-                  <View style={styles.relevanceBadge}>
-                    <Text style={styles.relevanceText}>{Math.round(rec.relevanceScore)}% match</Text>
-                  </View>
-                </View>
-                <Text style={styles.recommendationType}>
-                  {rec.type === 'service_offer' ? 'Service Offer' : 
-                   rec.type === 'service_request' ? 'Service Needed' : 
-                   'Opportunity'}
-                </Text>
-              </ProfessionalGradient>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
-      </Animated.View>
-    );
+    score = (fields.filter(Boolean).length / fields.length) * 100;
+    return Math.min(Math.round(score), 100);
   };
 
-  // Enhanced Quick Actions
-  const QuickActions = () => (
-    <Animated.View style={[styles.quickActions, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.quickActionsScroll}>
-        {[
-          { 
-            icon: 'add-circle', 
-            label: 'Create', 
-            color: '#00f0a8', 
-            onPress: () => setShowCreateMenu(true)
-          },
-          { icon: 'analytics', label: 'Analytics', color: '#1e90ff', onPress: () => handleNavigation('analytics') },
-          { icon: 'people', label: 'Network', color: '#ff6b81', onPress: () => handleNavigation('network') },
-          { icon: 'leaf', label: 'My Farm', color: '#a55eea', onPress: () => handleNavigation('farms') },
-          { icon: 'construct', label: 'Services', color: '#fed330', onPress: () => handleNavigation('services') },
-          { icon: 'chatbubbles', label: 'Messages', color: '#00d2d3', onPress: () => handleNavigation('messages') },
-        ].map((action, index) => (
-          <TouchableOpacity key={`action-${index}`} style={styles.quickActionItem} onPress={action.onPress}>
-            <View style={[styles.actionIcon, { backgroundColor: action.color }]}>
-              <Icon name={action.icon} size={22} color="#000" />
+  const calculateNetworkScore = (userData) => {
+    const baseScore = (userData.connections || 0) * 10;
+    const postScore = (userData.posts || 0) * 5;
+    const skillScore = (userData.skills?.length || 0) * 15;
+    return baseScore + postScore + skillScore;
+  };
+
+  const loadPosts = useCallback(async () => {
+    try {
+      const response = await fetchPosts();
+      const postsData = response?.data?.posts || response?.data || response || [];
+      setPosts(Array.isArray(postsData) ? postsData.slice(0, 20) : []);
+    } catch (error) {
+      console.warn('Posts load failed:', error);
+      setPosts([]);
+    }
+  }, []);
+
+  const refreshAllData = useCallback(async () => {
+    setLoading(true);
+    await Promise.all([loadUserData(), loadPosts()]);
+    setLoading(false);
+  }, [loadUserData, loadPosts]);
+
+  useEffect(() => {
+    refreshAllData();
+  }, []);
+
+  return {
+    user,
+    posts,
+    loading,
+    stats,
+    refreshData: refreshAllData,
+    setStats
+  };
+};
+
+// ADVANCED POST CARD COMPONENT WITH MEMOIZATION
+const AdvancedPostCard = React.memo(({ item, onPress, userType }) => {
+  const [liked, setLiked] = useState(false);
+  const [bookmarked, setBookmarked] = useState(false);
+  const [likeCount, setLikeCount] = useState(item.likes || 0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+
+  const author = item.author || item.user || {};
+  const userName = author.firstName ? `${author.firstName} ${author.lastName || ''}`.trim() : 'Community Member';
+  const userRole = author.userType || author.role || 'Member';
+  const postText = item.text || item.content || item.body || '';
+  const postTime = item.createdAt ? formatTimeAgo(item.createdAt) : 'Recently';
+
+  const handleLike = () => {
+    Animated.sequence([
+      Animated.timing(scaleAnim, {
+        toValue: 1.2,
+        duration: 100,
+        useNativeDriver: true
+      }),
+      Animated.timing(scaleAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true
+      })
+    ]).start();
+
+    setLiked(!liked);
+    setLikeCount(prev => liked ? prev - 1 : prev + 1);
+  };
+
+  const handleBookmark = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0.5,
+      duration: 100,
+      useNativeDriver: true
+    }).start(() => {
+      setBookmarked(!bookmarked);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 100,
+        useNativeDriver: true
+      }).start();
+    });
+  };
+
+  return (
+    <Animated.View style={[styles.postCard, { opacity: fadeAnim }]}>
+      <View style={styles.postHeader}>
+        <View style={styles.postAuthor}>
+          {author.profileImage ? (
+            <Image source={{ uri: author.profileImage }} style={styles.postAvatar} />
+          ) : (
+            <View style={styles.postAvatarFallback}>
+              <Text style={styles.postAvatarText}>{userName.charAt(0)}</Text>
+            </View>
+          )}
+          <View style={styles.postAuthorInfo}>
+            <Text style={styles.postAuthorName}>{userName}</Text>
+            <View style={styles.postMeta}>
+              <Text style={styles.postTime}>{postTime}</Text>
+              <Text style={styles.postRole}>{userRole}</Text>
+            </View>
+          </View>
+        </View>
+        
+        <TouchableOpacity onPress={handleBookmark} style={styles.bookmarkButton}>
+          {bookmarked ? (
+            <Icon name="bookmark" size={20} color="#00f0a8" />
+          ) : (
+            <Icon name="bookmark-outline" size={20} color="#666" />
+          )}
+        </TouchableOpacity>
+      </View>
+
+      <TouchableOpacity onPress={onPress} activeOpacity={0.9}>
+        <Text style={styles.postContent} numberOfLines={3}>
+          {postText}
+        </Text>
+        
+        {item.media && (
+          <Image source={{ uri: item.media }} style={styles.postMedia} resizeMode="cover" />
+        )}
+      </TouchableOpacity>
+
+      <View style={styles.postActions}>
+        <TouchableOpacity 
+          style={styles.postAction}
+          onPress={handleLike}
+          activeOpacity={0.7}
+        >
+          <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+            <Icon 
+              name={liked ? "heart" : "heart-outline"} 
+              size={20} 
+              color={liked ? "#ff375f" : "#666"} 
+            />
+          </Animated.View>
+          <Text style={[styles.postActionText, liked && styles.likedText]}>
+            {likeCount}
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.postAction} activeOpacity={0.7}>
+          <Icon name="chatbubble-outline" size={20} color="#666" />
+          <Text style={styles.postActionText}>{item.comments || 0}</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.postAction} activeOpacity={0.7}>
+          <Icon name="share-social-outline" size={20} color="#666" />
+          <Text style={styles.postActionText}>{item.shares || 0}</Text>
+        </TouchableOpacity>
+
+        {item.category && (
+          <View style={styles.postCategory}>
+            <Text style={styles.postCategoryText}>{item.category}</Text>
+          </View>
+        )}
+      </View>
+    </Animated.View>
+  );
+});
+
+// ADVANCED STATS CARD WITH ANIMATIONS
+const AdvancedStatsCard = ({ stats, onRefresh }) => {
+  const progressAnim = useRef(new Animated.Value(0)).current;
+  const [animatedStats, setAnimatedStats] = useState(stats);
+
+  useEffect(() => {
+    Animated.timing(progressAnim, {
+      toValue: stats.profileCompletion,
+      duration: 1000,
+      useNativeDriver: false
+    }).start();
+    
+    setAnimatedStats(stats);
+  }, [stats]);
+
+  const progressWidth = progressAnim.interpolate({
+    inputRange: [0, 100],
+    outputRange: ['0%', '100%']
+  });
+
+  return (
+    <View style={styles.statsCard}>
+      <LinearGradient
+        colors={['rgba(0, 240, 168, 0.08)', 'rgba(0, 240, 168, 0.02)']}
+        style={styles.statsGradient}
+      >
+        <View style={styles.statsHeader}>
+          <Text style={styles.statsTitle}>Performance Metrics</Text>
+          <TouchableOpacity onPress={onRefresh} style={styles.refreshButton}>
+            <Icon name="refresh" size={18} color="#00f0a8" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.statsGrid}>
+          <View style={styles.statItem}>
+            <View style={styles.statIcon}>
+              {VectorIcons.trending('#00f0a8', 20)}
+            </View>
+            <Text style={styles.statNumber}>{animatedStats.profileCompletion}%</Text>
+            <Text style={styles.statLabel}>Profile Complete</Text>
+            <View style={styles.progressContainer}>
+              <Animated.View style={[styles.progressBar, { width: progressWidth }]} />
+            </View>
+          </View>
+
+          <View style={styles.statItem}>
+            <View style={[styles.statIcon, styles.networkIcon]}>
+              {VectorIcons.network('#1e90ff', 20)}
+            </View>
+            <Text style={styles.statNumber}>{animatedStats.networkScore}</Text>
+            <Text style={styles.statLabel}>Network Score</Text>
+            <Text style={styles.statSubtext}>Growing</Text>
+          </View>
+
+          <View style={styles.statItem}>
+            <View style={[styles.statIcon, styles.reputationIcon]}>
+              <Icon name="star" size={20} color="#FFD700" />
+            </View>
+            <Text style={styles.statNumber}>{animatedStats.reputation}</Text>
+            <Text style={styles.statLabel}>Reputation</Text>
+            <View style={styles.ratingContainer}>
+              {[1,2,3,4,5].map((star) => (
+                <Icon 
+                  key={star}
+                  name={star <= Math.floor(animatedStats.reputation/20) ? "star" : "star-outline"} 
+                  size={12} 
+                  color="#FFD700" 
+                />
+              ))}
+            </View>
+          </View>
+
+          <View style={styles.statItem}>
+            <View style={[styles.statIcon, styles.opportunityIcon]}>
+              {VectorIcons.skills('#4CD964', 20)}
+            </View>
+            <Text style={styles.statNumber}>{animatedStats.opportunities}</Text>
+            <Text style={styles.statLabel}>Opportunities</Text>
+            <Text style={styles.statSubtext}>Available</Text>
+          </View>
+        </View>
+      </LinearGradient>
+    </View>
+  );
+};
+
+// ADVANCED QUICK ACTIONS GRID
+const AdvancedQuickActions = ({ userType, navigation }) => {
+  const actions = useMemo(() => {
+    const baseActions = [
+      { 
+        id: 'create', 
+        label: 'Create Post', 
+        icon: 'add-circle',
+        color: '#00f0a8',
+        action: () => navigation.navigate('CreatePost')
+      },
+      { 
+        id: 'discover', 
+        label: 'Discover', 
+        icon: (color, size) => VectorIcons.search(color, size),
+        color: '#1e90ff',
+        action: () => navigation.navigate('Discover')
+      },
+      { 
+        id: 'market', 
+        label: 'Marketplace', 
+        icon: (color, size) => VectorIcons.marketplace(color, size),
+        color: '#FF9500',
+        action: () => navigation.navigate('Marketplace')
+      },
+      { 
+        id: 'messages', 
+        label: 'Messages', 
+        icon: 'chatbubbles',
+        color: '#FF6B81',
+        action: () => navigation.navigate('Messages')
+      }
+    ];
+
+    // Add role-specific actions
+    if (userType === 'skilled') {
+      baseActions.push(
+        { 
+          id: 'skills', 
+          label: 'My Skills', 
+          icon: (color, size) => VectorIcons.skills(color, size),
+          color: '#FFD700',
+          action: () => navigation.navigate('Profile', { screen: 'Skills' })
+        }
+      );
+    } else if (userType === 'farmer') {
+      baseActions.push(
+        { 
+          id: 'farm', 
+          label: 'Farm Dashboard', 
+          icon: 'leaf',
+          color: '#4CD964',
+          action: () => navigation.navigate('FarmDashboard')
+        }
+      );
+    } else if (userType === 'client') {
+      baseActions.push(
+        { 
+          id: 'projects', 
+          label: 'My Projects', 
+          icon: 'briefcase',
+          color: '#5856D6',
+          action: () => navigation.navigate('Projects')
+        }
+      );
+    }
+
+    return baseActions;
+  }, [userType, navigation]);
+
+  return (
+    <View style={styles.quickActionsContainer}>
+      <Text style={styles.sectionTitle}>Quick Actions</Text>
+      <View style={styles.quickActionsGrid}>
+        {actions.map((action) => (
+          <TouchableOpacity
+            key={action.id}
+            style={styles.quickAction}
+            onPress={action.action}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.actionIconContainer, { backgroundColor: `${action.color}20` }]}>
+              {typeof action.icon === 'function' ? 
+                action.icon(action.color, 24) : 
+                <Icon name={action.icon} size={24} color={action.color} />
+              }
             </View>
             <Text style={styles.actionLabel}>{action.label}</Text>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
+    </View>
+  );
+};
+
+// MAIN DASHBOARD COMPONENT
+export default function DashboardScreen({ navigation }) {
+  const { user, posts, loading, stats, refreshData } = useAdvancedDashboardData();
+  const [refreshing, setRefreshing] = useState(false);
+  const [activeTab, setActiveTab] = useState('home');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showSearch, setShowSearch] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(3);
+  
+  const scrollY = useRef(new Animated.Value(0)).current;
+  const headerOpacity = scrollY.interpolate({
+    inputRange: [0, 100],
+    outputRange: [1, 0.95],
+    extrapolate: 'clamp'
+  });
+
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
+  }, [refreshData]);
+
+  const handlePostPress = useCallback((post) => {
+    navigation.navigate('PostDetail', { postId: post.id });
+  }, [navigation]);
+
+  const handleNotificationPress = () => {
+    navigation.navigate('Notifications');
+    setUnreadNotifications(0);
+  };
+
+  const handleSearch = () => {
+    if (searchQuery.trim()) {
+      navigation.navigate('SearchResults', { query: searchQuery });
+      setSearchQuery('');
+      setShowSearch(false);
+    }
+  };
+
+  const renderHeader = () => (
+    <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
+      <LinearGradient
+        colors={['#000000', '#0a0a0a']}
+        style={styles.headerGradient}
+      >
+        <View style={styles.headerTop}>
+          <View style={styles.brandContainer}>
+            <Text style={styles.brandText}>VSXchangeZA</Text>
+            <View style={styles.statusIndicator}>
+              <View style={styles.statusDot} />
+              <Text style={styles.statusText}>Connected</Text>
+            </View>
+          </View>
+
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={styles.notificationButton}
+              onPress={handleNotificationPress}
+            >
+              <Icon name="notifications-outline" size={22} color="#00f0a8" />
+              {unreadNotifications > 0 && (
+                <View style={styles.notificationBadge}>
+                  <Text style={styles.notificationCount}>{unreadNotifications}</Text>
+                </View>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity 
+              style={styles.profileButton}
+              onPress={() => navigation.navigate('Profile')}
+            >
+              {user?.profileImage ? (
+                <Image source={{ uri: user.profileImage }} style={styles.profileImage} />
+              ) : (
+                <View style={styles.profileInitials}>
+                  <Text style={styles.profileInitialsText}>
+                    {user?.firstName?.[0]?.toUpperCase() || 'U'}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <View style={styles.welcomeSection}>
+          <Text style={styles.welcomeText}>
+            Welcome back, {user?.firstName || 'Professional'}
+          </Text>
+          <Text style={styles.welcomeSubtext}>
+            {user?.userType === 'skilled' && 'Your vocational expertise is in demand'}
+            {user?.userType === 'farmer' && 'Agricultural opportunities await'}
+            {user?.userType === 'client' && 'Find skilled professionals for your projects'}
+          </Text>
+        </View>
+
+        <TouchableOpacity 
+          style={styles.searchContainer}
+          onPress={() => setShowSearch(true)}
+          activeOpacity={0.8}
+        >
+          <Icon name="search" size={18} color="#666" style={styles.searchIcon} />
+          <Text style={styles.searchPlaceholder}>
+            Search skills, services, projects...
+          </Text>
+        </TouchableOpacity>
+      </LinearGradient>
     </Animated.View>
   );
 
-  // Create Post Menu
-  const CreatePostMenu = () => (
-    <Modal visible={showCreateMenu} transparent animationType="fade">
-      <Pressable style={styles.createMenuOverlay} onPress={() => setShowCreateMenu(false)}>
-        <Animated.View 
-          style={[
-            styles.createMenu, 
-            { 
-              transform: [
-                { scale: createMenuAnim },
-                { translateY: createMenuAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [20, 0]
-                })}
-              ]
-            }
-          ]}
-        >
-          <Text style={styles.createMenuTitle}>Create New</Text>
-          
-          {[
-            { icon: 'document-text', label: 'Post', color: '#00f0a8', action: () => navigation.navigate('CreatePost') },
-            { icon: 'camera', label: 'Photo', color: '#1e90ff', action: () => Alert.alert('Coming Soon', 'Photo upload feature') },
-            { icon: 'videocam', label: 'Video', color: '#ff6b81', action: () => Alert.alert('Coming Soon', 'Video upload feature') },
-            { icon: 'megaphone', label: 'Service Offer', color: '#a55eea', action: () => navigation.navigate('CreateService') },
-            { icon: 'help-circle', label: 'Service Request', color: '#fed330', action: () => navigation.navigate('CreateRequest') },
-          ].map((item, index) => (
-            <TouchableOpacity 
-              key={`menu-${index}`}
-              style={styles.createMenuItem}
-              onPress={() => {
-                setShowCreateMenu(false);
-                setTimeout(item.action, 300);
-              }}
-            >
-              <View style={[styles.createMenuIcon, { backgroundColor: item.color }]}>
-                <Icon name={item.icon} size={22} color="#000" />
-              </View>
-              <Text style={styles.createMenuLabel}>{item.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </Animated.View>
-      </Pressable>
-    </Modal>
-  );
-
-  // Enhanced Navigation Tabs
-  const NavigationTabs = () => (
-    <View style={styles.navTabs}>
+  const renderNavigationTabs = () => (
+    <View style={styles.navigationTabs}>
       {[
-        { id: 'feed', icon: 'home', label: 'Home' },
-        { id: 'explore', icon: 'search', label: 'Discover' },
-        { id: 'create', icon: 'add', label: 'Create' },
-        { id: 'messages', icon: 'chatbubble', label: 'Inbox' },
-        { id: 'profile', icon: 'person', label: 'Profile' },
+        { id: 'home', label: 'Home', icon: (color, size) => VectorIcons.home(color, size) },
+        { id: 'discover', label: 'Discover', icon: (color, size) => VectorIcons.search(color, size) },
+        { id: 'market', label: 'Market', icon: (color, size) => VectorIcons.marketplace(color, size) },
+        { id: 'profile', label: 'Profile', icon: (color, size) => VectorIcons.profile(color, size) },
       ].map((tab) => (
-        <TouchableOpacity 
-          key={`tab-${tab.id}`} 
-          style={[styles.navTab, activeTab === tab.id && styles.navTabActive]} 
-          onPress={() => handleNavigation(tab.id)}
+        <TouchableOpacity
+          key={tab.id}
+          style={[styles.navTab, activeTab === tab.id && styles.navTabActive]}
+          onPress={() => {
+            setActiveTab(tab.id);
+            if (tab.id === 'profile') navigation.navigate('Profile');
+          }}
+          activeOpacity={0.7}
         >
-          <Icon 
-            name={activeTab === tab.id ? tab.icon : `${tab.icon}-outline`} 
-            size={24} 
-            color={activeTab === tab.id ? '#00f0a8' : '#666'} 
-          />
-          <Text style={[styles.navTabText, activeTab === tab.id && styles.navTabTextActive]}>{tab.label}</Text>
-          {tab.id === 'messages' && unreadMessages > 0 && (
-            <View style={styles.messageBadge}>
-              <Text style={styles.messageBadgeText}>{unreadMessages}</Text>
-            </View>
+          {tab.icon(
+            activeTab === tab.id ? '#00f0a8' : '#666',
+            24
           )}
+          <Text style={[
+            styles.navTabText,
+            activeTab === tab.id && styles.navTabTextActive
+          ]}>
+            {tab.label}
+          </Text>
         </TouchableOpacity>
       ))}
     </View>
   );
 
-  // Enhanced Explore Sheet
-  const ExploreSheet = () => (
-    <Modal visible={exploreOpen} transparent animationType="none" onRequestClose={() => setExploreOpen(false)}>
-      <View style={styles.sheetOverlay}>
-        <Pressable style={styles.overlayTouchable} onPress={() => setExploreOpen(false)} />
-        <Animated.View style={[styles.sheet, { transform: [{ translateY: sheetAnim }] }]}>
-          <View style={styles.sheetHeader}>
-            <Text style={styles.sheetTitle}>Advanced Search</Text>
-            <TouchableOpacity onPress={() => setExploreOpen(false)}>
-              <Icon name="close" size={24} color="#00f0a8" />
-            </TouchableOpacity>
-          </View>
-
-          <View style={styles.sheetContent}>
-            <Text style={styles.sheetSubtitle}>Find skills and connect with experts</Text>
-
-            <View style={styles.searchContainer}>
-              <Icon name="search" size={18} color="#666" style={styles.searchIcon} />
-              <TextInput 
-                style={styles.searchInput} 
-                placeholder="Search skills, services, or users..." 
-                placeholderTextColor="#666" 
-                value={searchQuery} 
-                onChangeText={setSearchQuery} 
-              />
-            </View>
-
-            <View style={styles.skillsGrid}>
-              {['Carpentry', 'Electrical', 'Plumbing', 'Farming', 'Tech', 'Design', 'Marketing', 'Consulting', 'Mechanical', 'Construction'].map((skill) => {
-                const active = activeFilters.has(skill);
-                return (
-                  <TouchableOpacity
-                    key={`skill-${skill}`}
-                    style={[styles.skillChip, active && styles.skillChipActive]}
-                    onPress={() => {
-                      setActiveFilters(prev => {
-                        const next = new Set(prev);
-                        if (next.has(skill)) next.delete(skill);
-                        else next.add(skill);
-                        return next;
-                      });
-                    }}
-                  >
-                    <Text style={[styles.skillText, active && styles.skillTextActive]}>{skill}</Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            <TouchableOpacity style={styles.exploreButton} onPress={() => setExploreOpen(false)}>
-              <Text style={styles.exploreButtonText}>Apply Filters</Text>
-            </TouchableOpacity>
-          </View>
-        </Animated.View>
-      </View>
-    </Modal>
-  );
-
-  // Enhanced Filtering Logic - FIXED PERFORMANCE
-  const filteredPosts = useMemo(() => {
-    if ((!activeFilters || activeFilters.size === 0) && !searchQuery.trim()) return posts;
-    
-    const q = searchQuery.toLowerCase().trim();
-    return posts.filter((post) => {
-      const author = post.author || post.user || {};
-      const skills = author.skills || [];
-      const skillNames = skills.map(s => s.name || s).map(s => s.toLowerCase());
-      
-      const matchesQuery = q ? (
-        (post.text || '').toLowerCase().includes(q) ||
-        skillNames.some(skill => skill.includes(q)) ||
-        (author.firstName || '').toLowerCase().includes(q) ||
-        (author.lastName || '').toLowerCase().includes(q)
-      ) : true;
-
-      if (!activeFilters || activeFilters.size === 0) return matchesQuery;
-      
-      const matchesFilter = Array.from(activeFilters).some((filter) => {
-        const filterLower = filter.toLowerCase();
-        return skillNames.includes(filterLower) || 
-               (post.text || '').toLowerCase().includes(filterLower) ||
-               (post.tags || []).some(tag => tag.toLowerCase().includes(filterLower));
-      });
-
-      return matchesQuery && matchesFilter;
-    });
-  }, [posts, activeFilters, searchQuery]);
-
-  const logout = async () => {
-    await AsyncStorage.multiRemove(['token', 'user', 'globalUserData']);
-    navigation.replace("Login");
-  };
-
-  const onOrbPress = () => {
-    rippleScale.setValue(0.2);
-    rippleOpacity.setValue(0.28);
-    Animated.parallel([
-      Animated.timing(rippleScale, { toValue: 1.6, duration: 360, useNativeDriver: true }),
-      Animated.timing(rippleOpacity, { toValue: 0, duration: 360, useNativeDriver: true }),
-    ]).start(() => {
-      rippleScale.setValue(0);
-      rippleOpacity.setValue(0);
-      setExploreOpen(true);
-    });
-  };
+  if (loading && !refreshing) {
+    return (
+      <SafeAreaView style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#00f0a8" />
+        <Text style={styles.loadingText}>Loading Dashboard...</Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#000" />
+      
+      {renderHeader()}
 
-      {/* Enhanced Floating Orb */}
-      <Animated.View
-        pointerEvents="box-none"
-        style={[
-          styles.floatingOrb,
-          {
-            transform: [{ scale: orbScale }],
-          },
-        ]}
-      >
-        <Animated.View style={[
-          styles.ripple,
-          {
-            transform: [{ scale: rippleScale }],
-            opacity: rippleOpacity,
-          }
-        ]} pointerEvents="none" />
-
-        <TouchableOpacity activeOpacity={0.92} onPress={onOrbPress} style={styles.orbTouchable}>
-          <View style={styles.orbInner}>
-            <Text style={styles.orbLabel}>SEARCH</Text>
-          </View>
-        </TouchableOpacity>
-      </Animated.View>
-
-      <ProfessionalHeader />
-
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
-            onRefresh={onRefresh}
+            onRefresh={handleRefresh}
             colors={['#00f0a8']}
             tintColor="#00f0a8"
           />
         }
-      >
-        <StatsCard />
-        <AIRecommendationsSection />
-        <QuickActions />
-
-        {activeFilters.size > 0 && (
-          <View style={styles.activeFilters}>
-            <Text style={styles.filtersTitle}>Active Filters:</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.filtersScroll}>
-              {Array.from(activeFilters).map((filter) => (
-                <View key={`filter-${filter}`} style={styles.activeFilterChip}>
-                  <Text style={styles.activeFilterText}>{filter}</Text>
-                  <TouchableOpacity onPress={() => {
-                    setActiveFilters(prev => {
-                      const next = new Set(prev);
-                      next.delete(filter);
-                      return next;
-                    });
-                  }}>
-                    <Icon name="close" size={14} color="#00f0a8" />
-                  </TouchableOpacity>
-                </View>
-              ))}
-            </ScrollView>
-          </View>
+        onScroll={Animated.event(
+          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+          { useNativeDriver: true }
         )}
+        scrollEventThrottle={16}
+      >
+        <AdvancedStatsCard stats={stats} onRefresh={handleRefresh} />
+        
+        <AdvancedQuickActions userType={user?.userType} navigation={navigation} />
 
-        <View style={styles.section}>
+        <View style={styles.postsSection}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Community Feed</Text>
-            <TouchableOpacity onPress={loadPosts} style={styles.refreshButton}>
+            <TouchableOpacity onPress={handleRefresh}>
               <Icon name="refresh" size={18} color="#00f0a8" />
-              <Text style={styles.seeAllText}> Refresh</Text>
             </TouchableOpacity>
           </View>
 
-          {loading ? (
-            <ActivityIndicator size="large" color="#00f0a8" style={styles.loader} />
-          ) : filteredPosts.length === 0 ? (
+          {posts.length === 0 ? (
             <View style={styles.emptyState}>
               <Icon name="document-text" size={48} color="#666" />
-              <Text style={styles.emptyStateText}>No posts found</Text>
+              <Text style={styles.emptyStateText}>No posts yet</Text>
               <Text style={styles.emptyStateSubtext}>
-                {searchQuery || activeFilters.size > 0 
-                  ? 'Try adjusting your search criteria' 
-                  : 'Be the first to share something with the community!'}
+                Be the first to share in the community
               </Text>
             </View>
           ) : (
-            <View style={styles.feed}>
-              {filteredPosts.map((post, index) => (
-                <PostCard key={post.id} item={post} />
-              ))}
-            </View>
+            posts.map((post, index) => (
+              <AdvancedPostCard
+                key={post.id || `post-${index}`}
+                item={post}
+                onPress={() => handlePostPress(post)}
+                userType={user?.userType}
+              />
+            ))
           )}
         </View>
       </ScrollView>
 
-      <NavigationTabs />
-      <ExploreSheet />
-      <CreatePostMenu />
+      {renderNavigationTabs()}
 
-      {/* Enhanced Floating Action Button */}
-      <TouchableOpacity style={styles.fab} onPress={() => setShowCreateMenu(true)}>
-        <View style={styles.fabInner}>
-          <Icon name="add" size={28} color="#000" />
+      {/* Search Modal */}
+      <Modal
+        visible={showSearch}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowSearch(false)}
+      >
+        <View style={styles.searchModal}>
+          <View style={styles.searchModalContent}>
+            <View style={styles.searchModalHeader}>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search skills, services, projects..."
+                placeholderTextColor="#666"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+                autoFocus
+                onSubmitEditing={handleSearch}
+              />
+              <TouchableOpacity 
+                style={styles.searchClose}
+                onPress={() => setShowSearch(false)}
+              >
+                <Icon name="close" size={24} color="#00f0a8" />
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
-      </TouchableOpacity>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-// Enhanced Professional Styles
+// Helper function
+function formatTimeAgo(dateString) {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  if (diffHours < 24) return `${diffHours}h ago`;
+  if (diffDays < 7) return `${diffDays}d ago`;
+  return date.toLocaleDateString();
+}
+
+// ADVANCED STYLES
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#000000' },
-  scrollView: { flex: 1 },
-  recommendationsScroll: { marginHorizontal: -18 },
-  quickActionsScroll: { paddingHorizontal: 18 },
-  filtersScroll: { marginHorizontal: -18 },
-
-  professionalHeader: {
-    paddingTop: Platform.OS === 'ios' ? 56 : 48,
-    paddingHorizontal: 18,
-    paddingBottom: 16,
-    borderBottomLeftRadius: 30,
-    borderBottomRightRadius: 30,
+  container: {
+    flex: 1,
+    backgroundColor: '#000'
   },
-
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: '#000',
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  loadingText: {
+    color: '#00f0a8',
+    fontSize: 16,
+    marginTop: 16
+  },
+  header: {
+    backgroundColor: '#000',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)'
+  },
+  headerGradient: {
+    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingHorizontal: 20,
+    paddingBottom: 20
+  },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 12,
+    marginBottom: 15
   },
-
-  brandContainer: { flexDirection: 'row', alignItems: 'center' },
+  brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
   brandText: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '800',
     color: '#00f0a8',
-    textShadowColor: 'rgba(0, 240, 168, 0.45)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
+    marginRight: 10
   },
-  glowDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#00f0a8', marginLeft: 8 },
-
-  headerActions: { flexDirection: 'row' },
-  iconButton: { padding: 8, position: 'relative' },
-
+  statusIndicator: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 240, 168, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00f0a8',
+    marginRight: 4
+  },
+  statusText: {
+    color: '#00f0a8',
+    fontSize: 10,
+    fontWeight: '600'
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  notificationButton: {
+    position: 'relative',
+    padding: 8,
+    marginRight: 12
+  },
   notificationBadge: {
     position: 'absolute',
     top: 4,
     right: 4,
     backgroundColor: '#ff375f',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center'
   },
-  notificationText: {
+  notificationCount: {
     color: '#fff',
     fontSize: 10,
-    fontWeight: '700',
+    fontWeight: '700'
   },
-
-  userWelcome: { flexDirection: 'row', alignItems: 'center' },
-  avatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 14,
-    backgroundColor: '#00f0a8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
+  profileButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    overflow: 'hidden'
   },
-  avatarImage: {
+  profileImage: {
     width: '100%',
     height: '100%',
-    borderRadius: 14,
+    borderRadius: 20
   },
-  avatarText: { color: '#000', fontSize: 22, fontWeight: '800' },
-  userInfo: { flex: 1 },
-  welcomeText: { color: '#666', fontSize: 13, marginBottom: 2 },
-  userName: { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 2 },
-  userRole: { color: '#00f0a8', fontSize: 13, fontWeight: '600' },
-
-  statsCard: { margin: 18, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(0, 240, 168, 0.16)' },
-  statsTitle: { color: '#fff', fontSize: 16, fontWeight: '700', marginBottom: 10, textAlign: 'center', paddingTop: 16 },
-  statsGrid: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 12 },
-  statItem: { alignItems: 'center', flex: 1 },
-  statNumber: { color: '#00f0a8', fontSize: 22, fontWeight: '800', marginBottom: 4 },
-  statLabel: { color: '#666', fontSize: 12, fontWeight: '600' },
-  statDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.06)' },
-  sparklineContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingBottom: 12, marginBottom: 10 },
-  sparklineText: { color: '#00f0a8', fontSize: 13, fontWeight: '600' },
-
-  section: { marginHorizontal: 18, marginBottom: 22 },
-  sectionHeader: { marginBottom: 12 },
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  sectionTitle: { color: '#fff', fontSize: 18, fontWeight: '700', marginLeft: 8 },
-  sectionSubtitle: { color: '#666', fontSize: 14 },
-  refreshButton: { flexDirection: 'row', alignItems: 'center' },
-  seeAllText: { color: '#00f0a8', fontSize: 14, fontWeight: '600' },
-
-  recommendationCard: { width: 200, marginRight: 12, borderRadius: 12, overflow: 'hidden' },
-  recommendationHeader: { padding: 12 },
-  recommendationTitle: { color: '#fff', fontSize: 14, fontWeight: '600', lineHeight: 18 },
-  relevanceBadge: { backgroundColor: 'rgba(0,240,168,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 8, alignSelf: 'flex-start' },
-  relevanceText: { color: '#00f0a8', fontSize: 10, fontWeight: '700' },
-  recommendationType: { color: '#666', fontSize: 12, padding: 12, paddingTop: 0 },
-
-  quickActions: { marginBottom: 16 },
-  quickActionItem: { alignItems: 'center', marginRight: 16 },
-  actionIcon: { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  actionLabel: { color: '#fff', fontSize: 12, fontWeight: '600', textAlign: 'center' },
-
-  activeFilters: { marginHorizontal: 18, marginBottom: 12 },
-  filtersTitle: { color: '#fff', fontSize: 14, fontWeight: '600', marginBottom: 8 },
-  activeFilterChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,240,168,0.18)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15, marginRight: 8 },
-  activeFilterText: { color: '#00f0a8', fontSize: 12, fontWeight: '600', marginRight: 6 },
-
-  feed: { gap: 12 },
-
-  postCard: { borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 12 },
-  postHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10, padding: 16, paddingBottom: 6 },
-  postAvatar: { width: 50, height: 50, borderRadius: 12, backgroundColor: '#00f0a8', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  postAvatarImage: { width: '100%', height: '100%', borderRadius: 12 },
-  postAvatarText: { color: '#000', fontSize: 18, fontWeight: '800' },
-  postUserInfo: { flex: 1 },
-  postUserName: { color: '#fff', fontSize: 15, fontWeight: '700', marginBottom: 2 },
-  postTime: { color: '#666', fontSize: 12, marginBottom: 4 },
-  postSkills: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
-  skillTag: { backgroundColor: 'rgba(0,240,168,0.1)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginRight: 6, marginTop: 4 },
-  skillTagText: { color: '#00f0a8', fontSize: 10, fontWeight: '600' },
-  moreSkills: { color: '#666', fontSize: 10, marginTop: 4 },
-  postMenu: { padding: 5 },
-  postContent: { color: '#fff', fontSize: 15, lineHeight: 20, marginBottom: 12, paddingHorizontal: 16 },
-  postMedia: { width: '100%', height: 200, marginBottom: 12 },
-  postActions: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 12, paddingHorizontal: 12, paddingBottom: 14, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  postAction: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingVertical: 8, paddingHorizontal: 10 },
-  postActionText: { color: '#666', fontSize: 14, fontWeight: '600' },
-  likedText: { color: '#ff375f' },
-
-  navTabs: { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.95)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 10, paddingVertical: 10 },
-  navTab: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 15, position: 'relative' },
-  navTabActive: { backgroundColor: 'rgba(0,240,168,0.14)' },
-  navTabText: { color: '#666', fontSize: 10, fontWeight: '600', marginTop: 4 },
-  navTabTextActive: { color: '#00f0a8' },
-  messageBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 20,
-    backgroundColor: '#ff375f',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+  profileInitials: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    backgroundColor: '#00f0a8',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  profileInitialsText: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: '800'
+  },
+  welcomeSection: {
+    marginBottom: 15
+  },
+  welcomeText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 4
+  },
+  welcomeSubtext: {
+    color: '#666',
+    fontSize: 14
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)'
+  },
+  searchIcon: {
+    marginRight: 10
+  },
+  searchPlaceholder: {
+    color: '#666',
+    fontSize: 16,
+    flex: 1
+  },
+  scrollView: {
+    flex: 1
+  },
+  statsCard: {
+    margin: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 240, 168, 0.1)'
+  },
+  statsGradient: {
+    padding: 20
+  },
+  statsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  statsTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700'
+  },
+  refreshButton: {
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 240, 168, 0.1)'
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between'
+  },
+  statItem: {
+    width: '48%',
+    marginBottom: 20
+  },
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 240, 168, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8
   },
-  messageBadgeText: {
+  networkIcon: {
+    backgroundColor: 'rgba(30, 144, 255, 0.1)'
+  },
+  reputationIcon: {
+    backgroundColor: 'rgba(255, 215, 0, 0.1)'
+  },
+  opportunityIcon: {
+    backgroundColor: 'rgba(76, 217, 100, 0.1)'
+  },
+  statNumber: {
     color: '#fff',
-    fontSize: 10,
-    fontWeight: '700',
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 4
   },
-
-  fab: { position: 'absolute', right: 20, bottom: 90 },
-  fabInner: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#00f0a8', alignItems: 'center', justifyContent: 'center', shadowColor: '#00f0a8', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 8 },
-
-  floatingOrb: {
+  statLabel: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4
+  },
+  statSubtext: {
+    color: '#00f0a8',
+    fontSize: 10,
+    fontWeight: '600'
+  },
+  progressContainer: {
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginTop: 4
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#00f0a8',
+    borderRadius: 2
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    marginTop: 4
+  },
+  quickActionsContainer: {
+    marginHorizontal: 20,
+    marginBottom: 20
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 15
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between'
+  },
+  quickAction: {
+    width: '48%',
+    marginBottom: 12
+  },
+  actionIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8
+  },
+  actionLabel: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center'
+  },
+  postsSection: {
+    marginHorizontal: 20,
+    marginBottom: 100
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15
+  },
+  postCard: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)'
+  },
+  postHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12
+  },
+  postAuthor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1
+  },
+  postAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12
+  },
+  postAvatarFallback: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#00f0a8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12
+  },
+  postAvatarText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '800'
+  },
+  postAuthorInfo: {
+    flex: 1
+  },
+  postAuthorName: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2
+  },
+  postMeta: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  postTime: {
+    color: '#666',
+    fontSize: 12,
+    marginRight: 8
+  },
+  postRole: {
+    color: '#00f0a8',
+    fontSize: 12,
+    fontWeight: '600'
+  },
+  bookmarkButton: {
+    padding: 4
+  },
+  postContent: {
+    color: '#fff',
+    fontSize: 15,
+    lineHeight: 20,
+    marginBottom: 12
+  },
+  postMedia: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 12
+  },
+  postActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)'
+  },
+  postAction: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  postActionText: {
+    color: '#666',
+    fontSize: 14,
+    marginLeft: 6
+  },
+  likedText: {
+    color: '#ff375f'
+  },
+  postCategory: {
+    backgroundColor: 'rgba(0, 240, 168, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6
+  },
+  postCategoryText: {
+    color: '#00f0a8',
+    fontSize: 10,
+    fontWeight: '600'
+  },
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: 40
+  },
+  emptyStateText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '600',
+    marginTop: 16,
+    marginBottom: 8
+  },
+  emptyStateSubtext: {
+    color: '#666',
+    fontSize: 14,
+    textAlign: 'center'
+  },
+  navigationTabs: {
     position: 'absolute',
-    top: Platform.OS === 'ios' ? 8 : 6,
+    bottom: 0,
     left: 0,
     right: 0,
+    flexDirection: 'row',
+    backgroundColor: 'rgba(0,0,0,0.95)',
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 12
+  },
+  navTab: {
+    flex: 1,
     alignItems: 'center',
-    zIndex: 1000,
-    elevation: 12,
+    paddingVertical: 8
   },
-  ripple: {
-    position: 'absolute',
-    width: 140,
-    height: 140,
-    borderRadius: 140 / 2,
-    backgroundColor: '#00f0a8',
-    opacity: 0.12,
-    zIndex: 0,
+  navTabActive: {
+    backgroundColor: 'rgba(0, 240, 168, 0.1)',
+    borderRadius: 12
   },
-  orbTouchable: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  orbInner: {
-    width: 56,
-    height: 56,
-    borderRadius: 999,
-    backgroundColor: '#00f0a8',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#00f0a8',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
-    shadowRadius: 20,
-    elevation: 16,
-  },
-  orbLabel: {
-    color: '#061015',
-    fontWeight: '900',
+  navTabText: {
+    color: '#666',
     fontSize: 10,
-    textTransform: 'uppercase',
-    letterSpacing: 1.2,
+    fontWeight: '600',
+    marginTop: 4
   },
-
-  sheetOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  overlayTouchable: { flex: 1 },
-  sheet: { backgroundColor: '#1a1a2e', borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 18, maxHeight: '78%' },
-  sheetHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  sheetTitle: { color: '#fff', fontSize: 20, fontWeight: '700' },
-  sheetContent: {},
-  sheetSubtitle: { color: '#666', fontSize: 14, marginBottom: 12 },
-
-  searchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.04)', borderRadius: 12, paddingHorizontal: 12, marginBottom: 14 },
-  searchIcon: { marginRight: 8 },
-  searchInput: { flex: 1, color: '#fff', paddingVertical: 10, fontSize: 15 },
-
-  skillsGrid: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 14 },
-  skillChip: { backgroundColor: 'rgba(0,240,168,0.08)', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 18, borderWidth: 1, borderColor: 'rgba(0,240,168,0.22)', marginRight: 8, marginBottom: 8 },
-  skillChipActive: { backgroundColor: '#00f0a8' },
-  skillText: { color: '#00f0a8', fontSize: 14, fontWeight: '600' },
-  skillTextActive: { color: '#061015' },
-
-  exploreButton: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#00f0a8', paddingVertical: 14, borderRadius: 14 },
-  exploreButtonText: { color: '#000', fontSize: 16, fontWeight: '700' },
-
-  createMenuOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'center', alignItems: 'center' },
-  createMenu: { backgroundColor: '#1a1a2e', borderRadius: 20, padding: 20, width: '80%' },
-  createMenuTitle: { color: '#fff', fontSize: 20, fontWeight: '700', marginBottom: 20, textAlign: 'center' },
-  createMenuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12 },
-  createMenuIcon: { width: 40, height: 40, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  createMenuLabel: { color: '#fff', fontSize: 16, fontWeight: '600' },
-
-  loader: { marginVertical: 40 },
-  emptyState: { alignItems: 'center', paddingVertical: 60 },
-  emptyStateText: { color: '#fff', fontSize: 18, fontWeight: '600', marginTop: 16, marginBottom: 8 },
-  emptyStateSubtext: { color: '#666', fontSize: 14, textAlign: 'center', paddingHorizontal: 20 },
+  navTabTextActive: {
+    color: '#00f0a8'
+  },
+  searchModal: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'flex-start',
+    paddingTop: Platform.OS === 'ios' ? 60 : 40
+  },
+  searchModalContent: {
+    backgroundColor: '#000'
+  },
+  searchModalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)'
+  },
+  searchInput: {
+    flex: 1,
+    color: '#fff',
+    fontSize: 16,
+    paddingVertical: 12
+  },
+  searchClose: {
+    padding: 8,
+    marginLeft: 10
+  }
 });
