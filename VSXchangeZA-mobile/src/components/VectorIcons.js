@@ -33,6 +33,39 @@ const VectorIcons = {
     </Svg>
   ),
 
+  analytics: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M3 3V19H21" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M7 14L10 10L14 16L19 10" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
+
+  network: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2"/>
+      <Path d="M19.4 15C17.2 17.2 14.8 19 12 19C9.2 19 6.8 17.2 4.6 15" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M19.4 9C17.2 6.8 14.8 5 12 5C9.2 5 6.8 6.8 4.6 9" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  ),
+
+  skills: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M14 2V8H20" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M16 13H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M16 17H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M10 9H9H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  ),
+
+  trending: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M23 6L13.5 15.5L8.5 10.5L1 18" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M17 6H23V12" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
+
   electrician: (color = '#00f0a8', size = 40) => (
     <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
       <Path d="M13 22L20 13L27 22L24 24L25 28L15 28L16 24L13 22Z" 
