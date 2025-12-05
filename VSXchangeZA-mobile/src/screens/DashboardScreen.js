@@ -26,12 +26,76 @@ import { fetchPosts } from "../api";
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, Circle, Rect } from 'react-native-svg';
 import { useFocusEffect } from '@react-navigation/native';
-import VectorIconsShared from '../components/VectorIcons';
 
 const { width, height } = Dimensions.get('window');
 
-// Use centralized vector icons
-const VectorIcons = VectorIconsShared;
+// PROFESSIONAL VECTOR ICONS SYSTEM - MATCHING PROFILE SCREEN
+const VectorIcons = {
+  home: (color = '#00f0a8', size = 28) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M9 22V12H15V22" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
+  
+  search: (color = '#666', size = 28) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="11" cy="11" r="8" stroke={color} strokeWidth="2"/>
+      <Path d="M21 21L16.65 16.65" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  ),
+  
+  marketplace: (color = '#666', size = 28) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.1 15.9 4.5 17 5.4 17H17M17 17C16.4696 17 15.9609 17.2107 15.5858 17.5858C15.2107 17.9609 15 18.4696 15 19C15 19.5304 15.2107 20.0391 15.5858 20.4142C15.9609 20.7893 16.4696 21 17 21C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19C19 18.4696 18.7893 17.9609 18.4142 17.5858C17.9609 17.2107 17.5304 17 17 17ZM9 19C9 19.5304 8.78929 20.0391 8.41421 20.4142C8.03914 20.7893 7.53043 21 7 21C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19C5 18.4696 5.21071 17.9609 5.58579 17.5858C5.96086 17.2107 6.46957 17 7 17C7.53043 17 8.03914 17.2107 8.41421 17.5858C8.78929 17.9609 9 18.4696 9 19Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
+  
+  profile: (color = '#666', size = 28) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
+
+  // Additional Professional Icons
+  analytics: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M3 3V19H21" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M7 14L10 10L14 16L19 10" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  ),
+
+  network: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2"/>
+      <Path d="M19.4 15C17.2 17.2 14.8 19 12 19C9.2 19 6.8 17.2 4.6 15" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M19.4 9C17.2 6.8 14.8 5 12 5C9.2 5 6.8 6.8 4.6 9" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  ),
+
+  skills: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" 
+        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M14 2V8H20" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M16 13H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M16 17H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+      <Path d="M10 9H9H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
+    </Svg>
+  ),
+
+  trending: (color = '#00f0a8', size = 24) => (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+      <Path d="M23 6L13.5 15.5L8.5 10.5L1 18" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+      <Path d="M17 6H23V12" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+    </Svg>
+  )
+};
 
 // ADVANCED DATA MANAGEMENT HOOK
 const useAdvancedDashboardData = () => {
@@ -784,85 +848,289 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 20
   },
-  avatarText: { color: '#000', fontSize: 22, fontWeight: '800' },
-  userInfo: { flex: 1 },
-  welcomeText: { color: '#666', fontSize: 13, marginBottom: 2 },
-  userName: { color: '#fff', fontSize: 18, fontWeight: '700', marginBottom: 2 },
-  userRole: { color: '#00f0a8', fontSize: 13, fontWeight: '600' },
-
-  statsCard: { margin: 18, borderRadius: 20, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(0, 240, 168, 0.16)' },
-  statsTitle: { color: '#fff', fontSize: 16, fontWeight: '700', marginBottom: 10, textAlign: 'center', paddingTop: 16 },
-  statsGrid: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12, paddingHorizontal: 12 },
-  statItem: { alignItems: 'center', flex: 1 },
-  statNumber: { color: '#00f0a8', fontSize: 22, fontWeight: '800', marginBottom: 4 },
-  statLabel: { color: '#666', fontSize: 12, fontWeight: '600' },
-  statDivider: { width: 1, height: 28, backgroundColor: 'rgba(255,255,255,0.06)' },
-  sparklineContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingBottom: 12, marginBottom: 10 },
-  sparklineText: { color: '#00f0a8', fontSize: 13, fontWeight: '600' },
-
-  section: { marginHorizontal: 18, marginBottom: 22 },
-  sectionHeader: { marginBottom: 12 },
-  sectionTitleRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 4 },
-  sectionTitle: { color: '#fff', fontSize: 18, fontWeight: '700', marginLeft: 8 },
-  sectionSubtitle: { color: '#666', fontSize: 14 },
-  refreshButton: { flexDirection: 'row', alignItems: 'center' },
-  seeAllText: { color: '#00f0a8', fontSize: 14, fontWeight: '600' },
-
-  recommendationCard: { width: 200, marginRight: 12, borderRadius: 12, overflow: 'hidden' },
-  recommendationHeader: { padding: 12 },
-  recommendationTitle: { color: '#fff', fontSize: 14, fontWeight: '600', lineHeight: 18 },
-  relevanceBadge: { backgroundColor: 'rgba(0,240,168,0.2)', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 8, marginTop: 8, alignSelf: 'flex-start' },
-  relevanceText: { color: '#00f0a8', fontSize: 10, fontWeight: '700' },
-  recommendationType: { color: '#666', fontSize: 12, padding: 12, paddingTop: 0 },
-
-  quickActions: { marginBottom: 16 },
-  quickActionItem: { alignItems: 'center', marginRight: 16 },
-  actionIcon: { width: 56, height: 56, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginBottom: 8 },
-  actionLabel: { color: '#fff', fontSize: 12, fontWeight: '600', textAlign: 'center' },
-
-  activeFilters: { marginHorizontal: 18, marginBottom: 12 },
-  filtersTitle: { color: '#fff', fontSize: 14, fontWeight: '600', marginBottom: 8 },
-  activeFilterChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(0,240,168,0.18)', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15, marginRight: 8 },
-  activeFilterText: { color: '#00f0a8', fontSize: 12, fontWeight: '600', marginRight: 6 },
-
-  feed: {},
-
-  postCard: { borderRadius: 16, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.08)', marginBottom: 12 },
-  postHeader: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10, padding: 16, paddingBottom: 6 },
-  postAvatar: { width: 50, height: 50, borderRadius: 12, backgroundColor: '#00f0a8', alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-  postAvatarImage: { width: '100%', height: '100%', borderRadius: 12 },
-  postAvatarText: { color: '#000', fontSize: 18, fontWeight: '800' },
-  postUserInfo: { flex: 1 },
-  postUserName: { color: '#fff', fontSize: 15, fontWeight: '700', marginBottom: 2 },
-  postTime: { color: '#666', fontSize: 12, marginBottom: 4 },
-  postSkills: { flexDirection: 'row', alignItems: 'center', flexWrap: 'wrap' },
-  skillTag: { backgroundColor: 'rgba(0,240,168,0.1)', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginRight: 6, marginTop: 4 },
-  skillTagText: { color: '#00f0a8', fontSize: 10, fontWeight: '600' },
-  moreSkills: { color: '#666', fontSize: 10, marginTop: 4 },
-  postMenu: { padding: 5 },
-  postContent: { color: '#fff', fontSize: 15, lineHeight: 20, marginBottom: 12, paddingHorizontal: 16 },
-  postMedia: { width: '100%', height: 200, marginBottom: 12 },
-  postActions: { flexDirection: 'row', justifyContent: 'space-around', paddingTop: 12, paddingHorizontal: 12, paddingBottom: 14, borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.06)' },
-  postAction: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 10 },
-  postActionText: { color: '#666', fontSize: 14, fontWeight: '600' },
-  likedText: { color: '#ff375f' },
-
-  navTabs: { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.95)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 10, paddingVertical: 10 },
-  navTab: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 15, position: 'relative' },
-  navTabActive: { backgroundColor: 'rgba(0,240,168,0.14)' },
-  navTabText: { color: '#666', fontSize: 10, fontWeight: '600', marginTop: 4 },
-  navTabTextActive: { color: '#00f0a8' },
-  messageBadge: {
-    position: 'absolute',
-    top: 4,
-    right: 20,
-    backgroundColor: '#ff375f',
-    borderRadius: 8,
-    minWidth: 16,
-    height: 16,
+  profileInitials: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 20,
+    backgroundColor: '#00f0a8',
+    alignItems: 'center',
+    justifyContent: 'center'
+  },
+  profileInitialsText: {
+    color: '#000',
+    fontSize: 18,
+    fontWeight: '800'
+  },
+  welcomeSection: {
+    marginBottom: 15
+  },
+  welcomeText: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '700',
+    marginBottom: 4
+  },
+  welcomeSubtext: {
+    color: '#666',
+    fontSize: 14
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderRadius: 12,
+    paddingHorizontal: 15,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)'
+  },
+  searchIcon: {
+    marginRight: 10
+  },
+  searchPlaceholder: {
+    color: '#666',
+    fontSize: 16,
+    flex: 1
+  },
+  scrollView: {
+    flex: 1
+  },
+  statsCard: {
+    margin: 20,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 240, 168, 0.1)'
+  },
+  statsGradient: {
+    padding: 20
+  },
+  statsHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 20
+  },
+  statsTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700'
+  },
+  refreshButton: {
+    padding: 6,
+    borderRadius: 12,
+    backgroundColor: 'rgba(0, 240, 168, 0.1)'
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between'
+  },
+  statItem: {
+    width: '48%',
+    marginBottom: 20
+  },
+  statIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(0, 240, 168, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 8
+  },
+  networkIcon: {
+    backgroundColor: 'rgba(30, 144, 255, 0.1)'
+  },
+  reputationIcon: {
+    backgroundColor: 'rgba(255, 215, 0, 0.1)'
+  },
+  opportunityIcon: {
+    backgroundColor: 'rgba(76, 217, 100, 0.1)'
+  },
+  statNumber: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 4
+  },
+  statLabel: {
+    color: '#666',
+    fontSize: 12,
+    fontWeight: '600',
+    marginBottom: 4
+  },
+  statSubtext: {
+    color: '#00f0a8',
+    fontSize: 10,
+    fontWeight: '600'
+  },
+  progressContainer: {
+    height: 4,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 2,
+    overflow: 'hidden',
+    marginTop: 4
+  },
+  progressBar: {
+    height: '100%',
+    backgroundColor: '#00f0a8',
+    borderRadius: 2
+  },
+  ratingContainer: {
+    flexDirection: 'row',
+    marginTop: 4
+  },
+  quickActionsContainer: {
+    marginHorizontal: 20,
+    marginBottom: 20
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 15
+  },
+  quickActionsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between'
+  },
+  quickAction: {
+    width: '48%',
+    marginBottom: 12
+  },
+  actionIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 8
+  },
+  actionLabel: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+    textAlign: 'center'
+  },
+  postsSection: {
+    marginHorizontal: 20,
+    marginBottom: 100
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15
+  },
+  postCard: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 12,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)'
+  },
+  postHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12
+  },
+  postAuthor: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1
+  },
+  postAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 12
+  },
+  postAvatarFallback: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#00f0a8',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12
+  },
+  postAvatarText: {
+    color: '#000',
+    fontSize: 16,
+    fontWeight: '800'
+  },
+  postAuthorInfo: {
+    flex: 1
+  },
+  postAuthorName: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2
+  },
+  postMeta: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  postTime: {
+    color: '#666',
+    fontSize: 12,
+    marginRight: 8
+  },
+  postRole: {
+    color: '#00f0a8',
+    fontSize: 12,
+    fontWeight: '600'
+  },
+  bookmarkButton: {
+    padding: 4
+  },
+  postContent: {
+    color: '#fff',
+    fontSize: 15,
+    lineHeight: 20,
+    marginBottom: 12
+  },
+  postMedia: {
+    width: '100%',
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 12
+  },
+  postActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.05)'
+  },
+  postAction: {
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  postActionText: {
+    color: '#666',
+    fontSize: 14,
+    marginLeft: 6
+  },
+  likedText: {
+    color: '#ff375f'
+  },
+  postCategory: {
+    backgroundColor: 'rgba(0, 240, 168, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6
+  },
+  postCategoryText: {
+    color: '#00f0a8',
+    fontSize: 10,
+    fontWeight: '600'
   },
   emptyState: {
     alignItems: 'center',
@@ -891,6 +1159,24 @@ const styles = StyleSheet.create({
     borderTopColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: 10,
     paddingVertical: 12
+  },
+  navTab: {
+    flex: 1,
+    alignItems: 'center',
+    paddingVertical: 8
+  },
+  navTabActive: {
+    backgroundColor: 'rgba(0, 240, 168, 0.1)',
+    borderRadius: 12
+  },
+  navTabText: {
+    color: '#666',
+    fontSize: 10,
+    fontWeight: '600',
+    marginTop: 4
+  },
+  navTabTextActive: {
+    color: '#00f0a8'
   },
   searchModal: {
     flex: 1,
