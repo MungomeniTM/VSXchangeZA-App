@@ -1,4 +1,4 @@
-// src/components/VectorIconsShared.js - UNIFIED VECTOR ICONS FOR BOTH SCREENS
+ // src/components/VectorIconsShared.js - UNIFIED VECTOR ICONS FOR BOTH SCREENS
 import React from 'react';
 import { View } from 'react-native';
 import Svg, { Path, Circle, Rect, G } from 'react-native-svg';
