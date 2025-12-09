@@ -1,4 +1,4 @@
-// src/screens/DashboardScreen.js - FIXED & OPTIMIZED VERSION
+// src/screens/DashboardScreen.js - UPDATED WITH UNIFIED NAVIGATION
 import React, { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import {
   View,
@@ -23,6 +23,9 @@ import {
 import Icon from 'react-native-vector-icons/Ionicons';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { fetchPosts } from "../api";
+
+// Import the shared vector icons
+import VectorIconsShared from '../components/VectorIconsShared';
 
 const { width, height } = Dimensions.get('window');
 
@@ -126,6 +129,74 @@ const useGlobalUser = () => {
   return { globalUser, updateGlobalUser, loadGlobalUser };
 };
 
+// Unified Navigation Tabs Component
+const UnifiedNavigationTabs = ({ activeTab, onTabChange, navigation, unreadMessages = 0 }) => {
+  const tabs = [
+    { 
+      id: 'feed', 
+      icon: 'home', 
+      label: 'Home',
+      screen: 'DashboardScreen'
+    },
+    { 
+      id: 'explore', 
+      icon: 'search', 
+      label: 'Discover',
+      screen: 'DiscoverScreen'
+    },
+    { 
+      id: 'create', 
+      icon: 'add', 
+      label: 'Create',
+      screen: 'CreatePost'
+    },
+    { 
+      id: 'messages', 
+      icon: 'chatbubble', 
+      label: 'Inbox',
+      screen: 'Messages'
+    },
+    { 
+      id: 'profile', 
+      icon: 'person', 
+      label: 'Profile',
+      screen: 'ProfileScreen'
+    },
+  ];
+
+  const handleTabPress = (tab) => {
+    if (tab.screen && navigation) {
+      navigation.navigate(tab.screen);
+    }
+    onTabChange(tab.id);
+  };
+
+  return (
+    <View style={styles.navTabs}>
+      {tabs.map((tab) => (
+        <TouchableOpacity 
+          key={`tab-${tab.id}`} 
+          style={[styles.navTab, activeTab === tab.id && styles.navTabActive]} 
+          onPress={() => handleTabPress(tab)}
+        >
+          {activeTab === tab.id ? 
+            VectorIconsShared[tab.icon]('#00f0a8', 24) : 
+            VectorIconsShared[`${tab.icon}Outline`] ? 
+            VectorIconsShared[`${tab.icon}Outline`]('#666', 24) : 
+            VectorIconsShared[tab.icon]('#666', 24)
+          }
+          <Text style={[styles.navTabText, activeTab === tab.id && styles.navTabTextActive]}>{tab.label}</Text>
+          {tab.id === 'messages' && unreadMessages > 0 && (
+            <View style={styles.messageBadge}>
+              <Text style={styles.messageBadgeText}>{unreadMessages}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+};
+
 export default function DashboardScreen({ navigation }) {
   // Enhanced state management
   const { globalUser, updateGlobalUser } = useGlobalUser();
@@ -167,7 +238,7 @@ export default function DashboardScreen({ navigation }) {
       explore: () => setExploreOpen(true),
       create: () => setShowCreateMenu(true),
       messages: () => navigation?.navigate?.('Messages'),
-      profile: () => navigation?.navigate?.('Profile'),
+      profile: () => navigation?.navigate?.('ProfileScreen'),
       analytics: () => navigation?.navigate?.('Analytics'),
       network: () => navigation?.navigate?.('Network'),
       farms: () => navigation?.navigate?.('FarmManagement'),
@@ -362,11 +433,10 @@ export default function DashboardScreen({ navigation }) {
               )}
             </View>
             <TouchableOpacity style={styles.postMenu} onPress={handleBookmark}>
-              <Icon 
-                name={bookmarked ? "bookmark" : "bookmark-outline"} 
-                size={20} 
-                color={bookmarked ? "#00f0a8" : "#666"} 
-              />
+              {bookmarked ? 
+                VectorIconsShared.bookmark('#00f0a8', 20) : 
+                VectorIconsShared.bookmark('#666', 20)
+              }
             </TouchableOpacity>
           </View>
 
@@ -378,11 +448,10 @@ export default function DashboardScreen({ navigation }) {
 
           <View style={styles.postActions}>
             <TouchableOpacity style={styles.postAction} onPress={handleLike}>
-              <Icon 
-                name={liked ? "heart" : "heart-outline"} 
-                size={20} 
-                color={liked ? "#ff375f" : "#666"} 
-              />
+              {liked ? 
+                VectorIconsShared.heart('#ff375f', 20) : 
+                VectorIconsShared.heart('#666', 20)
+              }
               <Text style={[styles.postActionText, liked && styles.likedText]}>{likeCount}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.postAction}>
@@ -390,7 +459,7 @@ export default function DashboardScreen({ navigation }) {
               <Text style={styles.postActionText}>{comments}</Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.postAction} onPress={handleShare}>
-              <Icon name="share-social-outline" size={20} color="#666" />
+              {VectorIconsShared.shareSocial('#666', 20)}
               <Text style={styles.postActionText}>{shares}</Text>
             </TouchableOpacity>
           </View>
@@ -413,7 +482,7 @@ export default function DashboardScreen({ navigation }) {
             style={styles.iconButton} 
             onPress={() => handleNavigation('notifications')}
           >
-            <Icon name="notifications-outline" size={20} color="#00f0a8" />
+            {VectorIconsShared.notifications('#00f0a8', 20)}
             {notifications.length > 0 && (
               <View style={styles.notificationBadge}>
                 <Text style={styles.notificationText}>{notifications.length}</Text>
@@ -421,7 +490,7 @@ export default function DashboardScreen({ navigation }) {
             )}
           </TouchableOpacity>
           <TouchableOpacity style={styles.iconButton} onPress={logout}>
-            <Icon name="log-out-outline" size={20} color="#ff6b6b" />
+            {VectorIconsShared.logOut('#ff6b6b', 20)}
           </TouchableOpacity>
         </View>
       </View>
@@ -473,7 +542,7 @@ export default function DashboardScreen({ navigation }) {
         </View>
 
         <View style={styles.sparklineContainer}>
-          <Icon name="trending-up" size={16} color="#00f0a8" />
+          {VectorIconsShared.trendingUp('#00f0a8', 16)}
           <Text style={styles.sparklineText}>
             {aiRecommendations.length > 0 ? 'Personalized matches available' : 'Building your network...'}
           </Text>
@@ -490,7 +559,7 @@ export default function DashboardScreen({ navigation }) {
       <Animated.View style={[styles.section, { opacity: fadeAnim }]}>
         <View style={styles.sectionHeader}>
           <View style={styles.sectionTitleRow}>
-            <Icon name="sparkles" size={20} color="#00f0a8" />
+            {VectorIconsShared.sparkles('#00f0a8', 20)}
             <Text style={styles.sectionTitle}>AI Recommendations</Text>
           </View>
           <Text style={styles.sectionSubtitle}>Curated based on your profile</Text>
@@ -540,7 +609,12 @@ export default function DashboardScreen({ navigation }) {
         ].map((action, index) => (
           <TouchableOpacity key={`action-${index}`} style={styles.quickActionItem} onPress={action.onPress}>
             <View style={[styles.actionIcon, { backgroundColor: action.color }]}>
-              <Icon name={action.icon} size={22} color="#000" />
+              {action.icon === 'analytics' && VectorIconsShared.analytics('#000', 22)}
+              {action.icon === 'people' && VectorIconsShared.people('#000', 22)}
+              {action.icon === 'leaf' && VectorIconsShared.leaf('#000', 22)}
+              {action.icon === 'construct' && VectorIconsShared.construct('#000', 22)}
+              {action.icon === 'chatbubbles' && VectorIconsShared.chatbubbles('#000', 22)}
+              {action.icon === 'add-circle' && <Icon name="add-circle" size={22} color="#000" />}
             </View>
             <Text style={styles.actionLabel}>{action.label}</Text>
           </TouchableOpacity>
@@ -585,7 +659,11 @@ export default function DashboardScreen({ navigation }) {
               }}
             >
               <View style={[styles.createMenuIcon, { backgroundColor: item.color }]}>
-                <Icon name={item.icon} size={22} color="#000" />
+                {item.icon === 'document-text' && VectorIconsShared.documentText('#000', 22)}
+                {item.icon === 'camera' && VectorIconsShared.camera('#000', 22)}
+                {item.icon === 'videocam' && VectorIconsShared.videocam('#000', 22)}
+                {item.icon === 'megaphone' && VectorIconsShared.megaphone('#000', 22)}
+                {item.icon === 'help-circle' && VectorIconsShared.helpCircle('#000', 22)}
               </View>
               <Text style={styles.createMenuLabel}>{item.label}</Text>
             </TouchableOpacity>
@@ -593,37 +671,6 @@ export default function DashboardScreen({ navigation }) {
         </Animated.View>
       </Pressable>
     </Modal>
-  );
-
-  // Enhanced Navigation Tabs
-  const NavigationTabs = () => (
-    <View style={styles.navTabs}>
-      {[
-        { id: 'feed', icon: 'home', label: 'Home' },
-        { id: 'explore', icon: 'search', label: 'Discover' },
-        { id: 'create', icon: 'add', label: 'Create' },
-        { id: 'messages', icon: 'chatbubble', label: 'Inbox' },
-        { id: 'profile', icon: 'person', label: 'Profile' },
-      ].map((tab) => (
-        <TouchableOpacity 
-          key={`tab-${tab.id}`} 
-          style={[styles.navTab, activeTab === tab.id && styles.navTabActive]} 
-          onPress={() => handleNavigation(tab.id)}
-        >
-          <Icon 
-            name={activeTab === tab.id ? tab.icon : `${tab.icon}-outline`} 
-            size={24} 
-            color={activeTab === tab.id ? '#00f0a8' : '#666'} 
-          />
-          <Text style={[styles.navTabText, activeTab === tab.id && styles.navTabTextActive]}>{tab.label}</Text>
-          {tab.id === 'messages' && unreadMessages > 0 && (
-            <View style={styles.messageBadge}>
-              <Text style={styles.messageBadgeText}>{unreadMessages}</Text>
-            </View>
-          )}
-        </TouchableOpacity>
-      ))}
-    </View>
   );
 
   // Enhanced Explore Sheet
@@ -635,7 +682,7 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.sheetHeader}>
             <Text style={styles.sheetTitle}>Advanced Search</Text>
             <TouchableOpacity onPress={() => setExploreOpen(false)}>
-              <Icon name="close" size={24} color="#00f0a8" />
+              {VectorIconsShared.close('#00f0a8', 24)}
             </TouchableOpacity>
           </View>
 
@@ -643,7 +690,7 @@ export default function DashboardScreen({ navigation }) {
             <Text style={styles.sheetSubtitle}>Find skills and connect with experts</Text>
 
             <View style={styles.searchContainer}>
-              <Icon name="search" size={18} color="#666" style={styles.searchIcon} />
+              {VectorIconsShared.search('#666', 18)}
               <TextInput 
                 style={styles.searchInput} 
                 placeholder="Search skills, services, or users..." 
@@ -793,7 +840,7 @@ export default function DashboardScreen({ navigation }) {
                       return next;
                     });
                   }}>
-                    <Icon name="close" size={14} color="#00f0a8" />
+                    {VectorIconsShared.close('#00f0a8', 14)}
                   </TouchableOpacity>
                 </View>
               ))}
@@ -805,7 +852,7 @@ export default function DashboardScreen({ navigation }) {
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Community Feed</Text>
             <TouchableOpacity onPress={loadPosts} style={styles.refreshButton}>
-              <Icon name="refresh" size={18} color="#00f0a8" />
+              {VectorIconsShared.refresh('#00f0a8', 18)}
               <Text style={styles.seeAllText}> Refresh</Text>
             </TouchableOpacity>
           </View>
@@ -832,14 +879,21 @@ export default function DashboardScreen({ navigation }) {
         </View>
       </ScrollView>
 
-      <NavigationTabs />
+      {/* Use Unified Navigation Tabs */}
+      <UnifiedNavigationTabs 
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        navigation={navigation}
+        unreadMessages={unreadMessages}
+      />
+      
       <ExploreSheet />
       <CreatePostMenu />
 
       {/* Enhanced Floating Action Button */}
       <TouchableOpacity style={styles.fab} onPress={() => setShowCreateMenu(true)}>
         <View style={styles.fabInner}>
-          <Icon name="add" size={28} color="#000" />
+          {VectorIconsShared.add('#000', 28)}
         </View>
       </TouchableOpacity>
     </SafeAreaView>
@@ -978,11 +1032,33 @@ const styles = StyleSheet.create({
   postActionText: { color: '#666', fontSize: 14, fontWeight: '600' },
   likedText: { color: '#ff375f' },
 
-  navTabs: { flexDirection: 'row', backgroundColor: 'rgba(0,0,0,0.95)', borderTopWidth: 1, borderTopColor: 'rgba(255,255,255,0.08)', paddingHorizontal: 10, paddingVertical: 10 },
-  navTab: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 15, position: 'relative' },
-  navTabActive: { backgroundColor: 'rgba(0,240,168,0.14)' },
-  navTabText: { color: '#666', fontSize: 10, fontWeight: '600', marginTop: 4 },
-  navTabTextActive: { color: '#00f0a8' },
+  navTabs: { 
+    flexDirection: 'row', 
+    backgroundColor: 'rgba(0,0,0,0.95)', 
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(255,255,255,0.08)', 
+    paddingHorizontal: 10, 
+    paddingVertical: 10 
+  },
+  navTab: { 
+    flex: 1, 
+    alignItems: 'center', 
+    paddingVertical: 8, 
+    borderRadius: 15, 
+    position: 'relative' 
+  },
+  navTabActive: { 
+    backgroundColor: 'rgba(0,240,168,0.14)' 
+  },
+  navTabText: { 
+    color: '#666', 
+    fontSize: 10, 
+    fontWeight: '600', 
+    marginTop: 4 
+  },
+  navTabTextActive: { 
+    color: '#00f0a8' 
+  },
   messageBadge: {
     position: 'absolute',
     top: 4,
@@ -1001,7 +1077,19 @@ const styles = StyleSheet.create({
   },
 
   fab: { position: 'absolute', right: 20, bottom: 90 },
-  fabInner: { width: 60, height: 60, borderRadius: 30, backgroundColor: '#00f0a8', alignItems: 'center', justifyContent: 'center', shadowColor: '#00f0a8', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8, elevation: 8 },
+  fabInner: { 
+    width: 60, 
+    height: 60, 
+    borderRadius: 30, 
+    backgroundColor: '#00f0a8', 
+    alignItems: 'center', 
+    justifyContent: 'center', 
+    shadowColor: '#00f0a8', 
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.3, 
+    shadowRadius: 8, 
+    elevation: 8 
+  },
 
   floatingOrb: {
     position: 'absolute',
