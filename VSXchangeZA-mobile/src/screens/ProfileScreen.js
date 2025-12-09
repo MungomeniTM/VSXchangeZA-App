@@ -1,4 +1,4 @@
-// src/screens/ProfileScreen.js
+// src/screens/ProfileScreen.js - UPDATED WITH UNIFIED NAVIGATION
 import React, { useState, useEffect, useRef, useCallback, useContext } from "react";
 import {
   View,
@@ -25,142 +25,17 @@ import {
   Pressable
 } from "react-native";
 import Icon from 'react-native-vector-icons/Ionicons';
-import MaterialIcon from 'react-native-vector-icons/MaterialIcons';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from 'expo-image-picker';
 import * as Location from 'expo-location';
 import * as FileSystem from 'expo-file-system';
 import { AppContext } from '../context/AppContext';
 import { LinearGradient } from 'expo-linear-gradient';
-import Svg, { Path, Circle, Rect, G, Defs, RadialGradient, Stop } from 'react-native-svg';
 
-
+// Import the shared vector icons
+import VectorIconsShared from '../components/VectorIconsShared';
 
 const { width, height } = Dimensions.get('window');
-
-// Inlined vector icons (copied from former components/VectorIcons.js)
-const VectorIconsShared = {
-  home: (color = '#00f0a8', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M9 22V12H15V22" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  search: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx="11" cy="11" r="8" stroke={color} strokeWidth="2"/>
-      <Path d="M21 21L16.65 16.65" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  marketplace: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.1 15.9 4.5 17 5.4 17H17M17 17C16.4696 17 15.9609 17.2107 15.5858 17.5858C15.2107 17.9609 15 18.4696 15 19C15 19.5304 15.2107 20.0391 15.5858 20.4142C15.9609 20.7893 16.4696 21 17 21C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19C19 18.4696 18.7893 17.9609 18.4142 17.5858C17.9609 17.2107 17.5304 17 17 17ZM9 19C9 19.5304 8.78929 20.0391 8.41421 20.4142C8.03914 20.7893 7.53043 21 7 21C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19C5 18.4696 5.21071 17.9609 5.58579 17.5858C5.96086 17.2107 6.46957 17 7 17C7.53043 17 8.03914 17.2107 8.41421 17.5858C8.78929 17.9609 9 18.4696 9 19Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  profile: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  analytics: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 3V19H21" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M7 14L10 10L14 16L19 10" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  network: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx="12" cy="12" r="3" stroke={color} strokeWidth="2"/>
-      <Path d="M19.4 15C17.2 17.2 14.8 19 12 19C9.2 19 6.8 17.2 4.6 15" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M19.4 9C17.2 6.8 14.8 5 12 5C9.2 5 6.8 6.8 4.6 9" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  skills: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M14 2V8H20" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M16 13H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M16 17H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M10 9H9H8" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  trending: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M23 6L13.5 15.5L8.5 10.5L1 18" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M17 6H23V12" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  electrician: (color = '#00f0a8', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M13 22L20 13L27 22L24 24L25 28L15 28L16 24L13 22Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M20 13V7" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M20 31V28" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  farmer: (color = '#4CD964', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M12 28L15 25L18 28L22 24L25 27L28 24" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M8 16C8 16 10 14 12 16C14 18 16 16 16 16C16 16 18 14 20 16C22 18 24 16 24 16C24 16 26 14 28 16C30 18 32 16 32 16V28C32 28.5304 31.7893 29.0391 31.4142 29.4142C31.0391 29.7893 30.5304 30 30 30H10C9.46957 30 8.96086 29.7893 8.58579 29.4142C8.21071 29.0391 8 28.5304 8 28V16Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M8 20H32" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  client: (color = '#007AFF', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M28 12H12C10.8954 12 10 12.8954 10 14V26C10 27.1046 10.8954 28 12 28H28C29.1046 28 30 27.1046 30 26V14C30 12.8954 29.1046 12 28 12Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M22 12V10C22 8.89543 21.1046 8 20 8C18.8954 8 18 8.89543 18 10V12" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M15 18H25" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M15 22H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  calendar: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M16 2V6" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M8 2V6" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M3 10H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  message: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  settings: (color = '#666', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M19.4 15C19.2662 15.466 19.1332 15.933 19.0002 16.3999C19.0306 16.6555 19.0306 16.9151 19.0002 17.1707C18.779 18.2124 18.346 19.1941 17.728 20.0519C17.5729 20.2623 17.3815 20.4441 17.1626 20.5886C16.9437 20.7331 16.7011 20.8378 16.4465 20.8978C16.1919 20.9578 15.9294 20.9721 15.6702 20.94C14.9157 20.8498 14.1792 20.6247 13.5 20.2769L12 21.2769C11.715 21.462 11.415 21.6219 11.1 21.7569C10.9291 21.8338 10.749 21.8908 10.564 21.9269C10.2535 21.9861 9.93653 22.0004 9.622 21.9694C8.952 21.8969 8.321 21.6194 7.8 21.1694C7.51067 20.913 7.26082 20.6166 7.058 20.2899C6.429 19.2769 6.429 18.0469 7.058 17.0339C7.26082 16.7072 7.51067 16.4108 7.8 16.1544C8.321 15.7044 8.952 15.4269 9.622 15.3544C9.93653 15.3234 10.2535 15.3377 10.564 15.3969C10.749 15.433 10.9291 15.49 11.1 15.5669C11.415 15.7019 11.715 15.8619 12 16.0469L13.5 15.0469C14.1792 14.6991 14.9157 14.474 15.6702 14.3839C15.9294 14.3518 16.1919 14.3661 16.4465 14.4261C16.7011 14.4861 16.9437 14.5908 17.1626 14.7353C17.3815 14.8798 17.5729 15.0616 17.728 15.272C18.346 16.1298 18.779 17.1115 19.0002 18.1532C19.0306 18.4088 19.0306 18.6684 19.0002 18.924C19.1332 19.3909 19.2662 19.8579 19.4 20.3239" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  )
-};
 
 // ENHANCED ENTERPRISE STATE MANAGEMENT WITH FIXED ROLE NAVIGATION
 const useAdvancedEnterpriseProfile = () => {
@@ -843,7 +718,7 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
           
           {editing && !uploading && !processing && (
             <View style={styles.editBadge}>
-              <Icon name="camera" size={16} color="#000" />
+              {VectorIconsShared.camera('#000', 16)}
             </View>
           )}
         </View>
@@ -867,7 +742,7 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
               style={styles.imageOption}
               onPress={() => handleImageSelect('camera')}
             >
-              <Icon name="camera" size={24} color="#00f0a8" />
+              {VectorIconsShared.camera('#00f0a8', 24)}
               <Text style={styles.imageOptionText}>Take Photo</Text>
             </TouchableOpacity>
             
@@ -888,7 +763,7 @@ const ProfileImageEditor = ({ profileImage, onImageUpdate, editing }) => {
                   Alert.alert('Success', 'Profile picture removed');
                 }}
               >
-                <Icon name="trash" size={24} color="#ff6b6b" />
+                {VectorIconsShared.trash('#ff6b6b', 24)}
                 <Text style={[styles.imageOptionText, styles.removeOptionText]}>
                   Remove Photo
                 </Text>
@@ -1120,7 +995,7 @@ const EditableField = ({
           </Text>
         </View>
         {editable && (
-          <Icon name="create-outline" size={16} color="#00f0a8" />
+          {VectorIconsShared.create('#00f0a8', 16)}
         )}
       </TouchableOpacity>
     );
@@ -1144,7 +1019,7 @@ const EditableField = ({
             >
               <Text style={styles.optionText}>{option}</Text>
               {tempValue === option && (
-                <Icon name="checkmark" size={16} color="#00f0a8" />
+                {VectorIconsShared.checkmark('#00f0a8', 16)}
               )}
             </TouchableOpacity>
           ))}
@@ -1181,7 +1056,7 @@ const EditableField = ({
       
       {error ? (
         <View style={styles.errorContainer}>
-          <Icon name="warning" size={12} color="#ff6b6b" />
+          {VectorIconsShared.warning('#ff6b6b', 12)}
           <Text style={styles.errorText}>{error}</Text>
         </View>
       ) : null}
@@ -1261,7 +1136,7 @@ const UserTypeSelector = ({
           style={styles.detailsButton}
           activeOpacity={0.7}
         >
-          <Icon name="chevron-forward" size={20} color="#00f0a8" />
+          {VectorIconsShared.chevronForward('#00f0a8', 20)}
         </TouchableOpacity>
       </View>
     );
@@ -1276,7 +1151,7 @@ const UserTypeSelector = ({
         </Text>
       </View>
       
-      <ScrollView style={styles.typeOptions} nestedScrollEnabled contentContainerStyle={{ paddingBottom: 12 }}>
+      <View style={styles.typeOptions}>
         {userTypes.map((userType) => (
           <TouchableOpacity
             key={userType.type}
@@ -1300,7 +1175,7 @@ const UserTypeSelector = ({
               </View>
               {currentType === userType.type && (
                 <View style={[styles.selectedBadge, { backgroundColor: userType.color }]}>
-                  <Icon name="checkmark" size={16} color="#000" />
+                  {VectorIconsShared.checkmark('#000', 16)}
                 </View>
               )}
             </View>
@@ -1321,7 +1196,7 @@ const UserTypeSelector = ({
               <View style={styles.featuresList}>
                 {userType.features.map((feature, index) => (
                   <View key={index} style={styles.featureItem}>
-                    <Icon name="checkmark-circle" size={14} color={userType.color} />
+                    {VectorIconsShared.checkmarkCircle(userType.color, 14)}
                     <Text style={styles.featureText}>{feature}</Text>
                   </View>
                 ))}
@@ -1329,10 +1204,10 @@ const UserTypeSelector = ({
             </View>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+      </View>
 
       <View style={styles.roleChangeNote}>
-        <Icon name="information-circle" size={16} color="#00f0a8" />
+        {VectorIconsShared.informationCircle('#00f0a8', 16)}
         <Text style={styles.roleChangeNoteText}>
           Changing your role will adjust available features but preserve your existing data.
         </Text>
@@ -1422,7 +1297,7 @@ const SkillManager = ({
           <Text style={styles.skillYears}>• {skill.years} year{skill.years !== 1 ? 's' : ''}</Text>
           {skill.certified && (
             <View style={styles.certifiedBadge}>
-              <Icon name="shield-checkmark" size={10} color="#000" />
+              {VectorIconsShared.shieldCheckmark('#000', 10)}
             </View>
           )}
         </View>
@@ -1437,14 +1312,14 @@ const SkillManager = ({
             style={styles.editSkillButton}
             activeOpacity={0.7}
           >
-            <Icon name="create-outline" size={16} color="#00f0a8" />
+            {VectorIconsShared.create('#00f0a8', 16)}
           </TouchableOpacity>
           <TouchableOpacity 
             onPress={onRemove} 
             style={styles.removeSkillButton}
             activeOpacity={0.7}
           >
-            <Icon name="close" size={16} color="#ff6b6b" />
+            {VectorIconsShared.close('#ff6b6b', 16)}
           </TouchableOpacity>
         </View>
       )}
@@ -1471,7 +1346,7 @@ const SkillManager = ({
             onPress={() => setShowAddSkill(true)}
             activeOpacity={0.7}
           >
-            <Icon name="add" size={20} color="#00f0a8" />
+            {VectorIconsShared.add('#00f0a8', 20)}
             <Text style={styles.addSkillText}>Add Skill</Text>
           </TouchableOpacity>
         )}
@@ -1532,7 +1407,7 @@ const SkillManager = ({
                 }}
                 activeOpacity={0.7}
               >
-                <Icon name="close" size={24} color="#00f0a8" />
+                {VectorIconsShared.close('#00f0a8', 24)}
               </TouchableOpacity>
             </View>
 
@@ -1718,11 +1593,7 @@ const SkillManager = ({
                       styles.certifiedToggleSwitch,
                       (editingSkill ? editingSkill.certified : newSkill.certified) && styles.certifiedToggleSwitchActive
                     ]}>
-                      <Icon 
-                        name={(editingSkill ? editingSkill.certified : newSkill.certified) ? "checkmark" : "close"} 
-                        size={12} 
-                        color="#000" 
-                      />
+                      {VectorIconsShared.checkmark('#000', 12)}
                     </View>
                     <View style={styles.certifiedToggleTexts}>
                       <Text style={styles.certifiedToggleText}>
@@ -1937,7 +1808,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <Icon name="close" size={24} color="#00f0a8" />
+              {VectorIconsShared.close('#00f0a8', 24)}
             </TouchableOpacity>
           </View>
 
@@ -2018,7 +1889,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
                   disabled={!newCrop.trim()}
                   activeOpacity={0.7}
                 >
-                  <Icon name="add" size={20} color="#00f0a8" />
+                  {VectorIconsShared.add('#00f0a8', 20)}
                 </TouchableOpacity>
               </View>
               <View style={styles.selectedItems}>
@@ -2029,7 +1900,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
                       onPress={() => removeCrop(crop)}
                       activeOpacity={0.7}
                     >
-                      <Icon name="close" size={16} color="#ff6b6b" />
+                      {VectorIconsShared.close('#ff6b6b', 16)}
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -2053,7 +1924,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
                   disabled={!newEquipment.trim()}
                   activeOpacity={0.7}
                 >
-                  <Icon name="add" size={20} color="#00f0a8" />
+                  {VectorIconsShared.add('#00f0a8', 20)}
                 </TouchableOpacity>
               </View>
               <View style={styles.selectedItems}>
@@ -2064,7 +1935,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
                       onPress={() => removeEquipment(item)}
                       activeOpacity={0.7}
                     >
-                      <Icon name="close" size={16} color="#ff6b6b" />
+                      {VectorIconsShared.close('#ff6b6b', 16)}
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -2126,7 +1997,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
                   disabled={!newPractice.trim()}
                   activeOpacity={0.7}
                 >
-                  <Icon name="add" size={20} color="#00f0a8" />
+                  {VectorIconsShared.add('#00f0a8', 20)}
                 </TouchableOpacity>
               </View>
               <View style={styles.selectedItems}>
@@ -2138,7 +2009,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
                       onPress={() => removePractice(practice)}
                       activeOpacity={0.7}
                     >
-                      <Icon name="close" size={16} color="#ff6b6b" />
+                      {VectorIconsShared.close('#ff6b6b', 16)}
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -2162,7 +2033,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
                   disabled={!newMarket.trim()}
                   activeOpacity={0.7}
                 >
-                  <Icon name="add" size={20} color="#00f0a8" />
+                  {VectorIconsShared.add('#00f0a8', 20)}
                 </TouchableOpacity>
               </View>
               <View style={styles.selectedItems}>
@@ -2174,7 +2045,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
                       onPress={() => removeMarket(market)}
                       activeOpacity={0.7}
                     >
-                      <Icon name="close" size={16} color="#ff6b6b" />
+                      {VectorIconsShared.close('#ff6b6b', 16)}
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -2195,11 +2066,7 @@ const FarmerProfileManager = ({ farmDetails = {}, onUpdate, editing, isVisible, 
                     styles.organicToggleSwitch,
                     tempFarmDetails.organicCertified && styles.organicToggleSwitchActive
                   ]}>
-                    <Icon 
-                      name={tempFarmDetails.organicCertified ? "checkmark" : "close"} 
-                      size={12} 
-                      color="#000" 
-                    />
+                    {VectorIconsShared.checkmark('#000', 12)}
                   </View>
                   <View style={styles.organicToggleTexts}>
                     <Text style={styles.organicToggleText}>
@@ -2397,7 +2264,7 @@ const ClientProfileManager = ({ clientDetails = {}, onUpdate, editing, isVisible
               onPress={onClose}
               activeOpacity={0.7}
             >
-              <Icon name="close" size={24} color="#00f0a8" />
+              {VectorIconsShared.close('#00f0a8', 24)}
             </TouchableOpacity>
           </View>
 
@@ -2472,7 +2339,7 @@ const ClientProfileManager = ({ clientDetails = {}, onUpdate, editing, isVisible
                   disabled={!newProjectType.trim()}
                   activeOpacity={0.7}
                 >
-                  <Icon name="add" size={20} color="#00f0a8" />
+                  {VectorIconsShared.add('#00f0a8', 20)}
                 </TouchableOpacity>
               </View>
               <View style={styles.selectedItems}>
@@ -2483,7 +2350,7 @@ const ClientProfileManager = ({ clientDetails = {}, onUpdate, editing, isVisible
                       onPress={() => removeProjectType(type)}
                       activeOpacity={0.7}
                     >
-                      <Icon name="close" size={16} color="#ff6b6b" />
+                      {VectorIconsShared.close('#ff6b6b', 16)}
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -2507,7 +2374,7 @@ const ClientProfileManager = ({ clientDetails = {}, onUpdate, editing, isVisible
                   disabled={!newServiceNeed.trim()}
                   activeOpacity={0.7}
                 >
-                  <Icon name="add" size={20} color="#00f0a8" />
+                  {VectorIconsShared.add('#00f0a8', 20)}
                 </TouchableOpacity>
               </View>
               <View style={styles.selectedItems}>
@@ -2518,7 +2385,7 @@ const ClientProfileManager = ({ clientDetails = {}, onUpdate, editing, isVisible
                       onPress={() => removeServiceNeed(service)}
                       activeOpacity={0.7}
                     >
-                      <Icon name="close" size={16} color="#ff6b6b" />
+                      {VectorIconsShared.close('#ff6b6b', 16)}
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -2542,7 +2409,7 @@ const ClientProfileManager = ({ clientDetails = {}, onUpdate, editing, isVisible
                   disabled={!newLocation.trim()}
                   activeOpacity={0.7}
                 >
-                  <Icon name="add" size={20} color="#00f0a8" />
+                  {VectorIconsShared.add('#00f0a8', 20)}
                 </TouchableOpacity>
               </View>
               <View style={styles.selectedItems}>
@@ -2554,7 +2421,7 @@ const ClientProfileManager = ({ clientDetails = {}, onUpdate, editing, isVisible
                       onPress={() => removeLocation(location)}
                       activeOpacity={0.7}
                     >
-                      <Icon name="close" size={16} color="#ff6b6b" />
+                      {VectorIconsShared.close('#ff6b6b', 16)}
                     </TouchableOpacity>
                   </View>
                 ))}
@@ -2813,7 +2680,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
             onPress={() => setShowLocationOptions(true)}
             activeOpacity={0.7}
           >
-            <Icon name="ellipsis-vertical" size={20} color="#00f0a8" />
+            {VectorIconsShared.ellipsisVertical('#00f0a8', 20)}
           </TouchableOpacity>
         )}
       </View>
@@ -2828,7 +2695,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
             <Icon name="location" size={20} color="#00f0a8" />
             {location.verified && (
               <View style={styles.verifiedBadge}>
-                <Icon name="checkmark" size={10} color="#000" />
+                {VectorIconsShared.checkmark('#000', 10)}
               </View>
             )}
           </View>
@@ -2875,7 +2742,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
             {gettingLocation ? (
               <ActivityIndicator color="#000" size="small" />
             ) : (
-              <Icon name="navigate" size={18} color="#000" />
+              {VectorIconsShared.navigate('#000', 18)}
             )}
             <Text style={styles.locationButtonText}>
               {gettingLocation ? 'Getting Location...' : 'Use Current Location'}
@@ -2887,7 +2754,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
             onPress={handleManualLocation}
             activeOpacity={0.7}
           >
-            <Icon name="create" size={18} color="#00f0a8" />
+            {VectorIconsShared.create('#00f0a8', 18)}
             <Text style={styles.secondaryLocationButtonText}>Enter Address</Text>
           </TouchableOpacity>
         </View>
@@ -2912,7 +2779,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
               style={styles.imageOption}
               onPress={getCurrentLocation}
             >
-              <Icon name="refresh" size={24} color="#00f0a8" />
+              {VectorIconsShared.refresh('#00f0a8', 24)}
               <Text style={styles.imageOptionText}>Update Location</Text>
             </TouchableOpacity>
             
@@ -2920,7 +2787,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
               style={styles.imageOption}
               onPress={handleManualLocation}
             >
-              <Icon name="create" size={24} color="#00f0a8" />
+              {VectorIconsShared.create('#00f0a8', 24)}
               <Text style={styles.imageOptionText}>Edit Address</Text>
             </TouchableOpacity>
             
@@ -2928,7 +2795,7 @@ const LocationManager = ({ location, onUpdate, editing }) => {
               style={[styles.imageOption, styles.removeOption]}
               onPress={clearLocation}
             >
-              <Icon name="trash" size={24} color="#ff6b6b" />
+              {VectorIconsShared.trash('#ff6b6b', 24)}
               <Text style={[styles.imageOptionText, styles.removeOptionText]}>
                 Clear Location
               </Text>
@@ -2947,63 +2814,63 @@ const LocationManager = ({ location, onUpdate, editing }) => {
   );
 };
 
-// FIXED: ADVANCED BOTTOM NAVIGATION WITH DASHBOARD-PARITY TABS
-const AdvancedBottomNavigation = ({ activeTab, onTabChange, navigation }) => {
-  const appCtx = useContext(AppContext) || {};
-  const unreadMessages = appCtx.unreadMessages || 0;
-
+// FIXED: UNIFIED BOTTOM NAVIGATION COMPONENT (SAME AS DASHBOARD)
+const UnifiedNavigationTabs = ({ activeTab, onTabChange, navigation, unreadMessages = 0 }) => {
   const tabs = [
-    { id: 'feed', icon: (c, s) => VectorIconsShared.home(c, s), label: 'Home', screen: 'DashboardScreen' },
-    { id: 'explore', icon: (c, s) => VectorIconsShared.search(c, s), label: 'Discover', screen: 'DiscoverScreen' },
-    { id: 'create', icon: null, label: 'Create', screen: 'CreatePost' },
-    { id: 'messages', icon: (c, s) => VectorIconsShared.message(c, s), label: 'Inbox', screen: 'MessagesScreen' },
-    { id: 'profile', icon: (c, s) => VectorIconsShared.profile(c, s), label: 'Profile', screen: 'ProfileScreen' }
+    { 
+      id: 'feed', 
+      icon: 'home', 
+      label: 'Home',
+      screen: 'DashboardScreen'
+    },
+    { 
+      id: 'explore', 
+      icon: 'search', 
+      label: 'Discover',
+      screen: 'DiscoverScreen'
+    },
+    { 
+      id: 'create', 
+      icon: 'add', 
+      label: 'Create',
+      screen: 'CreatePost'
+    },
+    { 
+      id: 'messages', 
+      icon: 'chatbubble', 
+      label: 'Inbox',
+      screen: 'Messages'
+    },
+    { 
+      id: 'profile', 
+      icon: 'person', 
+      label: 'Profile',
+      screen: 'ProfileScreen'
+    },
   ];
 
   const handleTabPress = (tab) => {
-    if (tab.id === 'create') {
-      if (navigation && navigation.navigate) navigation.navigate(tab.screen || 'CreatePost');
-      onTabChange(tab.id);
-      return;
+    if (tab.screen && navigation) {
+      navigation.navigate(tab.screen);
     }
-
-    if (tab.screen && navigation) navigation.navigate(tab.screen);
     onTabChange(tab.id);
   };
 
   return (
-    <View style={styles.bottomNavigation}>
+    <View style={styles.navTabs}>
       {tabs.map((tab) => (
-        <TouchableOpacity
-          key={tab.id}
-          style={[
-            styles.navItem,
-            activeTab === tab.id && styles.navItemActive
-          ]}
+        <TouchableOpacity 
+          key={`tab-${tab.id}`} 
+          style={[styles.navTab, activeTab === tab.id && styles.navTabActive]} 
           onPress={() => handleTabPress(tab)}
-          activeOpacity={0.8}
         >
-          {tab.id === 'create' ? (
-            <View style={{
-              backgroundColor: '#00f0a8',
-              width: 46,
-              height: 46,
-              borderRadius: 23,
-              justifyContent: 'center',
-              alignItems: 'center',
-              marginBottom: 4
-            }}>
-              <Icon name="add" size={24} color="#fff" />
-            </View>
-          ) : (
-            tab.icon(activeTab === tab.id ? '#00f0a8' : '#666', 24)
-          )}
-
-          <Text style={[
-            styles.navLabel,
-            activeTab === tab.id && styles.navLabelActive
-          ]}>{tab.label}</Text>
-
+          {activeTab === tab.id ? 
+            VectorIconsShared[tab.icon]('#00f0a8', 24) : 
+            VectorIconsShared[`${tab.icon}Outline`] ? 
+            VectorIconsShared[`${tab.icon}Outline`]('#666', 24) : 
+            VectorIconsShared[tab.icon]('#666', 24)
+          }
+          <Text style={[styles.navTabText, activeTab === tab.id && styles.navTabTextActive]}>{tab.label}</Text>
           {tab.id === 'messages' && unreadMessages > 0 && (
             <View style={styles.messageBadge}>
               <Text style={styles.messageBadgeText}>{unreadMessages}</Text>
@@ -3139,7 +3006,7 @@ export default function ProfileScreen({ navigation }) {
               onPress={() => navigation.navigate('DashboardScreen')}
               activeOpacity={0.7}
             >
-              <Icon name="chevron-back" size={28} color="#00f0a8" />
+              {VectorIconsShared.chevronBack('#00f0a8', 28)}
             </TouchableOpacity>
             
             <View style={styles.headerTitle}>
@@ -3165,7 +3032,7 @@ export default function ProfileScreen({ navigation }) {
                 activeOpacity={0.7}
                 disabled={editing}
               >
-                <Icon name="share-social" size={20} color={editing ? "#666" : "#00f0a8"} />
+                {VectorIconsShared.shareSocial(editing ? "#666" : "#00f0a8", 20)}
               </TouchableOpacity>
               
               <TouchableOpacity 
@@ -3201,11 +3068,7 @@ export default function ProfileScreen({ navigation }) {
                 }}
                 activeOpacity={0.7}
               >
-                <Icon 
-                  name={editing ? "checkmark" : "create-outline"} 
-                  size={20} 
-                  color="#00f0a8" 
-                />
+                {VectorIconsShared.create('#00f0a8', 20)}
               </TouchableOpacity>
 
               {editing && isDirty && (
@@ -3246,7 +3109,7 @@ export default function ProfileScreen({ navigation }) {
                 }}
                 activeOpacity={0.7}
               >
-                <Icon name="ellipsis-vertical" size={20} color="#00f0a8" />
+                {VectorIconsShared.ellipsisVertical('#00f0a8', 20)}
               </TouchableOpacity>
             </View>
           </View>
@@ -3299,7 +3162,7 @@ export default function ProfileScreen({ navigation }) {
                 <View style={styles.statItem}>
                   <Text style={styles.statNumber}>{profile.rating}</Text>
                   <View style={styles.ratingContainer}>
-                    <Icon name="star" size={12} color="#FFD700" />
+                    {VectorIconsShared.star('#FFD700', 12)}
                     <Text style={styles.statLabel}>Rating</Text>
                   </View>
                 </View>
@@ -3331,7 +3194,7 @@ export default function ProfileScreen({ navigation }) {
                   onPress={() => navigation.navigate('Booking', { professional: profile })}
                   activeOpacity={0.7}
                 >
-                  <Icon name="calendar" size={18} color="#000" />
+                  {VectorIconsShared.calendar('#000', 18)}
                   <Text style={styles.hireButtonText}>Hire Now</Text>
                 </TouchableOpacity>
 
@@ -3371,7 +3234,7 @@ export default function ProfileScreen({ navigation }) {
           {/* Enhanced Save Status */}
           {lastSave && (
             <View style={styles.saveStatus}>
-              <Icon name="checkmark-circle" size={12} color="#00f0a8" />
+              {VectorIconsShared.checkmarkCircle('#00f0a8', 12)}
               <Text style={styles.saveStatusText}>
                 Auto-saved {new Date(lastSave).toLocaleTimeString()}
               </Text>
@@ -3525,7 +3388,7 @@ export default function ProfileScreen({ navigation }) {
           <View style={styles.tabContent}>
             <Text style={styles.sectionTitle}>Portfolio Gallery</Text>
             <View style={styles.comingSoonSection}>
-              <Icon name="images" size={64} color="#666" />
+              {VectorIconsShared.images('#666', 64)}
               <Text style={styles.comingSoonTitle}>Advanced Portfolio</Text>
               <Text style={styles.comingSoonText}>
                 Showcase your work with high-resolution images, project descriptions, client testimonials, and before/after comparisons. Organize your portfolio by project type, category, or date.
@@ -3672,8 +3535,8 @@ export default function ProfileScreen({ navigation }) {
         <TabContent />
       </KeyboardAvoidingView>
 
-      {/* FIXED: Advanced Bottom Navigation with proper navigation */}
-      <AdvancedBottomNavigation 
+      {/* FIXED: Use Unified Navigation Tabs (SAME AS DASHBOARD) */}
+      <UnifiedNavigationTabs 
         activeTab={bottomNavTab}
         onTabChange={setBottomNavTab}
         navigation={navigation}
@@ -3869,7 +3732,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,
   },
   nameEditor: {
-    // removed unsupported 'gap' property for React Native
+    // Style for name editor
   },
   userName: {
     color: '#fff',
@@ -3927,7 +3790,6 @@ const styles = StyleSheet.create({
   },
   actionButtons: {
     flexDirection: 'row',
-    // removed unsupported 'gap' property for React Native
   },
   contactButton: {
     flex: 2,
@@ -4025,8 +3887,7 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   typeOptions: {
-    maxHeight: 360,
-    marginBottom: 8
+    // Style for type options
   },
   typeOption: {
     backgroundColor: 'rgba(255,255,255,0.03)',
@@ -4083,7 +3944,6 @@ const styles = StyleSheet.create({
   examplesList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    // removed unsupported 'gap' property for React Native
   },
   exampleChip: {
     backgroundColor: 'rgba(255,255,255,0.1)',
@@ -4105,12 +3965,11 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   featuresList: {
-    // removed unsupported 'gap' property for React Native
+    // Style for features list
   },
   featureItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    // removed unsupported 'gap' property for React Native
   },
   featureText: {
     color: '#fff',
@@ -4123,7 +3982,6 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginTop: 10,
-    // removed unsupported 'gap' property for React Native
   },
   roleChangeNoteText: {
     color: '#00f0a8',
@@ -4173,7 +4031,6 @@ const styles = StyleSheet.create({
   tabsScrollContent: {
     paddingHorizontal: 20,
     paddingVertical: 12,
-    // removed unsupported 'gap' property for React Native
   },
   tab: {
     flexDirection: 'row',
@@ -4182,7 +4039,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.05)',
-    // removed unsupported 'gap' property for React Native
   },
   activeTab: {
     backgroundColor: 'rgba(0,240,168,0.2)',
@@ -4220,7 +4076,6 @@ const styles = StyleSheet.create({
   sectionTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   sectionTitle: {
     color: '#fff',
@@ -4300,7 +4155,6 @@ const styles = StyleSheet.create({
   errorContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
     marginTop: 6,
   },
   errorText: {
@@ -4309,7 +4163,6 @@ const styles = StyleSheet.create({
   },
   editButtons: {
     flexDirection: 'row',
-    gap: 10,
     marginTop: 12,
   },
   cancelButton: {
@@ -4386,7 +4239,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
     borderColor: '#00f0a8',
-    // removed unsupported 'gap' property for React Native
   },
   addSkillText: {
     color: '#00f0a8',
@@ -4394,7 +4246,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   skillsGrid: {
-    // removed unsupported 'gap' property for React Native
+    // Style for skills grid
   },
   skillChip: {
     flexDirection: 'row',
@@ -4418,7 +4270,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap',
-    // removed unsupported 'gap' property for React Native
     marginBottom: 6,
   },
   skillCategory: {
@@ -4453,7 +4304,6 @@ const styles = StyleSheet.create({
   },
   skillActions: {
     flexDirection: 'row',
-    gap: 8,
   },
   editSkillButton: {
     padding: 6,
@@ -4531,7 +4381,6 @@ const styles = StyleSheet.create({
   },
   modalFooter: {
     flexDirection: 'row',
-    gap: 10,
     padding: 20,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.1)',
@@ -4566,7 +4415,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 2,
     marginRight: 8,
-    gap: 6,
   },
   categoryChipSelected: {
     backgroundColor: 'rgba(0,240,168,0.2)',
@@ -4577,7 +4425,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   subcategoriesContainer: {
-    gap: 8,
+    // Style for subcategories container
   },
   subcategoryChip: {
     paddingHorizontal: 12,
@@ -4598,7 +4446,6 @@ const styles = StyleSheet.create({
   levelOptions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    // removed unsupported 'gap' property for React Native
   },
   levelChip: {
     flex: 1,
@@ -4626,7 +4473,6 @@ const styles = StyleSheet.create({
   yearsSelector: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    // removed unsupported 'gap' property for React Native
   },
   yearChip: {
     paddingHorizontal: 16,
@@ -4658,7 +4504,6 @@ const styles = StyleSheet.create({
   certifiedToggleContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
   certifiedToggleSwitch: {
     width: 24,
@@ -4716,7 +4561,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   farmDetailsGrid: {
-    gap: 15,
+    // Style for farm details grid
   },
   farmDetailItem: {
     backgroundColor: 'rgba(255,255,255,0.05)',
@@ -4742,7 +4587,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
     borderRadius: 8,
     alignSelf: 'flex-start',
-    gap: 4,
   },
   organicBadgeText: {
     color: '#4CD964',
@@ -4752,7 +4596,6 @@ const styles = StyleSheet.create({
   cropsList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   cropChip: {
     backgroundColor: 'rgba(76,217,100,0.2)',
@@ -4767,7 +4610,6 @@ const styles = StyleSheet.create({
   equipmentList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   equipmentChip: {
     backgroundColor: 'rgba(0,240,168,0.2)',
@@ -4803,7 +4645,6 @@ const styles = StyleSheet.create({
   },
   formRow: {
     flexDirection: 'row',
-    gap: 15,
   },
   flex1: {
     flex: 1,
@@ -4827,7 +4668,6 @@ const styles = StyleSheet.create({
   },
   inputWithButton: {
     flexDirection: 'row',
-    gap: 8,
     alignItems: 'center',
   },
   addItemButton: {
@@ -4843,7 +4683,6 @@ const styles = StyleSheet.create({
   selectedItems: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
     marginTop: 8,
   },
   selectedCrop: {
@@ -4853,7 +4692,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    gap: 6,
   },
   selectedCropText: {
     color: '#4CD964',
@@ -4866,7 +4704,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    gap: 6,
   },
   selectedEquipmentText: {
     color: '#00f0a8',
@@ -4911,7 +4748,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    gap: 6,
   },
   selectedPracticeText: {
     color: '#4CD964',
@@ -4924,7 +4760,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    gap: 6,
   },
   selectedMarketText: {
     color: '#007AFF',
@@ -4944,7 +4779,6 @@ const styles = StyleSheet.create({
   organicToggleContent: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
   },
   organicToggleSwitch: {
     width: 24,
@@ -4975,7 +4809,7 @@ const styles = StyleSheet.create({
     marginBottom: 25,
   },
   clientDetailsGrid: {
-    gap: 15,
+    // Style for client details grid
   },
   clientDetailItem: {
     backgroundColor: 'rgba(255,255,255,0.05)',
@@ -4996,7 +4830,6 @@ const styles = StyleSheet.create({
   projectTypesList: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   projectTypeChip: {
     backgroundColor: 'rgba(0,122,255,0.2)',
@@ -5088,7 +4921,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    gap: 6,
   },
   selectedProjectText: {
     color: '#007AFF',
@@ -5101,7 +4933,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    gap: 6,
   },
   selectedServiceText: {
     color: '#00f0a8',
@@ -5114,7 +4945,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
     borderRadius: 8,
-    gap: 6,
   },
   selectedLocationText: {
     color: '#00f0a8',
@@ -5123,7 +4953,6 @@ const styles = StyleSheet.create({
   budgetRangeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
   },
   budgetInput: {
     flex: 1,
@@ -5160,7 +4989,6 @@ const styles = StyleSheet.create({
   urgencyOptions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   urgencyChip: {
     flex: 1,
@@ -5189,7 +5017,6 @@ const styles = StyleSheet.create({
   communicationOptions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 8,
   },
   communicationChip: {
     flexDirection: 'row',
@@ -5198,7 +5025,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 16,
     backgroundColor: 'rgba(255,255,255,0.1)',
-    gap: 6,
   },
   communicationChipSelected: {
     backgroundColor: 'rgba(0,240,168,0.2)',
@@ -5296,7 +5122,6 @@ const styles = StyleSheet.create({
   },
   locationActions: {
     flexDirection: 'row',
-    gap: 10,
   },
   locationButton: {
     flex: 1,
@@ -5306,7 +5131,6 @@ const styles = StyleSheet.create({
     backgroundColor: '#00f0a8',
     paddingVertical: 12,
     borderRadius: 25,
-    gap: 8,
   },
   locationButtonText: {
     color: '#000',
@@ -5349,7 +5173,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     borderRadius: 12,
     marginBottom: 8,
-    gap: 12,
   },
   imageOptionText: {
     color: '#fff',
@@ -5374,31 +5197,49 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-  // Bottom Navigation Styles
-  bottomNavigation: {
-    flexDirection: 'row',
-    backgroundColor: '#000',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.1)',
-    paddingHorizontal: 10,
-    paddingVertical: 8,
+  // Bottom Navigation Styles (UNIFIED WITH DASHBOARD)
+  navTabs: { 
+    flexDirection: 'row', 
+    backgroundColor: 'rgba(0,0,0,0.95)', 
+    borderTopWidth: 1, 
+    borderTopColor: 'rgba(255,255,255,0.08)', 
+    paddingHorizontal: 10, 
+    paddingVertical: 10 
   },
-  navItem: {
-    flex: 1,
+  navTab: { 
+    flex: 1, 
+    alignItems: 'center', 
+    paddingVertical: 8, 
+    borderRadius: 15, 
+    position: 'relative' 
+  },
+  navTabActive: { 
+    backgroundColor: 'rgba(0,240,168,0.14)' 
+  },
+  navTabText: { 
+    color: '#666', 
+    fontSize: 10, 
+    fontWeight: '600', 
+    marginTop: 4 
+  },
+  navTabTextActive: { 
+    color: '#00f0a8' 
+  },
+  messageBadge: {
+    position: 'absolute',
+    top: 4,
+    right: 20,
+    backgroundColor: '#ff375f',
+    borderRadius: 8,
+    minWidth: 16,
+    height: 16,
     alignItems: 'center',
-    paddingVertical: 8,
-    borderRadius: 12,
+    justifyContent: 'center',
   },
-  navItemActive: {
-    backgroundColor: 'rgba(0,240,168,0.2)',
-  },
-  navLabel: {
-    color: '#666',
+  messageBadgeText: {
+    color: '#fff',
     fontSize: 10,
-    marginTop: 4,
-  },
-  navLabelActive: {
-    color: '#00f0a8',
+    fontWeight: '700',
   },
   // Coming Soon Sections
   comingSoonSection: {
@@ -5464,7 +5305,7 @@ const styles = StyleSheet.create({
   },
   // Details Grid
   detailsGrid: {
-    gap: 10,
+    // Style for details grid
   },
   // Saving Overlay
   savingOverlay: {
@@ -5479,7 +5320,6 @@ const styles = StyleSheet.create({
     padding: 30,
     borderRadius: 15,
     alignItems: 'center',
-    gap: 12,
   },
   savingOverlayText: {
     color: '#00f0a8',
