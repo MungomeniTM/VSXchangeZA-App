@@ -40,105 +40,8 @@ import VectorIconsShared from '../components/VectorIcons';
 
 const { width, height } = Dimensions.get('window');
 
-// ADVANCED VECTOR ICONS SYSTEM - PERFECTLY MATCHING DASHBOARD
-const VectorIcons = {
-  // Bottom Navigation Icons - EXACTLY matching DashboardScreen
-  home: (color = '#00f0a8', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 9L12 2L21 9V20C21 20.5304 20.7893 21.0391 20.4142 21.4142C20.0391 21.7893 19.5304 22 19 22H5C4.46957 22 3.96086 21.7893 3.58579 21.4142C3.21071 21.0391 3 20.5304 3 20V9Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M9 22V12H15V22" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-  
-  search: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Circle cx="11" cy="11" r="8" stroke={color} strokeWidth="2"/>
-      <Path d="M21 21L16.65 16.65" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-  
-  marketplace: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M3 3H5L5.4 5M7 13H17L21 5H5.4M7 13L5.4 5M7 13L4.7 15.3C4.1 15.9 4.5 17 5.4 17H17M17 17C16.4696 17 15.9609 17.2107 15.5858 17.5858C15.2107 17.9609 15 18.4696 15 19C15 19.5304 15.2107 20.0391 15.5858 20.4142C15.9609 20.7893 16.4696 21 17 21C17.5304 21 18.0391 20.7893 18.4142 20.4142C18.7893 20.0391 19 19.5304 19 19C19 18.4696 18.7893 17.9609 18.4142 17.5858C17.9609 17.2107 17.5304 17 17 17ZM9 19C9 19.5304 8.78929 20.0391 8.41421 20.4142C8.03914 20.7893 7.53043 21 7 21C6.46957 21 5.96086 20.7893 5.58579 20.4142C5.21071 20.0391 5 19.5304 5 19C5 18.4696 5.21071 17.9609 5.58579 17.5858C5.96086 17.2107 6.46957 17 7 17C7.53043 17 8.03914 17.2107 8.41421 17.5858C8.78929 17.9609 9 18.4696 9 19Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-  
-  profile: (color = '#666', size = 28) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M20 21V19C20 17.9391 19.5786 16.9217 18.8284 16.1716C18.0783 15.4214 17.0609 15 16 15H8C6.93913 15 5.92172 15.4214 5.17157 16.1716C4.42143 16.9217 4 17.9391 4 19V21" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M12 11C14.2091 11 16 9.20914 16 7C16 4.79086 14.2091 3 12 3C9.79086 3 8 4.79086 8 7C8 9.20914 9.79086 11 12 11Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  // Professional Category Icons - Enhanced for better visual consistency
-  electrician: (color = '#00f0a8', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M13 22L20 13L27 22L24 24L25 28L15 28L16 24L13 22Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M20 13V7" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M20 31V28" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  farmer: (color = '#4CD964', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M12 28L15 25L18 28L22 24L25 27L28 24" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M8 16C8 16 10 14 12 16C14 18 16 16 16 16C16 16 18 14 20 16C22 18 24 16 24 16C24 16 26 14 28 16C30 18 32 16 32 16V28C32 28.5304 31.7893 29.0391 31.4142 29.4142C31.0391 29.7893 30.5304 30 30 30H10C9.46957 30 8.96086 29.7893 8.58579 29.4142C8.21071 29.0391 8 28.5304 8 28V16Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M8 20H32" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  client: (color = '#007AFF', size = 40) => (
-    <Svg width={size} height={size} viewBox="0 0 40 40" fill="none">
-      <Path d="M28 12H12C10.8954 12 10 12.8954 10 14V26C10 27.1046 10.8954 28 12 28H28C29.1046 28 30 27.1046 30 26V14C30 12.8954 29.1046 12 28 12Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M22 12V10C22 8.89543 21.1046 8 20 8C18.8954 8 18 8.89543 18 10V12" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M15 18H25" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M15 22H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  // Additional icons for enhanced UI matching dashboard
-  calendar: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M19 4H5C3.89543 4 3 4.89543 3 6V20C3 21.1046 3.89543 22 5 22H19C20.1046 22 21 21.1046 21 20V6C21 4.89543 20.1046 4 19 4Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M16 2V6" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M8 2V6" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-      <Path d="M3 10H21" stroke={color} strokeWidth="2" strokeLinecap="round"/>
-    </Svg>
-  ),
-
-  message: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  wallet: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M19 7V11M3 7H19V7C20.1046 7 21 7.89543 21 9V17C21 18.1046 20.1046 19 19 19H5C3.89543 19 3 18.1046 3 17V7ZM3 7C3 5.89543 3.89543 5 5 5H16C17.1046 5 18 5.89543 18 7V7" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  ),
-
-  settings: (color = '#00f0a8', size = 24) => (
-    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-      <Path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      <Path d="M19.4 15C19.2662 15.466 19.1338 15.932 19.0015 16.398C18.9965 16.415 18.9915 16.432 18.9865 16.449L21.1465 18.609C21.3385 18.801 21.3385 19.114 21.1465 19.306L19.3065 21.146C19.1145 21.338 18.8015 21.338 18.6095 21.146L16.4495 18.986C16.4325 18.991 16.4155 18.996 16.3985 19.001C15.9325 19.133 15.4665 19.266 15 19.4V22C15 22.265 14.895 22.52 14.7075 22.707C14.52 22.895 14.265 23 14 23H10C9.735 23 9.48 22.895 9.2925 22.707C9.105 22.52 9 22.265 9 22V19.4C8.534 19.266 8.068 19.133 7.602 19.001C7.585 18.996 7.568 18.991 7.551 18.986L5.391 21.146C5.199 21.338 4.886 21.338 4.694 21.146L2.854 19.306C2.662 19.114 2.662 18.801 2.854 18.609L5.014 16.449C5.009 16.432 5.004 16.415 4.999 16.398C4.867 15.932 4.734 15.466 4.6 15V12C4.6 11.735 4.495 11.48 4.3075 11.293C4.12 11.105 3.865 11 3.6 11H1C0.735 11 0.48 10.895 0.2925 10.707C0.105 10.52 0 10.265 0 10V6C0 5.735 0.105 5.48 0.2925 5.293C0.48 5.105 0.735 5 1 5H3.6C3.734 4.534 3.867 4.068 3.999 3.602C4.004 3.585 4.009 3.568 4.014 3.551L1.854 1.391C1.662 1.199 1.662 0.886 1.854 0.694L3.694 -1.146C3.886 -1.338 4.199 -1.338 4.391 -1.146L6.551 1.014C6.568 1.009 6.585 1.004 6.602 0.999C7.068 0.867 7.534 0.734 8 0.6V-2C8 -2.265 8.105 -2.52 8.2925 -2.707C8.48 -2.895 8.735 -3 9 -3H13C13.265 -3 13.52 -2.895 13.7075 -2.707C13.895 -2.52 14 -2.265 14 -2V0.6C14.466 0.734 14.932 0.867 15.398 0.999C15.415 1.004 15.432 1.009 15.449 1.014L17.609 -1.146C17.801 -1.338 18.114 -1.338 18.306 -1.146L20.146 0.694C20.338 0.886 20.338 1.199 20.146 1.391L17.986 3.551C17.991 3.568 17.996 3.585 18.001 3.602C18.133 4.068 18.266 4.534 18.4 5H21C21.265 5 21.52 5.105 21.7075 5.293C21.895 5.48 22 5.735 22 6V10C22 10.265 21.895 10.52 21.7075 10.707C21.52 10.895 21.265 11 21 11H18.4C18.266 11.466 18.133 11.932 18.001 12.398C17.996 12.415 17.991 12.432 17.986 12.449L20.146 14.609C20.338 14.801 20.338 15.114 20.146 15.306L18.306 17.146C18.114 17.338 17.801 17.338 17.609 17.146L15.449 14.986C15.432 14.991 15.415 14.996 15.398 15.001C14.932 15.133 14.466 15.266 14 15.4V18C14 18.265 13.895 18.52 13.7075 18.707C13.52 18.895 13.265 19 13 19H9C8.735 19 8.48 18.895 8.2925 18.707C8.105 18.52 8 18.265 8 18V15.4C7.534 15.266 7.068 15.133 6.602 15.001C6.585 14.996 6.568 14.991 6.551 14.986L4.391 17.146C4.199 17.338 3.886 17.338 3.694 17.146L1.854 15.306C1.662 15.114 1.662 14.801 1.854 14.609L4.014 12.449C4.009 12.432 4.004 12.415 3.999 12.398C3.867 11.932 3.734 11.466 3.6 11H1C0.735 11 0.48 10.895 0.2925 10.707C0.105 10.52 0 10.265 0 10V6C0 5.735 0.105 5.48 0.2925 5.293C0.48 5.105 0.735 5 1 5H3.6" 
-        stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </Svg>
-  )
-};
+// Use shared vector icons to match Dashboard
+const VectorIcons = VectorIconsShared;
 
 // ENHANCED ENTERPRISE STATE MANAGEMENT WITH FIXED ROLE NAVIGATION
 const useAdvancedEnterpriseProfile = () => {
@@ -1254,7 +1157,7 @@ const UserTypeSelector = ({
         </Text>
       </View>
       
-      <View style={styles.typeOptions}>
+      <ScrollView style={styles.typeOptions} nestedScrollEnabled contentContainerStyle={{ paddingBottom: 12 }}>
         {userTypes.map((userType) => (
           <TouchableOpacity
             key={userType.type}
@@ -1307,7 +1210,7 @@ const UserTypeSelector = ({
             </View>
           </TouchableOpacity>
         ))}
-      </View>
+      </ScrollView>
 
       <View style={styles.roleChangeNote}>
         <Icon name="information-circle" size={16} color="#00f0a8" />
@@ -2925,39 +2828,27 @@ const LocationManager = ({ location, onUpdate, editing }) => {
   );
 };
 
-// FIXED: ADVANCED BOTTOM NAVIGATION WITH ENHANCED VECTOR ICONS MATCHING DASHBOARD
+// FIXED: ADVANCED BOTTOM NAVIGATION WITH DASHBOARD-PARITY TABS
 const AdvancedBottomNavigation = ({ activeTab, onTabChange, navigation }) => {
+  const appCtx = useContext(AppContext) || {};
+  const unreadMessages = appCtx.unreadMessages || 0;
+
   const tabs = [
-    { 
-      id: 'home', 
-      label: 'Home', 
-      icon: (color, size) => VectorIconsShared.home(color, size),
-      screen: 'DashboardScreen'
-    },
-    { 
-      id: 'search', 
-      label: 'Discover', 
-      icon: (color, size) => VectorIconsShared.search(color, size),
-      screen: 'DiscoverScreen'
-    },
-    { 
-      id: 'marketplace', 
-      label: 'Market', 
-      icon: (color, size) => VectorIconsShared.marketplace(color, size),
-      screen: 'MarketplaceScreen'
-    },
-    { 
-      id: 'profile', 
-      label: 'Profile', 
-      icon: (color, size) => VectorIconsShared.profile(color, size),
-      screen: 'ProfileScreen'
-    },
+    { id: 'feed', icon: (c, s) => VectorIconsShared.home(c, s), label: 'Home', screen: 'DashboardScreen' },
+    { id: 'explore', icon: (c, s) => VectorIconsShared.search(c, s), label: 'Discover', screen: 'DiscoverScreen' },
+    { id: 'create', icon: null, label: 'Create', screen: 'CreatePost' },
+    { id: 'messages', icon: (c, s) => VectorIconsShared.message(c, s), label: 'Inbox', screen: 'MessagesScreen' },
+    { id: 'profile', icon: (c, s) => VectorIconsShared.profile(c, s), label: 'Profile', screen: 'ProfileScreen' }
   ];
 
   const handleTabPress = (tab) => {
-    if (tab.screen && navigation) {
-      navigation.navigate(tab.screen);
+    if (tab.id === 'create') {
+      if (navigation && navigation.navigate) navigation.navigate(tab.screen || 'CreatePost');
+      onTabChange(tab.id);
+      return;
     }
+
+    if (tab.screen && navigation) navigation.navigate(tab.screen);
     onTabChange(tab.id);
   };
 
@@ -2971,18 +2862,34 @@ const AdvancedBottomNavigation = ({ activeTab, onTabChange, navigation }) => {
             activeTab === tab.id && styles.navItemActive
           ]}
           onPress={() => handleTabPress(tab)}
-          activeOpacity={0.7}
+          activeOpacity={0.8}
         >
-          {tab.icon(
-            activeTab === tab.id ? '#00f0a8' : '#666',
-            24
+          {tab.id === 'create' ? (
+            <View style={{
+              backgroundColor: '#00f0a8',
+              width: 46,
+              height: 46,
+              borderRadius: 23,
+              justifyContent: 'center',
+              alignItems: 'center',
+              marginBottom: 4
+            }}>
+              <Icon name="add" size={24} color="#fff" />
+            </View>
+          ) : (
+            tab.icon(activeTab === tab.id ? '#00f0a8' : '#666', 24)
           )}
+
           <Text style={[
             styles.navLabel,
             activeTab === tab.id && styles.navLabelActive
-          ]}>
-            {tab.label}
-          </Text>
+          ]}>{tab.label}</Text>
+
+          {tab.id === 'messages' && unreadMessages > 0 && (
+            <View style={styles.messageBadge}>
+              <Text style={styles.messageBadgeText}>{unreadMessages}</Text>
+            </View>
+          )}
         </TouchableOpacity>
       ))}
     </View>
@@ -3999,7 +3906,8 @@ const styles = StyleSheet.create({
     lineHeight: 16,
   },
   typeOptions: {
-    // removed unsupported 'gap' property for React Native
+    maxHeight: 360,
+    marginBottom: 8
   },
   typeOption: {
     backgroundColor: 'rgba(255,255,255,0.03)',
